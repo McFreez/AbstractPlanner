@@ -2,23 +2,23 @@ package com.abstractplanner.dto;
 
 public class Task {
 
-    private Attribute attribute;
+    private Area area;
     private String name;
     private String description;
     private boolean done = false;
 
-    public Task(Attribute attribute, String name, String description) {
-        this.attribute = attribute;
+    public Task(Area area, String name, String description) {
+        this.area = area;
         this.name = name;
         this.description = description;
     }
 
-    public Attribute getAttribute() {
-        return attribute;
+    public Area getArea() {
+        return area;
     }
 
-    public void setAttribute(Attribute attribute) {
-        this.attribute = attribute;
+    public void setArea(Area area) {
+        this.area = area;
     }
 
     public String getName() {

@@ -5,7 +5,7 @@
     android:layout_height="100dp">
 
     <TextView
-        android:id="@+id/tv_attribute"
+        android:id="@+id/tv_area"
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:lines="2"

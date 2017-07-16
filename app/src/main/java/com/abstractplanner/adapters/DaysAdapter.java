@@ -9,16 +9,19 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.abstractplanner.R;
+import com.abstractplanner.dto.Day;
+
+import java.util.List;
 
 
 public class DaysAdapter extends RecyclerView.Adapter<DaysAdapter.DaysViewHolder> {
 
     private static final String TAG = DaysAdapter.class.getSimpleName();
 
-    private int mDaysCount;
+    private List<Day> mDays;
 
-    public DaysAdapter(int daysCount){
-        mDaysCount = daysCount;
+    public DaysAdapter(List<Day> days){
+        mDays = days;
     }
 
     @Override
@@ -36,12 +39,12 @@ public class DaysAdapter extends RecyclerView.Adapter<DaysAdapter.DaysViewHolder
 
     @Override
     public void onBindViewHolder(DaysViewHolder holder, int position) {
-        holder.bind(String.valueOf("Day " + position));
+        holder.bind(mDays.get(position).getDate());
     }
 
     @Override
     public int getItemCount() {
-        return mDaysCount;
+        return mDays.size();
     }
 
     class DaysViewHolder extends RecyclerView.ViewHolder{

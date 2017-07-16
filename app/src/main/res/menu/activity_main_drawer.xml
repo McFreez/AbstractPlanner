@@ -5,16 +5,19 @@
         <item
             android:id="@+id/today_tasks"
             android:icon="@drawable/ic_menu_camera"
-            android:checked="true"
             android:title="Today" />
         <item
             android:id="@+id/calendar_grid"
             android:icon="@drawable/ic_menu_gallery"
             android:title="Calendar" />
         <item
-            android:id="@+id/add_attribute"
+            android:id="@+id/add_area"
             android:icon="@drawable/ic_menu_gallery"
             android:title="Add area" />
+        <item
+            android:id="@+id/add_task"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="Add task" />
 <!--        <item
             android:id="@+id/nav_slideshow"
             android:icon="@drawable/ic_menu_slideshow"

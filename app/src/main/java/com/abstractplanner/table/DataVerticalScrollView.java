@@ -8,7 +8,7 @@ public class DataVerticalScrollView extends ScrollView {
 
     private boolean followedScrolling = false;
 
-    private AttributesScrollView attributesView;
+    private AreasScrollView areasScrollView;
 
     public DataVerticalScrollView(Context context) {
         super(context);
@@ -26,8 +26,8 @@ public class DataVerticalScrollView extends ScrollView {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
 
-    public void synchronizeScrollingWith(AttributesScrollView scrollView){
-        attributesView = scrollView;
+    public void synchronizeScrollingWith(AreasScrollView scrollView){
+        areasScrollView = scrollView;
     }
 
     public void followedScrollTo(int x, int y){
@@ -39,8 +39,8 @@ public class DataVerticalScrollView extends ScrollView {
     protected void onScrollChanged(int l, int t, int oldl, int oldt) {
         super.onScrollChanged(l, t, oldl, oldt);
 
-        if(attributesView != null && !followedScrolling)
-            attributesView.followedScrollTo(l, t);
+        if(areasScrollView != null && !followedScrolling)
+            areasScrollView.followedScrollTo(l, t);
 
         followedScrolling = false;
     }

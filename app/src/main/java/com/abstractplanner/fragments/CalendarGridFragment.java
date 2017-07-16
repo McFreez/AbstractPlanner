@@ -2,7 +2,6 @@ package com.abstractplanner.fragments;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.Toolbar;
@@ -14,35 +13,38 @@ import android.widget.LinearLayout;
 
 import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
-import com.abstractplanner.adapters.AttributesAdapter;
+import com.abstractplanner.adapters.AreasAdapter;
 import com.abstractplanner.adapters.DataAdapter;
 import com.abstractplanner.adapters.DaysAdapter;
-import com.abstractplanner.dto.Attribute;
-import com.abstractplanner.table.AttributesScrollView;
+import com.abstractplanner.dto.Area;
+import com.abstractplanner.dto.Day;
+import com.abstractplanner.dto.Task;
+import com.abstractplanner.table.AreasScrollView;
 import com.abstractplanner.table.DataRecyclerView;
 import com.abstractplanner.table.DataVerticalScrollView;
 import com.abstractplanner.table.DaysRecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class CalendarGridFragment extends Fragment{
 
     private Toolbar mShortToolbar;
-    private static int ATTRIBUTES_COUNT;
+    private static int AREAS_COUNT;
     private static final int DAYS_COUNT = 10;
 
-    private AttributesAdapter attributesAdapter;
+    private AreasAdapter areasAdapter;
     private DaysAdapter daysAdapter;
     private DataAdapter dataAdapter;
 
-    private AttributesScrollView attributesScrollView;
-    private LinearLayout attributesContainer;
+    private AreasScrollView areasScrollView;
+    private LinearLayout areasContainer;
     private DataRecyclerView dataRecyclerView;
     private DaysRecyclerView daysRecyclerView;
     private DataVerticalScrollView dataVerticalScrollView;
 
-    private ImageView buttonAddAttribute;
+    private ImageView buttonAddArea;
 
     @Nullable
     @Override
@@ -55,7 +57,7 @@ public class CalendarGridFragment extends Fragment{
         LinearLayoutManager layoutManager_data = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         LinearLayoutManager layoutManager_days = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
 
-        attributesContainer = (LinearLayout) view.findViewById(R.id.attributes_container);
+        areasContainer = (LinearLayout) view.findViewById(R.id.areas_container);
 
         dataRecyclerView = (DataRecyclerView) view.findViewById(R.id.rv_data);
         dataRecyclerView.setLayoutManager(layoutManager_data);
@@ -65,30 +67,67 @@ public class CalendarGridFragment extends Fragment{
 
         dataVerticalScrollView = (DataVerticalScrollView) view.findViewById(R.id.data_vertical_scroll);
 
-        attributesScrollView = (AttributesScrollView) view.findViewById(R.id.attributes_scroll);
+        areasScrollView = (AreasScrollView) view.findViewById(R.id.areas_scroll);
 
-        attributesScrollView.synchronizeScrollWith(dataVerticalScrollView);
-        dataVerticalScrollView.synchronizeScrollingWith(attributesScrollView);
+        areasScrollView.synchronizeScrollWith(dataVerticalScrollView);
+        dataVerticalScrollView.synchronizeScrollingWith(areasScrollView);
 
         dataRecyclerView.synchronizeScrollingWith(daysRecyclerView);
         daysRecyclerView.synchronizeScrollingWith(dataRecyclerView);
 
-        List<Attribute> attributes = ((MainActivity)getActivity()).attributes;
-        attributesAdapter = new AttributesAdapter(getContext(), attributes, attributesContainer);
+        List<Area> areas = ((MainActivity)getActivity()).areas;
+        // fake data
+/*        if(areas.size() == 0) {
+            areas.add(new Area("Area 1", "dgdsfgsd"));
+            areas.add(new Area("Area 2", "fsdgdsfgsd"));
+            areas.add(new Area("Area 3", "dgdsfgsd"));
+            areas.add(new Area("Area 4", "fsdgdsfgsd"));
+            areas.add(new Area("Area 5", "dgdsfgsd"));
+            areas.add(new Area("Area 6", "fsdgdsfgsd"));
+            areas.add(new Area("Area 7", "dgdsfgsd"));
+            areas.add(new Area("Area 8", "fsdgdsfgsd"));
+            areas.add(new Area("Area 9", "dgdsfgsd"));
+            areas.add(new Area("Area 10", "fsdgdsfgsd"));
+            areas.add(new Area("Area 11", "dgdsfgsd"));
+            areas.add(new Area("Area 12", "fsdgdsfgsd"));
+            areas.add(new Area("Area 13", "dgdsfgsd"));
+            areas.add(new Area("Area 14", "fsdgdsfgsd"));
+            areas.add(new Area("Area 15", "dgdsfgsd"));
+            areas.add(new Area("Area 16", "fsdgdsfgsd"));
+        }
+*/
 
-        ATTRIBUTES_COUNT = attributes.size();
+        areasAdapter = new AreasAdapter(getContext(), areas, areasContainer);
 
-        daysAdapter = new DaysAdapter(DAYS_COUNT);
+        AREAS_COUNT = areas.size();
+
+        List<Day> days = ((MainActivity)getActivity()).days;
+        if(days.size() == 0) {
+            for (int i = 0; i < DAYS_COUNT; i++) {
+                Day d = new Day("Day " + i);
+                // fake data
+/*                Random r = new Random();
+                int areaIndex = r.nextInt(areas.size());
+                Task t = new Task(areas.get(areaIndex), "Name " + i, "sdgsgsd fg sd gsd f");
+                t.setDone(r.nextBoolean());
+                d.addTask(t);
+                */
+
+                days.add(d);
+            }
+        }
+
+        daysAdapter = new DaysAdapter(days);
         daysRecyclerView.setAdapter(daysAdapter);
 
-        dataAdapter = new DataAdapter(DAYS_COUNT, ATTRIBUTES_COUNT, getContext());
+        dataAdapter = new DataAdapter(days, areas, (MainActivity) getActivity());
         dataRecyclerView.setAdapter(dataAdapter);
 
-        buttonAddAttribute = (ImageView) view.findViewById(R.id.button_add_attribute);
-        buttonAddAttribute.setOnClickListener(new View.OnClickListener() {
+        buttonAddArea = (ImageView) view.findViewById(R.id.button_add_area);
+        buttonAddArea.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ((MainActivity)getActivity()).displaySelectedScreen(R.id.add_attribute);
+                ((MainActivity)getActivity()).displaySelectedScreen(R.id.add_area, null);
             }
         });
 

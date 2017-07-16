@@ -4,25 +4,25 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.ScrollView;
 
-public class AttributesScrollView extends ScrollView {
+public class AreasScrollView extends ScrollView {
 
     private boolean followedScrolling = false;
 
     private DataVerticalScrollView dataVerticalScroll;
 
-    public AttributesScrollView(Context context) {
+    public AreasScrollView(Context context) {
         super(context);
     }
 
-    public AttributesScrollView(Context context, AttributeSet attrs) {
+    public AreasScrollView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
-    public AttributesScrollView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public AreasScrollView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 
-    public AttributesScrollView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public AreasScrollView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
 

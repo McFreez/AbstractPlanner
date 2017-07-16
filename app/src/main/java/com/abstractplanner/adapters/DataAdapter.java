@@ -1,10 +1,8 @@
 package com.abstractplanner.adapters;
 
-import android.content.Context;
 import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,30 +10,36 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
+import com.abstractplanner.dto.Area;
+import com.abstractplanner.dto.Day;
+import com.abstractplanner.dto.Task;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder> {
 
     private static final String TAG = DataAdapter.class.getSimpleName();
 
-    private int mAttributesCount;
-    private int mDaysCount;
-    private Context mContext;
+    private List<Day> mDays;
+    private List<Area> mAreas;
+    private MainActivity mActivity;
 
-    public DataAdapter(int daysCount, int attributesCount, Context context){
-        mDaysCount = daysCount;
-        mAttributesCount = attributesCount;
-        mContext = context;
+    public DataAdapter(List<Day> days, List<Area> areas, MainActivity activity){
+        mDays = days;
+        mAreas = areas;
+        mActivity = activity;
     }
 
     @Override
     public DataAdapter.DataViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         int layoutId = R.layout.data_in_day_column;
-        LayoutInflater inflater = LayoutInflater.from(mContext);
+        LayoutInflater inflater = LayoutInflater.from(mActivity);
         boolean shouldAttachToParentImmediately = false;
 
         View view = inflater.inflate(layoutId, parent, shouldAttachToParentImmediately);
@@ -46,68 +50,92 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
 
     @Override
     public void onBindViewHolder(DataAdapter.DataViewHolder holder, int position) {
-        holder.bind(String.valueOf("Day " + position));
+        holder.bind(mDays.get(position));
     }
 
     @Override
     public int getItemCount() {
-        return mDaysCount;
+        return mDays.size();
     }
 
     public int dpToPx(int dp) {
-        DisplayMetrics displayMetrics = mContext.getResources().getDisplayMetrics();
+        DisplayMetrics displayMetrics = mActivity.getResources().getDisplayMetrics();
         return Math.round(dp * displayMetrics.density);
     }
 
     class DataViewHolder extends RecyclerView.ViewHolder{
 
-        //TextView attributeTitle;
         LinearLayout container;
-        List<View> tasks;
+        List<View> taskContainers;
 
         public DataViewHolder(View itemView) {
             super(itemView);
 
-            tasks = new ArrayList<>();
+            taskContainers = new ArrayList<>();
 
             container = (LinearLayout) itemView.findViewById(R.id.data_in_day_container);
-            LayoutInflater inflater = LayoutInflater.from(mContext);
+            LayoutInflater inflater = LayoutInflater.from(mActivity);
 
-            for(int i = 0; i < mAttributesCount; i++){
+            for(int i = 0; i < mAreas.size(); i++){
 
                 View view = inflater.inflate(R.layout.data_task, null, false);
 
                 DataTaskViewHolder viewHolder = new DataTaskViewHolder();
 
+                viewHolder.area = mAreas.get(i);
                 viewHolder.addTaskButton = (ImageView) view.findViewById(R.id.add_task_button);
                 viewHolder.taskShortDescriptionContainer = (LinearLayout) view.findViewById(R.id.task_short_description_container);
                 viewHolder.taskStatus = (ImageView) view.findViewById(R.id.task_status);
                 viewHolder.taskName = (TextView) view.findViewById(R.id.task_name);
 
-                viewHolder.taskShortDescriptionContainer.setBackgroundColor(Color.CYAN);
-                viewHolder.addTaskButton.setBackgroundColor(Color.CYAN);
+                viewHolder.taskShortDescriptionContainer.setBackgroundColor(Color.GREEN);
+                viewHolder.addTaskButton.setBackgroundColor(Color.GREEN);
+
+
 
                 view.setTag(viewHolder);
 
-                tasks.add(view);
+                taskContainers.add(view);
                 container.addView(view);
-/*                LinearLayout ll = new LinearLayout(mContext);
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dpToPx(92), dpToPx(92));
-                params.setMargins(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4));
-                ll.setGravity(Gravity.CENTER_VERTICAL);
-                ll.setBackgroundColor(Color.CYAN);
-                tasks.add(ll);
-                container.addView(ll, params);*/
             }
-
-            //attributeTitle = (TextView) itemView.findViewById(R.id.tv_attribute);
         }
 
-        void bind(String title){
-            //attributeTitle.setText(title);
+        void bind(Day day){
+
+            for(View v : taskContainers){
+                DataTaskViewHolder viewHolder = (DataTaskViewHolder) v.getTag();
+                final Area area = viewHolder.area;
+                final String dayName = day.getDate();
+                viewHolder.addTaskButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Map<String, Object> additionalData = new HashMap<>();
+                        additionalData.put("taskAreaName", area.getName());
+                        additionalData.put("taskDay", dayName);
+                        mActivity.displaySelectedScreen(R.id.add_task, additionalData);
+                    }
+                });
+                viewHolder.taskShortDescriptionContainer.setVisibility(View.GONE);
+                viewHolder.addTaskButton.setVisibility(View.VISIBLE);
+
+                for (Task t : day.getTasks()) {
+                    if(viewHolder.area.getName().equals(t.getArea().getName())){
+                        viewHolder.addTaskButton.setVisibility(View.GONE);
+                        viewHolder.taskShortDescriptionContainer.setVisibility(View.VISIBLE);
+                        viewHolder.taskName.setText(t.getName());
+
+                        if(t.isDone()){
+                            viewHolder.taskStatus.setImageResource(R.drawable.checkbox_marked_circle_outline);
+                        }
+                        else
+                            viewHolder.taskStatus.setImageResource(R.drawable.checkbox_blank_circle_outline);
+                    }
+                }
+            }
         }
 
         class DataTaskViewHolder {
+            Area area;
             ImageView addTaskButton;
             LinearLayout taskShortDescriptionContainer;
             ImageView taskStatus;

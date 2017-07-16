@@ -2,12 +2,12 @@ package com.abstractplanner.dto;
 
 
 
-public class Attribute {
+public class Area {
 
     private String name;
     private String description;
 
-    public Attribute(String name, String description) {
+    public Area(String name, String description) {
         this.name = name;
         this.description = description;
     }

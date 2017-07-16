@@ -1,7 +1,7 @@
 package com.abstractplanner;
 
+import android.content.Context;
 import android.os.Bundle;
-import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.design.widget.NavigationView;
@@ -10,25 +10,33 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.DragEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.SlidingDrawer;
 
-import com.abstractplanner.dto.Attribute;
-import com.abstractplanner.fragments.AddAttributeFragment;
+import com.abstractplanner.dto.Area;
+import com.abstractplanner.dto.Day;
+import com.abstractplanner.fragments.AddAreaFragment;
+import com.abstractplanner.fragments.AddTaskFragment;
 import com.abstractplanner.fragments.CalendarGridFragment;
 import com.abstractplanner.fragments.TodayTasksFragment;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    public List<Attribute> attributes = new ArrayList<>();
+    public List<Area> areas = new ArrayList<>();
+    public List<Day> days = new ArrayList<>();
 
     private DrawerLayout mDrawer;
     private Toolbar mLongToolbar;
+    private NavigationView mNavigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,18 +49,42 @@ public class MainActivity extends AppCompatActivity
 
         changeSupportActionBar(mLongToolbar);
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        mNavigationView = (NavigationView) findViewById(R.id.nav_view);
+        mNavigationView.setNavigationItemSelectedListener(this);
 
         if(savedInstanceState == null) {
-            displaySelectedScreen(R.id.today_tasks);
+            displaySelectedScreen(R.id.today_tasks, null);
         }
+    }
+
+    @Override
+    public void setTitle(CharSequence title) {
+        super.setTitle(title);
+
+        mLongToolbar.setTitle(title);
     }
 
     private void changeSupportActionBar(Toolbar toolbar){
         setSupportActionBar(toolbar);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, mDrawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                this, mDrawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close){
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                InputMethodManager inputMethodManager = (InputMethodManager)
+                        getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+            }
+
+            @Override
+            public void onDrawerSlide(View drawerView, float slideOffset) {
+                super.onDrawerSlide(drawerView, slideOffset);
+                InputMethodManager inputMethodManager = (InputMethodManager)
+                        getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+
+            }
+        };
         mDrawer.setDrawerListener(toggle);
         toggle.syncState();
     }
@@ -89,7 +121,7 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    public void displaySelectedScreen(int id){
+    public void displaySelectedScreen(int id, Map<String, Object> additionalData){
         Fragment fragment = null;
 
         switch (id){
@@ -99,10 +131,23 @@ public class MainActivity extends AppCompatActivity
             case R.id.calendar_grid:
                 fragment = new CalendarGridFragment();
                 break;
-            case R.id.add_attribute:
-                fragment = new AddAttributeFragment();
+            case R.id.add_area:
+                fragment = new AddAreaFragment();
+                break;
+            case R.id.add_task:
+                fragment = new AddTaskFragment();
+                if(additionalData != null){
+                    if(additionalData.containsKey("taskDay") && additionalData.containsKey("taskAreaName")) {
+                        String day = (String) additionalData.get("taskDay");
+                        String areaName = (String) additionalData.get("taskAreaName");
+
+                        ((AddTaskFragment)fragment).setPredefinedParameters(areaName, day);
+                    }
+                }
                 break;
         }
+
+        mNavigationView.getMenu().findItem(id).setChecked(true);
 
         if(fragment != null){
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -130,7 +175,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
-        displaySelectedScreen(item.getItemId());
+        displaySelectedScreen(item.getItemId(), null);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
