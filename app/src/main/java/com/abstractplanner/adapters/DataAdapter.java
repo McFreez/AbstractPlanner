@@ -17,6 +17,8 @@ import com.abstractplanner.dto.Day;
 import com.abstractplanner.dto.Task;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,13 +107,14 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
             for(View v : taskContainers){
                 DataTaskViewHolder viewHolder = (DataTaskViewHolder) v.getTag();
                 final Area area = viewHolder.area;
-                final String dayName = day.getDate();
+                final Calendar calendarDate = new GregorianCalendar(
+                        day.getDate().get(Calendar.YEAR), day.getDate().get(Calendar.MONTH), day.getDate().get(Calendar.DAY_OF_MONTH));;
                 viewHolder.addTaskButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         Map<String, Object> additionalData = new HashMap<>();
                         additionalData.put("taskAreaName", area.getName());
-                        additionalData.put("taskDay", dayName);
+                        additionalData.put("taskDay", calendarDate);
                         mActivity.displaySelectedScreen(R.id.add_task, additionalData);
                     }
                 });

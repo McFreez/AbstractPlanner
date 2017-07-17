@@ -11,6 +11,8 @@ import android.widget.TextView;
 import com.abstractplanner.R;
 import com.abstractplanner.dto.Day;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 
@@ -57,8 +59,14 @@ public class DaysAdapter extends RecyclerView.Adapter<DaysAdapter.DaysViewHolder
             dayTitle = (TextView) itemView.findViewById(R.id.tv_day);
         }
 
-        void bind(String title){
-            dayTitle.setText(title);
+        void bind(Calendar date){
+            Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
+            Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
+
+            if(date.after(previousYear) && date.before(nextYear))
+                dayTitle.setText(String.format("%1$tb %1$te", date));
+            else
+                dayTitle.setText(String.format("%1$tb %1$te, %1$tY", date));
         }
     }
 }

@@ -9,6 +9,8 @@
         android:id="@+id/tv_day"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         android:gravity="center"
         tools:text="Day number"/>
 

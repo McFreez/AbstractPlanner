@@ -10,23 +10,37 @@
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:focusableInTouchMode="true">
 
         <TextView
             android:id="@+id/textView3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
             android:layout_marginTop="32dp"
             android:text="Input task details"
-            android:textAppearance="@android:style/TextAppearance.DeviceDefault.Large"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginLeft="8dp"
+            android:textAppearance="@android:style/TextAppearance.DeviceDefault.SearchResult.Title"
+            android:textSize="24sp"
+            app:layout_constraintHorizontal_bias="0.502"
             app:layout_constraintLeft_toLeftOf="parent"
-            android:layout_marginRight="8dp"
             app:layout_constraintRight_toRightOf="parent"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            app:layout_constraintHorizontal_bias="0.502" />
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="28dp"
+            android:layout_marginTop="24dp"
+            android:text="Area"
+            android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView3" />
 
         <Spinner
             android:id="@+id/spinner_select_area"
@@ -36,21 +50,24 @@
             app:layout_constraintLeft_toLeftOf="parent"
             android:layout_marginRight="24dp"
             app:layout_constraintRight_toRightOf="parent"
-            android:layout_marginTop="32dp"
-            app:layout_constraintTop_toBottomOf="@+id/textView3" />
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            app:layout_constraintHorizontal_bias="0.0"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/textView4" />
 
         <TextView
             android:id="@+id/tv_areas_error"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="28dp"
-            android:layout_marginTop="0dp"
             android:text="You need to create an area first"
             android:textColor="@android:color/holo_red_dark"
             android:textSize="12sp"
             android:visibility="invisible"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/spinner_select_area" />
+            app:layout_constraintTop_toBottomOf="@+id/spinner_select_area"
+            android:layout_marginStart="28dp" />
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/et_task_name_layout"
@@ -69,7 +86,8 @@
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:hint="Name"
-                android:inputType="textPersonName" />
+                android:inputType="textPersonName"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium.Inverse" />
 
         </android.support.design.widget.TextInputLayout>
 
@@ -90,40 +108,55 @@
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:hint="Description"
-                android:inputType="textPersonName"/>
+                android:inputType="textPersonName"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium.Inverse" />
 
         </android.support.design.widget.TextInputLayout>
 
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/et_task_date_layout"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:id="@+id/task_date_layout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="24dp"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="8dp"
+            android:clickable="true"
+            android:background="?android:attr/selectableItemBackground"
+            android:orientation="vertical"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/et_task_description_layout">
 
-            <android.support.design.widget.TextInputEditText
-                android:id="@+id/et_task_date"
-                android:layout_width="match_parent"
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:ems="10"
-                android:hint="Date"
-                android:inputType="textPersonName"/>
+                android:layout_marginBottom="8dp"
+                android:layout_marginStart="30dp"
+                android:layout_marginTop="16dp"
+                android:text="Choose date"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.SearchResult.Title"
+                android:textSize="18sp" />
 
-        </android.support.design.widget.TextInputLayout>
+            <TextView
+                android:id="@+id/task_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:layout_marginStart="30dp"
+                tools:text="JAN 19, 2017"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.SearchResult.Subtitle"
+                android:textSize="14sp" />
+
+        </LinearLayout>
 
         <CheckBox
             android:id="@+id/checkBox_task_done"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="24dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="8dp"
             android:text="Task is done"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/et_task_date_layout" />
+            app:layout_constraintTop_toBottomOf="@+id/task_date_layout"
+            android:layout_marginStart="24dp" />
 
         <Button
             android:id="@+id/button_add_task"

@@ -1,10 +1,13 @@
 package com.abstractplanner.fragments;
 
+import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
+import android.text.format.DateUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +15,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.DatePicker;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -22,11 +27,14 @@ import com.abstractplanner.dto.Day;
 import com.abstractplanner.dto.Task;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import static android.content.Context.INPUT_METHOD_SERVICE;
 
 public class AddTaskFragment extends Fragment {
+
+    private static final String LOG_TAG = "AddTaskFragment";
 
     private Spinner mSpinnerSelectArea;
     private TextView mSpinnerError;
@@ -34,12 +42,12 @@ public class AddTaskFragment extends Fragment {
     private TextInputEditText mTaskNameEditText;
     private TextInputLayout mTaskDescriptionLayout;
     private TextInputEditText mTaskDescriptionEditText;
-    private TextInputLayout mTaskDateLayout;
-    private TextInputEditText mTaskDateEditText;
+    private LinearLayout mTaskDateLayout;
+    private TextView mTaskDateTextView;
+    private Calendar mTaskDate;
     private CheckBox mTaskDoneCheckBox;
     private Button mAddTaskButton;
 
-    private String predefinedDay;
     private String predefinedAreaName;
 
     @Nullable
@@ -55,8 +63,8 @@ public class AddTaskFragment extends Fragment {
         mTaskNameEditText = (TextInputEditText) view.findViewById(R.id.et_task_name);
         mTaskDescriptionLayout = (TextInputLayout) view.findViewById(R.id.et_task_description_layout);
         mTaskDescriptionEditText = (TextInputEditText) view.findViewById(R.id.et_task_description);
-        mTaskDateLayout = (TextInputLayout) view.findViewById(R.id.et_task_date_layout);
-        mTaskDateEditText = (TextInputEditText) view.findViewById(R.id.et_task_date);
+        mTaskDateLayout = (LinearLayout) view.findViewById(R.id.task_date_layout);
+        mTaskDateTextView = (TextView) view.findViewById(R.id.task_date);
         mTaskDoneCheckBox = (CheckBox) view.findViewById(R.id.checkBox_task_done);
         mAddTaskButton = (Button) view.findViewById(R.id.button_add_task);
 
@@ -73,10 +81,26 @@ public class AddTaskFragment extends Fragment {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mSpinnerSelectArea.setAdapter(adapter);
 
-        if(predefinedDay != null && predefinedAreaName != null){
-            mTaskDateEditText.setText(predefinedDay);
+        if(mTaskDate == null){
+            mTaskDate = Calendar.getInstance();
+        }
+
+        if(predefinedAreaName != null){
             mSpinnerSelectArea.setSelection(spinnerArray.indexOf(predefinedAreaName));
         }
+
+        setDateString();
+
+        if(areas.size() == 0) {
+            mSpinnerError.setVisibility(View.VISIBLE);
+        }
+
+        mTaskDateLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setDate(view);
+            }
+        });
 
         mAddTaskButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -118,13 +142,13 @@ public class AddTaskFragment extends Fragment {
                     mTaskDescriptionLayout.setErrorEnabled(false);
                 }
 
-                if(mTaskDateEditText.getText().length() <= 0){
+/*                if(mTaskDateEditText.getText().length() <= 0){
                     mTaskDateLayout.setErrorEnabled(true);
                     mTaskDateLayout.setError("You need to enter a date");
                     error = true;
                 } else{
                     mTaskDateLayout.setErrorEnabled(false);
-                }
+                }*/
 
                 if(error)
                     return;
@@ -135,8 +159,13 @@ public class AddTaskFragment extends Fragment {
 
                 List<Day> days = ((MainActivity) getActivity()).days;
 
+                mTaskDate.set(Calendar.HOUR_OF_DAY, 0);
+                mTaskDate.set(Calendar.MINUTE, 0);
+                mTaskDate.set(Calendar.SECOND, 0);
+                mTaskDate.set(Calendar.MILLISECOND, 0);
+
                 for(int i = 0; i < days.size(); i++){
-                    if(days.get(i).getDate().equals(mTaskDateEditText.getText().toString())){
+                    if(days.get(i).getDate().compareTo(mTaskDate) == 0){
                         days.get(i).addTask(task);
                     }
                 }
@@ -165,9 +194,31 @@ public class AddTaskFragment extends Fragment {
         super.onStop();
     }
 
-    public void setPredefinedParameters(String areaName, String day){
+    DatePickerDialog.OnDateSetListener d = new DatePickerDialog.OnDateSetListener() {
+        public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+            mTaskDate.set(Calendar.YEAR, year);
+            mTaskDate.set(Calendar.MONTH, monthOfYear);
+            mTaskDate.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+            setDateString();
+        }
+    };
+
+    // отображаем диалоговое окно для выбора даты
+    private void setDate(View v) {
+        new DatePickerDialog(getContext(), d,
+                mTaskDate.get(Calendar.YEAR),
+                mTaskDate.get(Calendar.MONTH),
+                mTaskDate.get(Calendar.DAY_OF_MONTH))
+                .show();
+    }
+
+    private void setDateString(){
+        mTaskDateTextView.setText(DateUtils.formatDateTime(getContext(), mTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR));
+    }
+
+    public void setPredefinedParameters(String areaName, Calendar date){
         predefinedAreaName = areaName;
-        predefinedDay = day;
+        mTaskDate = date;
     }
 
 }

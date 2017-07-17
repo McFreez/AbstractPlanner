@@ -7,20 +7,20 @@ import java.util.List;
 public class Day {
 
     // temporary
-    private String date;
+    private Calendar date;
 
     private List<Task> tasks;
 
-    public Day(String date) {
+    public Day(Calendar date) {
         this.date = date;
         tasks = new ArrayList<>();
     }
 
-    public String getDate() {
+    public Calendar getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(Calendar date) {
         this.date = date;
     }
 

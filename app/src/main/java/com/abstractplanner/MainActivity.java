@@ -25,6 +25,7 @@ import com.abstractplanner.fragments.CalendarGridFragment;
 import com.abstractplanner.fragments.TodayTasksFragment;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
@@ -138,10 +139,10 @@ public class MainActivity extends AppCompatActivity
                 fragment = new AddTaskFragment();
                 if(additionalData != null){
                     if(additionalData.containsKey("taskDay") && additionalData.containsKey("taskAreaName")) {
-                        String day = (String) additionalData.get("taskDay");
+                        Calendar date = (Calendar) additionalData.get("taskDay");
                         String areaName = (String) additionalData.get("taskAreaName");
 
-                        ((AddTaskFragment)fragment).setPredefinedParameters(areaName, day);
+                        ((AddTaskFragment)fragment).setPredefinedParameters(areaName, date);
                     }
                 }
                 break;
