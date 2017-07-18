@@ -5,6 +5,8 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 
+import com.abstractplanner.adapters.DaysAdapter;
+
 public class DaysRecyclerView extends RecyclerView {
 
     private boolean followedScrolling = false;
@@ -30,6 +32,14 @@ public class DaysRecyclerView extends RecyclerView {
     public void followedScrollTo(int dx, int dy){
         followedScrolling = true;
         scrollBy(dx, dy);
+    }
+
+    public void scrollToToday(){
+        dataView.scrollToToday();
+    }
+
+    public DaysAdapter getDaysAdapter(){
+        return (DaysAdapter) getAdapter();
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.abstractplanner.adapters;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,7 @@ import android.widget.TextView;
 
 import com.abstractplanner.R;
 import com.abstractplanner.dto.Day;
+import com.abstractplanner.table.DaysRecyclerView;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -21,6 +23,8 @@ public class DaysAdapter extends RecyclerView.Adapter<DaysAdapter.DaysViewHolder
     private static final String TAG = DaysAdapter.class.getSimpleName();
 
     private List<Day> mDays;
+    private Context mContext;
+    private DaysRecyclerView mRecyclerView;
 
     public DaysAdapter(List<Day> days){
         mDays = days;
@@ -28,9 +32,9 @@ public class DaysAdapter extends RecyclerView.Adapter<DaysAdapter.DaysViewHolder
 
     @Override
     public DaysViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        Context context = parent.getContext();
+        mContext = parent.getContext();
         int layoutId = R.layout.days_item;
-        LayoutInflater inflater = LayoutInflater.from(context);
+        LayoutInflater inflater = LayoutInflater.from(mContext);
         boolean shouldAttachToParentImmediately = false;
 
         View view = inflater.inflate(layoutId, parent, shouldAttachToParentImmediately);
@@ -42,6 +46,19 @@ public class DaysAdapter extends RecyclerView.Adapter<DaysAdapter.DaysViewHolder
     @Override
     public void onBindViewHolder(DaysViewHolder holder, int position) {
         holder.bind(mDays.get(position).getDate());
+        holder.dayTitle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mRecyclerView.scrollToToday();
+            }
+        });
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+
+        mRecyclerView = (DaysRecyclerView) recyclerView;
     }
 
     @Override
@@ -64,9 +81,9 @@ public class DaysAdapter extends RecyclerView.Adapter<DaysAdapter.DaysViewHolder
             Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
 
             if(date.after(previousYear) && date.before(nextYear))
-                dayTitle.setText(String.format("%1$tb %1$te", date));
+                dayTitle.setText(DateUtils.formatDateTime(mContext, date.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE));
             else
-                dayTitle.setText(String.format("%1$tb %1$te, %1$tY", date));
+                dayTitle.setText(DateUtils.formatDateTime(mContext, date.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR));
         }
     }
 }

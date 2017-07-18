@@ -11,13 +11,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.EditText;
 
 import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
 import com.abstractplanner.dto.Area;
-
-import org.w3c.dom.Text;
 
 import static android.content.Context.INPUT_METHOD_SERVICE;
 
@@ -70,7 +67,6 @@ public class AddAreaFragment extends Fragment {
 
             }
         });
-
 
         return view;
     }
