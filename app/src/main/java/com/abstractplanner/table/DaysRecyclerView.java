@@ -10,6 +10,7 @@ import com.abstractplanner.adapters.DaysAdapter;
 public class DaysRecyclerView extends RecyclerView {
 
     private boolean followedScrolling = false;
+    private boolean followedScrollingToPosition = false;
 
     private DataRecyclerView dataView;
 
@@ -34,8 +35,9 @@ public class DaysRecyclerView extends RecyclerView {
         scrollBy(dx, dy);
     }
 
-    public void scrollToToday(){
-        dataView.scrollToToday();
+    public void followedScrollToPosition(int position){
+        followedScrollingToPosition = true;
+        scrollToPosition(position);
     }
 
     public DaysAdapter getDaysAdapter(){
@@ -46,10 +48,23 @@ public class DaysRecyclerView extends RecyclerView {
     public void onScrolled(int dx, int dy) {
         super.onScrolled(dx, dy);
 
+        if(followedScrollingToPosition)
+        {
+            followedScrollingToPosition = false;
+            return;
+        }
+
         if(dataView != null && !followedScrolling)
             dataView.followedScrollTo(dx, dy);
 
         followedScrolling = false;
+    }
 
+    public void smoothScrollToToday(){
+        dataView.smoothScrollToToday();
+    }
+
+    public void scrollToToday(){
+        dataView.scrollToToday();
     }
 }

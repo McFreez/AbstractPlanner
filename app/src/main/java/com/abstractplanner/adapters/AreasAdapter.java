@@ -45,20 +45,6 @@ public class AreasAdapter {
         }
     }
 
-/*    public void addArea(Area area){
-        LayoutInflater inflater = LayoutInflater.from(mContext);
-        View view = inflater.inflate(R.layout.areas_item, null, false);
-
-        AreasViewHolder viewHolder = new AreasViewHolder();
-        viewHolder.areaTitle = (TextView) view.findViewById(R.id.tv_attribute);
-        viewHolder.areaTitle.setText(area.getName());
-        view.setTag(viewHolder);
-
-        mAreas.add(area);
-        mAreasContainer.addView(view);
-        mAreasViews.add(view);
-    }*/
-
     static class AreasViewHolder {
         public TextView areaTitle;
     }

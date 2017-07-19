@@ -2,6 +2,7 @@ package com.abstractplanner.adapters;
 
 
 import android.content.Context;
+import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
@@ -49,7 +50,7 @@ public class DaysAdapter extends RecyclerView.Adapter<DaysAdapter.DaysViewHolder
         holder.dayTitle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mRecyclerView.scrollToToday();
+                mRecyclerView.smoothScrollToToday();
             }
         });
     }
@@ -79,6 +80,18 @@ public class DaysAdapter extends RecyclerView.Adapter<DaysAdapter.DaysViewHolder
         void bind(Calendar date){
             Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
             Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
+
+            Calendar today = Calendar.getInstance();
+            today.set(Calendar.HOUR_OF_DAY, 0);
+            today.set(Calendar.MINUTE, 0);
+            today.set(Calendar.SECOND, 0);
+            today.set(Calendar.MILLISECOND, 0);
+
+            if(date.compareTo(today) == 0){
+                dayTitle.setBackgroundColor(Color.RED);
+            }
+            else
+                dayTitle.setBackgroundColor(mContext.getResources().getColor(android.R.color.transparent));
 
             if(date.after(previousYear) && date.before(nextYear))
                 dayTitle.setText(DateUtils.formatDateTime(mContext, date.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE));

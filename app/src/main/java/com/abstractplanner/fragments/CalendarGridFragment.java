@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,8 +26,6 @@ import com.abstractplanner.table.DataVerticalScrollView;
 import com.abstractplanner.table.DaysRecyclerView;
 import com.abstractplanner.table.EndlessRecyclerViewScrollListener;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 public class CalendarGridFragment extends Fragment{
@@ -39,11 +36,15 @@ public class CalendarGridFragment extends Fragment{
     private static int AREAS_COUNT;
     public static final int STARTING_DAYS_COUNT = 60;
     public static final int UPLOAD_DAYS_ON_SCROLL_COUNT = 30;
+    public static final int TODAY_INITIAL_POSITION = 29;
 
     private AreasAdapter areasAdapter;
     private DaysAdapter daysAdapter;
     private DataAdapter dataAdapter;
 
+/*    private LinearLayout gridUpLayout;
+    private LinearLayout areasAndDataContainer;
+    private LinearLayout progressBarContainer;*/
     private AreasScrollView areasScrollView;
     private LinearLayout areasContainer;
     private DataRecyclerView dataRecyclerView;
@@ -63,6 +64,13 @@ public class CalendarGridFragment extends Fragment{
 
         mShortToolbar = (Toolbar) view.findViewById(R.id.toolbar_short);
 
+/*        gridUpLayout = (LinearLayout) view.findViewById(R.id.grid_up_layout) ;
+        gridUpLayout.setVisibility(View.GONE);
+        areasAndDataContainer = (LinearLayout) view.findViewById(R.id.areas_and_data_container);
+        areasAndDataContainer.setVisibility(View.GONE);
+        progressBarContainer = (LinearLayout) view.findViewById(R.id.progress_bar_container);
+        progressBarContainer.setVisibility(View.VISIBLE);*/
+
         layoutManager_data = new CenterLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         final LinearLayoutManager layoutManager_days = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
 
@@ -70,9 +78,11 @@ public class CalendarGridFragment extends Fragment{
 
         dataRecyclerView = (DataRecyclerView) view.findViewById(R.id.rv_data);
         dataRecyclerView.setLayoutManager(layoutManager_data);
+        dataRecyclerView.setHasFixedSize(true);
 
         daysRecyclerView = (DaysRecyclerView) view.findViewById(R.id.rv_days);
         daysRecyclerView.setLayoutManager(layoutManager_days);
+        daysRecyclerView.setHasFixedSize(true);
 
         dataVerticalScrollView = (DataVerticalScrollView) view.findViewById(R.id.data_vertical_scroll);
 
@@ -116,53 +126,28 @@ public class CalendarGridFragment extends Fragment{
 
         dataAdapter = new DataAdapter(days, areas, (MainActivity) getActivity());
         dataRecyclerView.setAdapter(dataAdapter);
+
         if(days.size() == 0) {
             dataAdapter.loadInitialDaysData(daysAdapter);
-            /*for (int i = 0; i < STARTING_DAYS_COUNT; i++) {
-                Calendar calendar = Calendar.getInstance();
-                calendar.set(Calendar.HOUR_OF_DAY, 0);
-                calendar.set(Calendar.MINUTE, 0);
-                calendar.set(Calendar.SECOND, 0);
-                calendar.set(Calendar.MILLISECOND, 0);
-
-                calendar.add(Calendar.DATE, i - 29);
-
-                Day d = new Day(calendar);
-
-                days.add(d);
-            }*/
         }
+
         dataRecyclerViewScrollListener = new EndlessRecyclerViewScrollListener(layoutManager_data) {
             @Override
             public void onScrollForwardLoadMore(final EndlessRecyclerViewScrollListener scrollListener) {
-/*
-                new AsyncTask<Void, Void, Void>(){
 
-                        @Override
-                        protected Void doInBackground(Void... voids) {*/
-                            dataAdapter.loadNextDaysData(daysAdapter, scrollListener, UPLOAD_DAYS_ON_SCROLL_COUNT);
+                dataAdapter.loadNextDaysData(daysAdapter, scrollListener, UPLOAD_DAYS_ON_SCROLL_COUNT);
 
-
-/*                        return null;
-                    }
-                }.execute();*/
             }
 
             @Override
             public void onScrollBackwardLoadMore(final EndlessRecyclerViewScrollListener scrollListener) {
-/*                new AsyncTask<Void, Void, Void>(){
 
-                    @Override
-                    protected Void doInBackground(Void... voids) {*/
-                        dataAdapter.loadPreviousDaysData(daysAdapter, scrollListener, UPLOAD_DAYS_ON_SCROLL_COUNT);
-/*
-                        return null;
-                    }
-                }.execute();*/
+                dataAdapter.loadPreviousDaysData(daysAdapter, scrollListener, UPLOAD_DAYS_ON_SCROLL_COUNT);
+
             }
         };
         dataRecyclerView.addOnScrollListener(dataRecyclerViewScrollListener);
-        dataRecyclerViewScrollListener.scrollToToday();
+        dataRecyclerView.scrollToToday();
 
         buttonAddArea = (ImageView) view.findViewById(R.id.button_add_area);
         buttonAddArea.setOnClickListener(new View.OnClickListener() {
@@ -173,108 +158,6 @@ public class CalendarGridFragment extends Fragment{
         });
 
         return view;
-    }
-
-    private void loadNextDaysData(RecyclerView view){
-        List<Day> days = ((MainActivity)getActivity()).days;
-        Calendar lastDate = days.get(days.size() - 1).getDate();
-
-        if(days.size() > STARTING_DAYS_COUNT) {
-            for (int i = 0; i < UPLOAD_DAYS_ON_SCROLL_COUNT; i++) {
-                days.remove(0);
-            }
-
-            view.post(new Runnable() {
-                @Override
-                public void run() {
-                    dataAdapter.notifyItemRangeRemoved(0, UPLOAD_DAYS_ON_SCROLL_COUNT);
-                    daysAdapter.notifyItemRangeRemoved(0, UPLOAD_DAYS_ON_SCROLL_COUNT);
-                }
-            });
-
-        }
-
-        final int finalCurSize = dataAdapter.getItemCount();
-
-        for(int i = 0; i < UPLOAD_DAYS_ON_SCROLL_COUNT; i++){
-            Calendar newDate = new GregorianCalendar(
-                    lastDate.get(Calendar.YEAR), lastDate.get(Calendar.MONTH), lastDate.get(Calendar.DAY_OF_MONTH));
-            newDate.set(Calendar.HOUR_OF_DAY, 0);
-            newDate.set(Calendar.MINUTE, 0);
-            newDate.set(Calendar.SECOND, 0);
-            newDate.set(Calendar.MILLISECOND, 0);
-
-
-            newDate.add(Calendar.DATE, i + 1);
-
-            Day d = new Day(newDate);
-
-            days.add(d);
-        }
-
-
-        final int daysSize = days.size();
-        view.post(new Runnable() {
-            @Override
-            public void run() {
-                dataAdapter.notifyItemRangeInserted(finalCurSize, daysSize - 1);
-                daysAdapter.notifyItemRangeInserted(finalCurSize, daysSize - 1);
-            }
-        });
-
-        dataRecyclerViewScrollListener.resetState();
-    }
-
-    private void loadPreviousDaysData(RecyclerView view){
-        List<Day> days = ((MainActivity)getActivity()).days;
-        Calendar lastDate = days.get(0).getDate();
-
-
-        if(days.size() > STARTING_DAYS_COUNT) {
-            int beginIndex = days.size() - 1;
-            for (int i = beginIndex; i >= beginIndex - UPLOAD_DAYS_ON_SCROLL_COUNT; i--) {
-                days.remove(i);
-            }
-
-            final int sizeAfterRemoving = days.size();
-
-            view.post(new Runnable() {
-                @Override
-                public void run() {
-                    dataAdapter.notifyItemRangeRemoved(sizeAfterRemoving, UPLOAD_DAYS_ON_SCROLL_COUNT);
-                    daysAdapter.notifyItemRangeRemoved(sizeAfterRemoving, UPLOAD_DAYS_ON_SCROLL_COUNT);
-                }
-            });
-
-        }
-
-        //dataRecyclerViewScrollListener.resetState();
-
-        for(int i = 0; i < UPLOAD_DAYS_ON_SCROLL_COUNT; i++){
-            Calendar newDate = new GregorianCalendar(
-                    lastDate.get(Calendar.YEAR), lastDate.get(Calendar.MONTH), lastDate.get(Calendar.DAY_OF_MONTH));
-            newDate.set(Calendar.HOUR_OF_DAY, 0);
-            newDate.set(Calendar.MINUTE, 0);
-            newDate.set(Calendar.SECOND, 0);
-            newDate.set(Calendar.MILLISECOND, 0);
-
-
-            newDate.add(Calendar.DATE, - 1 - i);
-
-            Day d = new Day(newDate);
-            //days.add
-            days.add(0, d);
-        }
-
-        view.post(new Runnable() {
-            @Override
-            public void run() {
-                dataAdapter.notifyItemRangeInserted(0, UPLOAD_DAYS_ON_SCROLL_COUNT);
-                daysAdapter.notifyItemRangeInserted(0, UPLOAD_DAYS_ON_SCROLL_COUNT);
-            }
-        });
-
-        dataRecyclerViewScrollListener.resetState();
     }
 
     @Override

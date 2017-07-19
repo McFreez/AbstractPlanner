@@ -33,7 +33,7 @@ public abstract class EndlessRecyclerViewScrollListener extends RecyclerView.OnS
         int totalItemCount = mLayoutManager.getItemCount();
 
         if(scrollToTodayRequested) {
-            ((DataRecyclerView) view).scrollToToday();
+            ((DataRecyclerView) view).smoothScrollToToday();
             scrollToTodayRequested = false;
         }
 
