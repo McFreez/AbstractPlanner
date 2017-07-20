@@ -1,6 +1,11 @@
 package com.abstractplanner.adapters;
 
+import android.content.DialogInterface;
 import android.graphics.Color;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
@@ -19,6 +24,7 @@ import com.abstractplanner.dto.Area;
 import com.abstractplanner.dto.Day;
 import com.abstractplanner.dto.Task;
 import com.abstractplanner.fragments.CalendarGridFragment;
+import com.abstractplanner.fragments.EditTaskDialogFragment;
 import com.abstractplanner.table.CenterLayoutManager;
 import com.abstractplanner.table.DataRecyclerView;
 import com.abstractplanner.table.EndlessRecyclerViewScrollListener;
@@ -211,6 +217,64 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
         daysAdapter.notifyDataSetChanged();
     }
 
+    public void saveEditedTask(Task taskBeforeEdit, Calendar taskDateBeforeEdit, Task taskAfterEdit, Calendar taskDateAfterEdit){
+
+        Day previousDay = null;
+
+        for(int i = 0; i < getItemCount(); i++){
+            if(mDays.get(i).getDate().compareTo(taskDateBeforeEdit) == 0) {
+                previousDay = mDays.get(i);
+                break;
+            }
+        }
+
+        if(previousDay == null)
+            return;
+
+        int removeIndex = -1;
+
+        for(int i = 0; i < previousDay.getTasks().size(); i++){
+            if (previousDay.getTasks().get(i).equals(taskBeforeEdit)){
+                if(taskDateBeforeEdit.compareTo(taskDateAfterEdit) == 0){
+                    previousDay.getTasks().get(i).setArea(taskAfterEdit.getArea());
+                    previousDay.getTasks().get(i).setName(taskAfterEdit.getName());
+                    previousDay.getTasks().get(i).setDescription(taskAfterEdit.getDescription());
+                    previousDay.getTasks().get(i).setDone(taskAfterEdit.isDone());
+
+                    notifyDataSetChanged();
+                    return;
+                } else {
+                    removeIndex = i;
+                    break;
+                }
+            }
+        }
+
+        if(removeIndex >= 0) {
+            previousDay.getTasks().remove(removeIndex);
+        }
+        else
+            return;
+
+        Day newDay = null;
+
+        for(int i = 0; i < getItemCount(); i++){
+            if(mDays.get(i).getDate().compareTo(taskDateAfterEdit) == 0) {
+                newDay = mDays.get(i);
+                break;
+            }
+        }
+
+        if(newDay == null)
+            return;
+
+        newDay.addTask(taskAfterEdit);
+
+        notifyDataSetChanged();
+
+
+    }
+
     class DataViewHolder extends RecyclerView.ViewHolder{
 
         LinearLayout container;
@@ -278,6 +342,81 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
                         }
                         else
                             viewHolder.taskStatus.setImageResource(R.drawable.checkbox_blank_circle_outline);
+
+                        final Task task = t;
+                        final DataTaskViewHolder dataTaskViewHolder = viewHolder;
+
+                        viewHolder.taskShortDescriptionContainer.setClickable(true);
+                        viewHolder.taskShortDescriptionContainer.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                Snackbar snackbar = Snackbar.make(view, task.getName(), Snackbar.LENGTH_SHORT);
+                                if(task.isDone()) {
+                                    snackbar.setAction("MARK AS UNDONE", new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            task.setDone(false);
+                                            dataTaskViewHolder.taskStatus.setImageResource(R.drawable.checkbox_blank_circle_outline);
+                                        }
+                                    });
+                                    snackbar.setActionTextColor(Color.RED);
+                                }
+                                else {
+                                    snackbar.setAction("MARK AS DONE", new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            task.setDone(true);
+                                            dataTaskViewHolder.taskStatus.setImageResource(R.drawable.checkbox_marked_circle_outline);
+                                        }
+                                    });
+                                    snackbar.setActionTextColor(Color.GREEN);
+                                }
+
+                                snackbar.show();
+                            }
+                        });
+                        viewHolder.taskShortDescriptionContainer.setOnLongClickListener(new View.OnLongClickListener() {
+                            @Override
+                            public boolean onLongClick(View view) {
+
+                                String status;
+                                if(task.isDone())
+                                    status = "Status: Done";
+                                else
+                                    status = "Status: Undone";
+                                AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+                                builder.setMessage(task.getDescription() + "\n\n" + status)
+                                        .setTitle(task.getName())
+                                        .setNegativeButton("Edit", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                FragmentManager fragmentManager = mActivity.getSupportFragmentManager();
+                                                EditTaskDialogFragment newFragment = new EditTaskDialogFragment();
+                                                newFragment.setTask(task);
+                                                newFragment.setTaskDate(calendarDate);
+                                                newFragment.setDataAdapter(DataAdapter.this);
+                                                // The device is smaller, so show the fragment fullscreen
+                                                FragmentTransaction transaction = fragmentManager.beginTransaction();
+                                                // For a little polish, specify a transition animation
+                                                transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                                                // To make it fullscreen, use the 'content' root view as the container
+                                                // for the fragment, which is always the root view for the activity
+                                                transaction.add(android.R.id.content, newFragment)
+                                                        .addToBackStack(null).commit();
+                                            }
+                                        })
+                                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                dialogInterface.dismiss();
+                                            }
+                                        });
+
+                                builder.show();
+                                return false;
+                            }
+                        });
+
                     }
                 }
             }
