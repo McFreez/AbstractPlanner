@@ -9,14 +9,12 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.widget.Toolbar;
 import android.text.format.DateUtils;
-import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
@@ -24,7 +22,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -32,7 +29,6 @@ import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
 import com.abstractplanner.adapters.DataAdapter;
 import com.abstractplanner.dto.Area;
-import com.abstractplanner.dto.Day;
 import com.abstractplanner.dto.Task;
 
 import java.util.ArrayList;
@@ -68,9 +64,9 @@ public class EditTaskDialogFragment extends DialogFragment {
                              Bundle savedInstanceState) {
 
         // Inflate the layout to use as dialog or embedded fragment
-        View view = inflater.inflate(R.layout.fragment_dialog_add_task, container, false);
+        View view = inflater.inflate(R.layout.fragment_dialog_edit_task, container, false);
 
-        mToolbar = (Toolbar) view.findViewById(R.id.fragment_dialog_add_task_toolbar);
+        mToolbar = (Toolbar) view.findViewById(R.id.fragment_dialog_edit_task_toolbar);
         mSpinnerSelectArea = (Spinner) view.findViewById(R.id.spinner_select_area);
         mSpinnerError = (TextView) view.findViewById(R.id.tv_areas_error);
         mTaskNameLayout = (TextInputLayout) view.findViewById(R.id.et_task_name_layout);
@@ -156,15 +152,6 @@ public class EditTaskDialogFragment extends DialogFragment {
         getActivity().getMenuInflater().inflate(R.menu.add_task_dialog_menu, menu);
     }
 
-    DatePickerDialog.OnDateSetListener d = new DatePickerDialog.OnDateSetListener() {
-        public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-            mTaskDate.set(Calendar.YEAR, year);
-            mTaskDate.set(Calendar.MONTH, monthOfYear);
-            mTaskDate.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-            setDateString();
-        }
-    };
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -175,7 +162,7 @@ public class EditTaskDialogFragment extends DialogFragment {
                 InputMethodManager inputMethodManager = (InputMethodManager)
                         getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                 inputMethodManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
-                saveNewTask();
+                saveEditedTask();
             }
             return true;
         } else if (id == android.R.id.home) {
@@ -190,7 +177,16 @@ public class EditTaskDialogFragment extends DialogFragment {
         return super.onOptionsItemSelected(item);
     }
 
-    private void saveNewTask(){
+    DatePickerDialog.OnDateSetListener d = new DatePickerDialog.OnDateSetListener() {
+        public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+            mTaskDate.set(Calendar.YEAR, year);
+            mTaskDate.set(Calendar.MONTH, monthOfYear);
+            mTaskDate.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+            setDateString();
+        }
+    };
+
+    private void saveEditedTask(){
 
         boolean error = false;
 

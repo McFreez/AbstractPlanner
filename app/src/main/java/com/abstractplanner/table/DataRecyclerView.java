@@ -122,6 +122,17 @@ public class DataRecyclerView extends RecyclerView {
         }
     }
 
+    public void refreshView(){
+        DataAdapter adapter = (DataAdapter) getAdapter();
+        CenterLayoutManager layoutManager = (CenterLayoutManager) getLayoutManager();
+
+        this.setAdapter(null);
+        this.setLayoutManager(null);
+        this.setAdapter(adapter);
+        this.setLayoutManager(layoutManager);
+        adapter.notifyDataSetChanged();
+    }
+
     public void scrollToToday(){
         DataAdapter adapter = (DataAdapter) getAdapter();
 

@@ -115,8 +115,6 @@ public class CalendarGridFragment extends Fragment{
             areas.add(new Area("Area 16", "fsdgdsfgsd"));*/
         }
 
-        areasAdapter = new AreasAdapter(getContext(), areas, areasContainer);
-
         AREAS_COUNT = areas.size();
 
         List<Day> days = ((MainActivity)getActivity()).days;
@@ -130,6 +128,8 @@ public class CalendarGridFragment extends Fragment{
         if(days.size() == 0) {
             dataAdapter.loadInitialDaysData(daysAdapter);
         }
+
+        areasAdapter = new AreasAdapter((MainActivity) getActivity(), areas, areasContainer, dataAdapter);
 
         dataRecyclerViewScrollListener = new EndlessRecyclerViewScrollListener(layoutManager_data) {
             @Override
