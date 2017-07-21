@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
-    android:layout_width="100dp"
+    android:layout_width="@dimen/calendar_item_size"
     android:layout_height="match_parent">
 
     <TextView
@@ -11,7 +11,8 @@
         android:layout_height="match_parent"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
+        android:textColor="@color/textColor"
         android:gravity="center"
-        tools:text="Day number"/>
+        tools:text="Day number" />
 
 </LinearLayout>

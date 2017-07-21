@@ -4,19 +4,19 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/today_tasks"
-            android:icon="@drawable/ic_menu_camera"
+            android:icon="@drawable/ic_today_black_48dp"
             android:title="Today" />
         <item
             android:id="@+id/calendar_grid"
-            android:icon="@drawable/ic_menu_gallery"
+            android:icon="@drawable/ic_grid_on_black_48dp"
             android:title="Calendar" />
         <item
             android:id="@+id/add_area"
-            android:icon="@drawable/ic_menu_gallery"
+            android:icon="@drawable/ic_add_row_black_24dp"
             android:title="Add area" />
         <item
             android:id="@+id/add_task"
-            android:icon="@drawable/ic_menu_gallery"
+            android:icon="@drawable/ic_library_add_black_48dp"
             android:title="Add task" />
 <!--        <item
             android:id="@+id/nav_slideshow"

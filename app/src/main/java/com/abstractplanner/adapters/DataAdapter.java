@@ -300,8 +300,8 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
                 viewHolder.taskStatus = (ImageView) view.findViewById(R.id.task_status);
                 viewHolder.taskName = (TextView) view.findViewById(R.id.task_name);
 
-                viewHolder.taskShortDescriptionContainer.setBackgroundColor(Color.GREEN);
-                viewHolder.addTaskButton.setBackgroundColor(Color.GREEN);
+                viewHolder.taskShortDescriptionContainer.setBackgroundColor(Color.GRAY);
+                viewHolder.addTaskButton.setBackgroundColor(Color.GRAY);
 
 
 
@@ -317,6 +317,21 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
             for(View v : taskContainers){
                 DataTaskViewHolder viewHolder = (DataTaskViewHolder) v.getTag();
                 final Area area = viewHolder.area;
+                final Calendar today = Calendar.getInstance();
+                today.set(Calendar.HOUR_OF_DAY, 0);
+                today.set(Calendar.MINUTE, 0);
+                today.set(Calendar.SECOND, 0);
+                today.set(Calendar.MILLISECOND, 0);
+                if(today.compareTo(day.getDate()) == 0)
+                {
+                    v.setBackgroundColor(mActivity.getResources().getColor(R.color.colorAccent));
+                    viewHolder.taskShortDescriptionContainer.setBackgroundColor(mActivity.getResources().getColor(R.color.colorAccent));
+                    viewHolder.addTaskButton.setBackgroundColor(mActivity.getResources().getColor(R.color.colorAccent));
+                }else {
+                    v.setBackgroundColor(mActivity.getResources().getColor(R.color.colorPrimaryLight));
+                    viewHolder.taskShortDescriptionContainer.setBackgroundColor(Color.GRAY);
+                    viewHolder.addTaskButton.setBackgroundColor(Color.GRAY);
+                }
                 final Calendar calendarDate = new GregorianCalendar(
                         day.getDate().get(Calendar.YEAR), day.getDate().get(Calendar.MONTH), day.getDate().get(Calendar.DAY_OF_MONTH));;
                 viewHolder.addTaskButton.setOnClickListener(new View.OnClickListener() {

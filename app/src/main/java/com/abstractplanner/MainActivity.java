@@ -17,8 +17,11 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.SlidingDrawer;
 
+import com.abstractplanner.data.AbstractDataProvider;
+import com.abstractplanner.data.TasksDataProviderFragment;
 import com.abstractplanner.dto.Area;
 import com.abstractplanner.dto.Day;
+import com.abstractplanner.dto.Task;
 import com.abstractplanner.fragments.AddAreaFragment;
 import com.abstractplanner.fragments.AddTaskFragment;
 import com.abstractplanner.fragments.CalendarGridFragment;
@@ -34,6 +37,7 @@ public class MainActivity extends AppCompatActivity
 
     public List<Area> areas = new ArrayList<>();
     public List<Day> days = new ArrayList<>();
+    public List<Task> tasks = new ArrayList<>();
 
     private DrawerLayout mDrawer;
     private Toolbar mLongToolbar;
@@ -55,6 +59,14 @@ public class MainActivity extends AppCompatActivity
 
         if(savedInstanceState == null) {
             displaySelectedScreen(R.id.today_tasks, null);
+        }
+
+        bindTodayTasksFakeData();
+    }
+
+    private void bindTodayTasksFakeData(){
+        for(int i = 0; i < 20; i++){
+            tasks.add(new Task(new Area("Area " + i, "Area description " + i), "Task " + i, "Task description " + i, 0));
         }
     }
 
@@ -128,6 +140,9 @@ public class MainActivity extends AppCompatActivity
         switch (id){
             case R.id.today_tasks:
                 fragment = new TodayTasksFragment();
+                getSupportFragmentManager().beginTransaction()
+                        .add(new TasksDataProviderFragment(), "data provider")
+                        .commit();
                 break;
             case R.id.calendar_grid:
                 fragment = new CalendarGridFragment();
@@ -182,5 +197,10 @@ public class MainActivity extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
 
         return true;
+    }
+
+    public AbstractDataProvider getDataProvider() {
+        final Fragment fragment = getSupportFragmentManager().findFragmentByTag("data provider");
+        return ((TasksDataProviderFragment) fragment).getDataProvider();
     }
 }

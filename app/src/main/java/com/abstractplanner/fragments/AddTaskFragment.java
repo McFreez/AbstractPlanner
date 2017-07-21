@@ -154,7 +154,7 @@ public class AddTaskFragment extends Fragment {
                     return;
 
                 Task task = new Task(selectedArea, mTaskNameEditText.getText().toString(),
-                        mTaskDescriptionEditText.getText().toString());
+                        mTaskDescriptionEditText.getText().toString(), 0);
                 task.setDone(mTaskDoneCheckBox.isChecked());
 
                 List<Day> days = ((MainActivity) getActivity()).days;

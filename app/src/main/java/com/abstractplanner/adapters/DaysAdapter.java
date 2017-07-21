@@ -88,10 +88,10 @@ public class DaysAdapter extends RecyclerView.Adapter<DaysAdapter.DaysViewHolder
             today.set(Calendar.MILLISECOND, 0);
 
             if(date.compareTo(today) == 0){
-                dayTitle.setBackgroundColor(Color.RED);
+                dayTitle.setBackgroundColor(mContext.getResources().getColor(R.color.colorAccent));
             }
             else
-                dayTitle.setBackgroundColor(mContext.getResources().getColor(android.R.color.transparent));
+                dayTitle.setBackgroundColor(mContext.getResources().getColor(R.color.colorPrimary));
 
             if(date.after(previousYear) && date.before(nextYear))
                 dayTitle.setText(DateUtils.formatDateTime(mContext, date.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE));

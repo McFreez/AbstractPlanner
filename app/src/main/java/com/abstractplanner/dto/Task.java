@@ -6,11 +6,13 @@ public class Task {
     private String name;
     private String description;
     private boolean done = false;
+    private int viewType;
 
-    public Task(Area area, String name, String description) {
+    public Task(Area area, String name, String description, int viewType) {
         this.area = area;
         this.name = name;
         this.description = description;
+        this.viewType = viewType;
     }
 
     public Area getArea() {
@@ -43,5 +45,13 @@ public class Task {
 
     public void setDone(boolean done) {
         this.done = done;
+    }
+
+    public int getViewType() {
+        return viewType;
+    }
+
+    public void setViewType(int viewType) {
+        this.viewType = viewType;
     }
 }

@@ -7,6 +7,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -43,10 +44,17 @@ public class AreasAdapter {
         for(int i = 0; i < mAreas.size(); i++){
 
             View view = inflater.inflate(R.layout.areas_item, null, false);
+            //int width = (int) mActivity.getResources().getDimension(R.dimen.areas_column_width);
+            int height = (int) mActivity.getResources().getDimension(R.dimen.calendar_item_size);
+            //view.setLayoutParams(new LinearLayout.LayoutParams(, heightViewGroup.LayoutParams.MATCH_PARENT));
 
             AreasViewHolder viewHolder = new AreasViewHolder();
             viewHolder.areaTitle = (TextView) view.findViewById(R.id.tv_area);
             viewHolder.areaTitle.setText(mAreas.get(i).getName());
+
+
+            //viewHolder.areaTitle.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            //viewHolder.areaTitle.setBackgroundColor(mActivity.getResources().getColor(R.color.colorPrimary));
 
             final Area area = mAreas.get(i);
 

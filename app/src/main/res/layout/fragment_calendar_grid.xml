@@ -9,7 +9,7 @@
 
     <LinearLayout
         android:layout_width="0dp"
-        android:layout_height="56dp"
+        android:layout_height="?attr/actionBarSize"
         android:orientation="horizontal"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -17,8 +17,8 @@
         android:id="@+id/grid_up_layout">
 
         <LinearLayout
-            android:layout_width="56dp"
-            android:layout_height="56dp">
+            android:layout_width="?attr/actionBarSize"
+            android:layout_height="?attr/actionBarSize">
 
             <android.support.design.widget.AppBarLayout
                 android:id="@+id/app_bar_short"
@@ -39,7 +39,7 @@
 
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="56dp"
+            android:layout_height="?attr/actionBarSize"
             android:layout_weight="1"
             tools:layout_editor_absoluteX="466dp"
             tools:layout_editor_absoluteY="0dp">
@@ -72,8 +72,9 @@
         app:layout_constraintTop_toBottomOf="@+id/grid_up_layout">
 
         <LinearLayout
-            android:layout_width="56dp"
-            android:layout_height="match_parent">
+            android:layout_width="?attr/actionBarSize"
+            android:layout_height="match_parent"
+            android:background="@color/secondaryTextColor">
 
             <com.abstractplanner.table.AreasScrollView
                 android:id="@+id/areas_scroll"
@@ -124,14 +125,19 @@
                         android:overScrollMode="never"
                         android:scrollbars="vertical"/>
 
-                    <ImageView
-                        android:id="@+id/button_add_area"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
-                        android:src="@drawable/ic_add_row_green_24dp"
-                        android:background="?attr/selectableItemBackground"
-                        android:clickable="true"
-                        android:padding="8dp"/>
+                        android:background="@color/colorAccent">
+                        <ImageView
+                            android:id="@+id/button_add_area"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:src="@drawable/ic_add_row_orange_24dp"
+                            style="@style/SelectableItemBackground"
+                            android:clickable="true"
+                            android:padding="8dp"/>
+                    </LinearLayout>
 
                 </LinearLayout>
 

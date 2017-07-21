@@ -37,7 +37,7 @@
 
     <LinearLayout
         android:id="@+id/spinner_splitter"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="1dp"
         android:orientation="horizontal"
         android:background="@android:color/darker_gray"

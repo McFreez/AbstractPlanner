@@ -228,7 +228,7 @@ public class EditTaskDialogFragment extends DialogFragment {
             return;
 
         Task task = new Task(selectedArea, mTaskNameEditText.getText().toString(),
-                mTaskDescriptionEditText.getText().toString());
+                mTaskDescriptionEditText.getText().toString(), 0);
         task.setDone(mTaskDoneCheckBox.isChecked());
 
         mTaskDate.set(Calendar.HOUR_OF_DAY, 0);

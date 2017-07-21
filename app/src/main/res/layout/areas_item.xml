@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="100dp">
+    android:layout_width="@dimen/areas_column_width"
+    android:layout_height="@dimen/calendar_item_size"
+    android:orientation="vertical"
+    android:gravity="center">
 
-    <TextView
-        android:id="@+id/tv_area"
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:lines="2"
+    <TextView android:id="@+id/tv_area"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/calendar_item_size"
         android:ellipsize="end"
-        android:gravity="center_horizontal|center_vertical"
-        tools:text="Attribute"
-        android:rotation="-90"/>
+        android:gravity="center"
+        android:lines="2"
+        android:rotation="-90"
+        android:textColor="@color/textColor"
+        tools:text="Attribute" />
 
 </LinearLayout>
