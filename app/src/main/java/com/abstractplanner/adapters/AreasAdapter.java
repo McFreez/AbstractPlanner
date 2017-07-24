@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
+import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.dto.Area;
 import com.abstractplanner.fragments.EditAreaDialogFragment;
 import com.abstractplanner.fragments.EditTaskDialogFragment;
@@ -26,13 +27,16 @@ public class AreasAdapter {
     private List<Area> mAreas;
     private List<View> mAreasViews;
     private LinearLayout mAreasContainer;
-    private DataAdapter mDataAdapter;
+    private AbstractPlannerDatabaseHelper mDbHelper;
+    //private DataAdapter mDataAdapter;
 
-    public AreasAdapter(MainActivity activity, List<Area> areas, LinearLayout attributesContainer, DataAdapter dataAdapter){
+    public AreasAdapter(MainActivity activity, List<Area> areas, LinearLayout attributesContainer){
         mActivity = activity;
         mAreas = areas;
         mAreasContainer = attributesContainer;
-        mDataAdapter = dataAdapter;
+        //mDataAdapter = dataAdapter;
+
+        mDbHelper = mActivity.getDbHelper();
 
         createViews();
     }
@@ -108,10 +112,12 @@ public class AreasAdapter {
     private void removeArea(Area area){
 
         int removeIndex = -1;
+        long removeID = -1;
 
         for (int i = 0; i < mAreas.size(); i++){
             if(mAreas.get(i).equals(area)){
                 removeIndex = i;
+                removeID = mAreas.get(i).getId();
                 break;
             }
         }
@@ -120,6 +126,7 @@ public class AreasAdapter {
             return;
 
         mAreas.remove(removeIndex);
+        mDbHelper.deleteArea(removeID);
 
         mActivity.displaySelectedScreen(R.id.calendar_grid, null);
     }

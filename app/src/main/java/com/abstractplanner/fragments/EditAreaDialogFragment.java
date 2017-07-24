@@ -2,11 +2,13 @@ package com.abstractplanner.fragments;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -21,6 +23,7 @@ import android.widget.Button;
 import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
 import com.abstractplanner.adapters.AreasAdapter;
+import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.dto.Area;
 
 import static android.content.Context.INPUT_METHOD_SERVICE;
@@ -34,8 +37,9 @@ public class EditAreaDialogFragment extends DialogFragment {
     private TextInputEditText mAreaDescriptionEditText;
     private Button mAddAreaButton;
 
-    private Area mPreviousArea;
+    private Area mArea;
     private AreasAdapter mAdapter;
+    private AbstractPlannerDatabaseHelper mDbHelper;
 
     @Nullable
     @Override
@@ -51,8 +55,10 @@ public class EditAreaDialogFragment extends DialogFragment {
         mAddAreaButton = (Button) view.findViewById(R.id.button_add_area);
         mAddAreaButton.setVisibility(View.GONE);
 
-        mAreaNameEditText.setText(mPreviousArea.getName());
-        mAreaDescriptionEditText.setText(mPreviousArea.getDescription());
+        mDbHelper = ((MainActivity)getActivity()).getDbHelper();
+
+        mAreaNameEditText.setText(mArea.getName());
+        mAreaDescriptionEditText.setText(mArea.getDescription());
 
         mToolbar.setTitle("Edit task");
         mToolbar.setNavigationIcon(android.R.drawable.ic_menu_close_clear_cancel);
@@ -135,12 +141,27 @@ public class EditAreaDialogFragment extends DialogFragment {
         if(error)
             return;
 
-        Area area = new Area(mAreaNameEditText.getText().toString(),
+        Area area = new Area(mArea.getId(), mAreaNameEditText.getText().toString(),
                 mAreaDescriptionEditText.getText().toString());
 
-        mAdapter.saveEditedArea(mPreviousArea, area);
+        long id = mDbHelper.updateArea(area);
 
-        dismiss();
+        if(id < 0){
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setMessage("Name " + area.getName() + " is already in use.")
+                    .setTitle("Try another name")
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    });
+
+            builder.show();
+        } else {
+            mAdapter.saveEditedArea(mArea, area);
+            dismiss();
+        }
     }
 
     @Override
@@ -153,7 +174,7 @@ public class EditAreaDialogFragment extends DialogFragment {
     }
 
     public void setPrevoisArea(Area previousArea){
-        mPreviousArea = previousArea;
+        mArea = previousArea;
     }
 
     public void setAreasAdapter(AreasAdapter areasAdapter){

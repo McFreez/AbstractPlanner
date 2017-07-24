@@ -1,6 +1,7 @@
 package com.abstractplanner.adapters;
 
 import android.content.DialogInterface;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentManager;
@@ -20,6 +21,8 @@ import android.widget.TextView;
 
 import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
+import com.abstractplanner.data.AbstractPlannerContract.*;
+import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.dto.Area;
 import com.abstractplanner.dto.Day;
 import com.abstractplanner.dto.Task;
@@ -45,11 +48,13 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
     private List<Area> mAreas;
     private MainActivity mActivity;
     private DataRecyclerView mRecyclerView;
+    private AbstractPlannerDatabaseHelper mDbHelper;
 
     public DataAdapter(List<Day> days, List<Area> areas, MainActivity activity){
         mDays = days;
         mAreas = areas;
         mActivity = activity;
+        mDbHelper = mActivity.getDbHelper();
     }
 
     @Override
@@ -101,8 +106,8 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
     }
 
     public void loadNextDaysData(final DaysAdapter daysAdapter, EndlessRecyclerViewScrollListener scrollListener, final int addingCount){
-        List<Day> days = mActivity.days;
-        Calendar lastDate = days.get(days.size() - 1).getDate();
+        //List<Day> days = mActivity.days;
+        Calendar lastDate = mDays.get(mDays.size() - 1).getDate();
 
         final int previousSize = this.getItemCount();
 
@@ -118,10 +123,28 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
 
             Day d = new Day(newDate);
 
-            days.add(d);
+            mDays.add(d);
         }
 
-        final int daysSize = days.size();
+        Calendar startDate = new GregorianCalendar(
+                lastDate.get(Calendar.YEAR), lastDate.get(Calendar.MONTH), lastDate.get(Calendar.DAY_OF_MONTH));
+        startDate.add(Calendar.DATE, 1);
+        startDate.set(Calendar.HOUR_OF_DAY, 0);
+        startDate.set(Calendar.MINUTE, 0);
+        startDate.set(Calendar.SECOND, 0);
+        startDate.set(Calendar.MILLISECOND, 0);
+
+        Calendar endDate = new GregorianCalendar(
+                lastDate.get(Calendar.YEAR), lastDate.get(Calendar.MONTH), lastDate.get(Calendar.DAY_OF_MONTH));
+        endDate.add(Calendar.DATE, addingCount);
+        endDate.set(Calendar.HOUR_OF_DAY, 0);
+        endDate.set(Calendar.MINUTE, 0);
+        endDate.set(Calendar.SECOND, 0);
+        endDate.set(Calendar.MILLISECOND, 0);
+
+        getDaysTasks(startDate, endDate);
+
+        final int daysSize = mDays.size();
         mRecyclerView.post(new Runnable() {
             @Override
             public void run() {
@@ -130,9 +153,9 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
             }
         });
 
-        if(days.size() > CalendarGridFragment.STARTING_DAYS_COUNT) {
+        if(mDays.size() > CalendarGridFragment.STARTING_DAYS_COUNT) {
             for (int i = 0; i < addingCount; i++) {
-                days.remove(0);
+                mDays.remove(0);
             }
 
             mRecyclerView.post(new Runnable() {
@@ -150,16 +173,16 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
     }
 
     public void loadPreviousDaysData(final DaysAdapter daysAdapter, EndlessRecyclerViewScrollListener scrollListener, final int addingCount){
-        List<Day> days = mActivity.days;
-        Calendar lastDate = days.get(0).getDate();
+        //List<Day> days = mActivity.days;
+        Calendar lastDate = mDays.get(0).getDate();
 
-        if(days.size() > CalendarGridFragment.STARTING_DAYS_COUNT) {
-            int beginIndex = days.size() - 1;
+        if(mDays.size() > CalendarGridFragment.STARTING_DAYS_COUNT) {
+            int beginIndex = mDays.size() - 1;
             for (int i = beginIndex; i >= beginIndex - addingCount; i--) {
-                days.remove(i);
+                mDays.remove(i);
             }
 
-            final int sizeAfterRemoving = days.size();
+            final int sizeAfterRemoving = mDays.size();
 
             mRecyclerView.post(new Runnable() {
                 @Override
@@ -183,8 +206,26 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
             newDate.add(Calendar.DATE, - 1 - i);
 
             Day d = new Day(newDate);
-            days.add(0, d);
+            mDays.add(0, d);
         }
+
+        Calendar startDate = new GregorianCalendar(
+                lastDate.get(Calendar.YEAR), lastDate.get(Calendar.MONTH), lastDate.get(Calendar.DAY_OF_MONTH));
+        startDate.add(Calendar.DATE, - addingCount);
+        startDate.set(Calendar.HOUR_OF_DAY, 0);
+        startDate.set(Calendar.MINUTE, 0);
+        startDate.set(Calendar.SECOND, 0);
+        startDate.set(Calendar.MILLISECOND, 0);
+
+        Calendar endDate = new GregorianCalendar(
+                lastDate.get(Calendar.YEAR), lastDate.get(Calendar.MONTH), lastDate.get(Calendar.DAY_OF_MONTH));
+        endDate.add(Calendar.DATE, - 1);
+        endDate.set(Calendar.HOUR_OF_DAY, 0);
+        endDate.set(Calendar.MINUTE, 0);
+        endDate.set(Calendar.SECOND, 0);
+        endDate.set(Calendar.MILLISECOND, 0);
+
+        getDaysTasks(startDate, endDate);
 
         mRecyclerView.post(new Runnable() {
             @Override
@@ -213,16 +254,66 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
             mDays.add(d);
         }
 
+        Calendar startDate = Calendar.getInstance();
+        startDate.set(Calendar.HOUR_OF_DAY, 0);
+        startDate.set(Calendar.MINUTE, 0);
+        startDate.set(Calendar.SECOND, 0);
+        startDate.set(Calendar.MILLISECOND, 0);
+        startDate.add(Calendar.DATE, - CalendarGridFragment.TODAY_INITIAL_POSITION);
+
+        Calendar endDate = Calendar.getInstance();
+        endDate.set(Calendar.HOUR_OF_DAY, 0);
+        endDate.set(Calendar.MINUTE, 0);
+        endDate.set(Calendar.SECOND, 0);
+        endDate.set(Calendar.MILLISECOND, 0);
+        endDate.add(Calendar.DATE, CalendarGridFragment.STARTING_DAYS_COUNT - CalendarGridFragment.TODAY_INITIAL_POSITION);
+
+        getDaysTasks(startDate, endDate);
+
         this.notifyDataSetChanged();
         daysAdapter.notifyDataSetChanged();
     }
 
-    public void saveEditedTask(Task taskBeforeEdit, Calendar taskDateBeforeEdit, Task taskAfterEdit, Calendar taskDateAfterEdit){
+    private void getDaysTasks(Calendar startDate, Calendar endDate){
+        Cursor taskCursor = mDbHelper.getTasksInRange(startDate, endDate);
+
+        for(int i = 0; i < taskCursor.getCount(); i++){
+            taskCursor.moveToPosition(i);
+            long taskDateMillis = taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_DATE));
+            Calendar taskDate = Calendar.getInstance();
+            taskDate.setTimeInMillis(taskDateMillis);
+            /*Log.e(LOG_TAG, "Day " + i + " is " + DateUtils.formatDateTime(mActivity, mDays.get(i).getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
+            + " Task");*/
+            for (Day d : mDays){
+                if(d.getDate().compareTo(taskDate) == 0){
+
+                    boolean isDone;
+                    if(taskCursor.getInt(taskCursor.getColumnIndex(TaskEntry.COLUMN_STATUS)) == 1)
+                        isDone = true;
+                    else
+                        isDone = false;
+
+                    Task task = new Task(taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry._ID)) ,
+                            mDbHelper.getAreaByID(taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_AREA_ID))),
+                            taskCursor.getString(taskCursor.getColumnIndex(TaskEntry.COLUMN_NAME)),
+                            taskCursor.getString(taskCursor.getColumnIndex(TaskEntry.COLUMN_DESCRIPTION)),
+                            taskDate,
+                            isDone);
+
+                    d.getTasks().add(task);
+
+                    break;
+                }
+            }
+        }
+    }
+
+    public void saveEditedTask(Task taskBeforeEdit, Task taskAfterEdit){
 
         Day previousDay = null;
 
         for(int i = 0; i < getItemCount(); i++){
-            if(mDays.get(i).getDate().compareTo(taskDateBeforeEdit) == 0) {
+            if(mDays.get(i).getDate().compareTo(taskBeforeEdit.getDate()) == 0) {
                 previousDay = mDays.get(i);
                 break;
             }
@@ -235,7 +326,7 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
 
         for(int i = 0; i < previousDay.getTasks().size(); i++){
             if (previousDay.getTasks().get(i).equals(taskBeforeEdit)){
-                if(taskDateBeforeEdit.compareTo(taskDateAfterEdit) == 0){
+                if(taskBeforeEdit.getDate().compareTo(taskAfterEdit.getDate()) == 0){
                     previousDay.getTasks().get(i).setArea(taskAfterEdit.getArea());
                     previousDay.getTasks().get(i).setName(taskAfterEdit.getName());
                     previousDay.getTasks().get(i).setDescription(taskAfterEdit.getDescription());
@@ -259,7 +350,7 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
         Day newDay = null;
 
         for(int i = 0; i < getItemCount(); i++){
-            if(mDays.get(i).getDate().compareTo(taskDateAfterEdit) == 0) {
+            if(mDays.get(i).getDate().compareTo(taskAfterEdit.getDate()) == 0) {
                 newDay = mDays.get(i);
                 break;
             }
@@ -371,6 +462,7 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
                                         @Override
                                         public void onClick(View view) {
                                             task.setDone(false);
+                                            mDbHelper.updateTask(task);
                                             dataTaskViewHolder.taskStatus.setImageResource(R.drawable.checkbox_blank_circle_outline);
                                         }
                                     });
@@ -381,6 +473,7 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
                                         @Override
                                         public void onClick(View view) {
                                             task.setDone(true);
+                                            mDbHelper.updateTask(task);
                                             dataTaskViewHolder.taskStatus.setImageResource(R.drawable.checkbox_marked_circle_outline);
                                         }
                                     });

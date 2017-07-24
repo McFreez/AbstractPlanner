@@ -1,11 +1,15 @@
 package com.abstractplanner.fragments;
 
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +18,8 @@ import android.widget.Button;
 
 import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
+import com.abstractplanner.adapters.DataAdapter;
+import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.dto.Area;
 
 import static android.content.Context.INPUT_METHOD_SERVICE;
@@ -26,6 +32,8 @@ public class AddAreaFragment extends Fragment {
     private TextInputEditText mAreaDescriptionEditText;
     private Button mAddAreaButton;
 
+    private AbstractPlannerDatabaseHelper mDbHelper;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -37,6 +45,7 @@ public class AddAreaFragment extends Fragment {
         mAreaDescriptionLayout = (TextInputLayout) view.findViewById(R.id.et_area_description_layout);
         mAreaDescriptionEditText = (TextInputEditText) view.findViewById(R.id.et_area_description);
         mAddAreaButton = (Button) view.findViewById(R.id.button_add_area);
+        mDbHelper = ((MainActivity)getActivity()).getDbHelper();
         mAddAreaButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -61,9 +70,23 @@ public class AddAreaFragment extends Fragment {
                 Area area = new Area(mAreaNameEditText.getText().toString(),
                         mAreaDescriptionEditText.getText().toString());
 
-                ((MainActivity) getActivity()).areas.add(area);
+                long id = mDbHelper.createArea(area);
+                //((MainActivity) getActivity()).areas.add(area);
 
-                ((MainActivity) getActivity()).displaySelectedScreen(R.id.calendar_grid, null);
+                if(id < 0) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    builder.setMessage("Name " + area.getName() + " is already in use.")
+                            .setTitle("Try another name")
+                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.dismiss();
+                                }
+                            });
+
+                    builder.show();
+                } else
+                    ((MainActivity) getActivity()).displaySelectedScreen(R.id.calendar_grid, null);
 
             }
         });

@@ -70,7 +70,7 @@ public class TodayTasksFragment extends Fragment {
         // swipe manager
         mRecyclerViewSwipeManager = new RecyclerViewSwipeManager();
 
-        List<Task> todayAndPreviousTasks = ((MainActivity)getActivity()).tasks;
+        //List<Task> todayAndPreviousTasks = ((MainActivity)getActivity()).tasks;
 /*        List<Day> days = ((MainActivity)getActivity()).days;
 
         Calendar today = Calendar.getInstance();

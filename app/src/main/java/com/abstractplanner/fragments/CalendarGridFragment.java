@@ -1,5 +1,6 @@
 package com.abstractplanner.fragments;
 
+import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -17,6 +18,8 @@ import com.abstractplanner.R;
 import com.abstractplanner.adapters.AreasAdapter;
 import com.abstractplanner.adapters.DataAdapter;
 import com.abstractplanner.adapters.DaysAdapter;
+import com.abstractplanner.data.AbstractPlannerContract;
+import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.dto.Area;
 import com.abstractplanner.dto.Day;
 import com.abstractplanner.table.AreasScrollView;
@@ -26,22 +29,22 @@ import com.abstractplanner.table.DataVerticalScrollView;
 import com.abstractplanner.table.DaysRecyclerView;
 import com.abstractplanner.table.EndlessRecyclerViewScrollListener;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CalendarGridFragment extends Fragment{
 
     private static final String LOG_TAG = "CalendarGridFragment";
 
-    private Toolbar mShortToolbar;
-    private static int AREAS_COUNT;
     public static final int STARTING_DAYS_COUNT = 60;
     public static final int UPLOAD_DAYS_ON_SCROLL_COUNT = 30;
     public static final int TODAY_INITIAL_POSITION = 29;
+    public List<Day> mDays = new ArrayList<>();
 
-    private AreasAdapter areasAdapter;
     private DaysAdapter daysAdapter;
     private DataAdapter dataAdapter;
 
+    private Toolbar mShortToolbar;
 /*    private LinearLayout gridUpLayout;
     private LinearLayout areasAndDataContainer;
     private LinearLayout progressBarContainer;*/
@@ -54,6 +57,8 @@ public class CalendarGridFragment extends Fragment{
     private DataVerticalScrollView dataVerticalScrollView;
 
     private ImageView buttonAddArea;
+
+    private AbstractPlannerDatabaseHelper dbHelper;
 
 
     @Nullable
@@ -94,16 +99,35 @@ public class CalendarGridFragment extends Fragment{
         dataRecyclerView.synchronizeScrollingWith(daysRecyclerView);
         daysRecyclerView.synchronizeScrollingWith(dataRecyclerView);
 
-        List<Area> areas = ((MainActivity)getActivity()).areas;
-        // fake data
+        dbHelper = ((MainActivity) getActivity()).getDbHelper();
+
+        List<Area> areas = new ArrayList<>();
+
+        Cursor areasCursor = dbHelper.getAllAreas();
+        for(int i = 0; i < areasCursor.getCount(); i++){
+            areasCursor.moveToPosition(i);
+            areas.add(new Area(areasCursor.getLong(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry._ID)),
+                    areasCursor.getString(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_NAME)),
+                    areasCursor.getString(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_DESCRIPTION))));
+        }
+
+
+/*        // fake data
         if(areas.size() == 0) {
-            areas.add(new Area("Area 1", "dgdsfgsd"));
-            areas.add(new Area("Area 2", "fsdgdsfgsd"));
+            dbHelper.createArea(new Area("Area 1", "dgdsfgsd"));
+            dbHelper.createArea(new Area("Area 2", "fsdgdsfgsd"));
+            dbHelper.createArea(new Area("Area 3", "dgdsfgsd"));
+            dbHelper.createArea(new Area("Area 4", "fsdgdsfgsd"));
+            dbHelper.createArea(new Area("Area 5", "dgdsfgsd"));
+            dbHelper.createArea(new Area("Area 6", "fsdgdsfgsd"));
+            //areas.add(new Area("Area 1", "dgdsfgsd"));
+            //dbHelper.createArea(new Area("Area 1", "dgdsfgsd"));
+*//*            areas.add(new Area("Area 2", "fsdgdsfgsd"));
             areas.add(new Area("Area 3", "dgdsfgsd"));
             areas.add(new Area("Area 4", "fsdgdsfgsd"));
             areas.add(new Area("Area 5", "dgdsfgsd"));
-            areas.add(new Area("Area 6", "fsdgdsfgsd"));
-/*            areas.add(new Area("Area 7", "dgdsfgsd"));
+            areas.add(new Area("Area 6", "fsdgdsfgsd"));*//*
+*//*            areas.add(new Area("Area 7", "dgdsfgsd"));
             areas.add(new Area("Area 8", "fsdgdsfgsd"));
             areas.add(new Area("Area 9", "dgdsfgsd"));
             areas.add(new Area("Area 10", "fsdgdsfgsd"));
@@ -112,24 +136,27 @@ public class CalendarGridFragment extends Fragment{
             areas.add(new Area("Area 13", "dgdsfgsd"));
             areas.add(new Area("Area 14", "fsdgdsfgsd"));
             areas.add(new Area("Area 15", "dgdsfgsd"));
-            areas.add(new Area("Area 16", "fsdgdsfgsd"));*/
-        }
+            areas.add(new Area("Area 16", "fsdgdsfgsd"));*//*
+        }*/
 
-        AREAS_COUNT = areas.size();
+/*        areasCursor = dbHelper.getAllAreas();
+        for(int i = 0; i < areasCursor.getCount(); i++){
+            areasCursor.moveToPosition(i);
+            areas.add(new Area(areasCursor.getString(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_NAME)),
+                    areasCursor.getString(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_DESCRIPTION))));
+        }*/
 
-        List<Day> days = ((MainActivity)getActivity()).days;
-
-        daysAdapter = new DaysAdapter(days);
+        daysAdapter = new DaysAdapter(mDays);
         daysRecyclerView.setAdapter(daysAdapter);
 
-        dataAdapter = new DataAdapter(days, areas, (MainActivity) getActivity());
+        dataAdapter = new DataAdapter(mDays, areas, (MainActivity) getActivity());
         dataRecyclerView.setAdapter(dataAdapter);
 
-        if(days.size() == 0) {
+        if(mDays.size() == 0) {
             dataAdapter.loadInitialDaysData(daysAdapter);
         }
 
-        areasAdapter = new AreasAdapter((MainActivity) getActivity(), areas, areasContainer, dataAdapter);
+        /*AreasAdapter areasAdapter = */new AreasAdapter((MainActivity) getActivity(), areas, areasContainer);
 
         dataRecyclerViewScrollListener = new EndlessRecyclerViewScrollListener(layoutManager_data) {
             @Override

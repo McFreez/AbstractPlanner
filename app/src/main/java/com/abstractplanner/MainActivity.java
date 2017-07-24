@@ -18,6 +18,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.SlidingDrawer;
 
 import com.abstractplanner.data.AbstractDataProvider;
+import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.data.TasksDataProviderFragment;
 import com.abstractplanner.dto.Area;
 import com.abstractplanner.dto.Day;
@@ -35,9 +36,7 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    public List<Area> areas = new ArrayList<>();
-    public List<Day> days = new ArrayList<>();
-    public List<Task> tasks = new ArrayList<>();
+    private AbstractPlannerDatabaseHelper dbHelper;
 
     private DrawerLayout mDrawer;
     private Toolbar mLongToolbar;
@@ -61,13 +60,7 @@ public class MainActivity extends AppCompatActivity
             displaySelectedScreen(R.id.today_tasks, null);
         }
 
-        bindTodayTasksFakeData();
-    }
-
-    private void bindTodayTasksFakeData(){
-        for(int i = 0; i < 20; i++){
-            tasks.add(new Task(new Area("Area " + i, "Area description " + i), "Task " + i, "Task description " + i, 0));
-        }
+        dbHelper = new AbstractPlannerDatabaseHelper(this);
     }
 
     @Override
@@ -202,5 +195,9 @@ public class MainActivity extends AppCompatActivity
     public AbstractDataProvider getDataProvider() {
         final Fragment fragment = getSupportFragmentManager().findFragmentByTag("data provider");
         return ((TasksDataProviderFragment) fragment).getDataProvider();
+    }
+
+    public AbstractPlannerDatabaseHelper getDbHelper(){
+        return dbHelper;
     }
 }

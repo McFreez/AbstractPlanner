@@ -1,11 +1,14 @@
 package com.abstractplanner.fragments;
 
 import android.app.DatePickerDialog;
+import android.content.DialogInterface;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,6 +25,8 @@ import android.widget.TextView;
 
 import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
+import com.abstractplanner.data.AbstractPlannerContract;
+import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.dto.Area;
 import com.abstractplanner.dto.Day;
 import com.abstractplanner.dto.Task;
@@ -49,6 +54,8 @@ public class AddTaskFragment extends Fragment {
     private Button mAddTaskButton;
 
     private String predefinedAreaName;
+    private AbstractPlannerDatabaseHelper mDbHelper;
+    private ArrayAdapter<String> mSpinnerAdapter;
 
     @Nullable
     @Override
@@ -68,30 +75,33 @@ public class AddTaskFragment extends Fragment {
         mTaskDoneCheckBox = (CheckBox) view.findViewById(R.id.checkBox_task_done);
         mAddTaskButton = (Button) view.findViewById(R.id.button_add_task);
 
-        List<String> spinnerArray =  new ArrayList<String>();
-        List<Area> areas = ((MainActivity)getActivity()).areas;
+        mDbHelper = ((MainActivity)getActivity()).getDbHelper();
 
-        for(int i = 0; i < areas.size(); i++){
-            spinnerArray.add(areas.get(i).getName());
+        List<String> spinnerAreas = new ArrayList<String>();
+
+        Cursor areasCursor = mDbHelper.getAllAreas();
+        for(int i = 0; i < areasCursor.getCount(); i++){
+            areasCursor.moveToPosition(i);
+            spinnerAreas.add(areasCursor.getString(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_NAME)));
         }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                getContext(), android.R.layout.simple_spinner_item, spinnerArray);
+        mSpinnerAdapter = new ArrayAdapter<String>(
+                getContext(), android.R.layout.simple_spinner_item, spinnerAreas);
 
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mSpinnerSelectArea.setAdapter(adapter);
+        mSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mSpinnerSelectArea.setAdapter(mSpinnerAdapter);
 
         if(mTaskDate == null){
             mTaskDate = Calendar.getInstance();
         }
 
         if(predefinedAreaName != null){
-            mSpinnerSelectArea.setSelection(spinnerArray.indexOf(predefinedAreaName));
+            mSpinnerSelectArea.setSelection(spinnerAreas.indexOf(predefinedAreaName));
         }
 
         setDateString();
 
-        if(areas.size() == 0) {
+        if(spinnerAreas.size() == 0) {
             mSpinnerError.setVisibility(View.VISIBLE);
         }
 
@@ -108,19 +118,13 @@ public class AddTaskFragment extends Fragment {
 
                 boolean error = false;
 
-                List<Area> areas = ((MainActivity)getActivity()).areas;
-
-                if(areas.size() == 0) {
+                if(mSpinnerAdapter.getCount() == 0) {
                     mSpinnerError.setVisibility(View.VISIBLE);
                     return;
                 }
 
-                Area selectedArea = null;
                 String selectedAreaName = mSpinnerSelectArea.getSelectedItem().toString();
-                for (Area a : areas) {
-                    if (a.getName().equals(selectedAreaName))
-                        selectedArea = a;
-                }
+                Area selectedArea = mDbHelper.getAreaByName(selectedAreaName);
 
                 if(selectedArea == null)
                     error = true;
@@ -142,35 +146,35 @@ public class AddTaskFragment extends Fragment {
                     mTaskDescriptionLayout.setErrorEnabled(false);
                 }
 
-/*                if(mTaskDateEditText.getText().length() <= 0){
-                    mTaskDateLayout.setErrorEnabled(true);
-                    mTaskDateLayout.setError("You need to enter a date");
-                    error = true;
-                } else{
-                    mTaskDateLayout.setErrorEnabled(false);
-                }*/
-
                 if(error)
                     return;
-
-                Task task = new Task(selectedArea, mTaskNameEditText.getText().toString(),
-                        mTaskDescriptionEditText.getText().toString(), 0);
-                task.setDone(mTaskDoneCheckBox.isChecked());
-
-                List<Day> days = ((MainActivity) getActivity()).days;
 
                 mTaskDate.set(Calendar.HOUR_OF_DAY, 0);
                 mTaskDate.set(Calendar.MINUTE, 0);
                 mTaskDate.set(Calendar.SECOND, 0);
                 mTaskDate.set(Calendar.MILLISECOND, 0);
 
-                for(int i = 0; i < days.size(); i++){
-                    if(days.get(i).getDate().compareTo(mTaskDate) == 0){
-                        days.get(i).addTask(task);
-                    }
-                }
+                Task task = new Task(selectedArea, mTaskNameEditText.getText().toString(),
+                        mTaskDescriptionEditText.getText().toString(), mTaskDate, mTaskDoneCheckBox.isChecked());
 
-                ((MainActivity) getActivity()).displaySelectedScreen(R.id.calendar_grid, null);
+                long id = mDbHelper.createTask(task);
+
+                if(id < 0){
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    builder.setMessage("You already have task for "
+                            + DateUtils.formatDateTime(getContext(), task.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
+                            + " on " + task.getArea().getName() + ".")
+                            .setTitle("Try another day or area")
+                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.dismiss();
+                                }
+                            });
+
+                    builder.show();
+                } else
+                    ((MainActivity) getActivity()).displaySelectedScreen(R.id.calendar_grid, null);
 
             }
         });

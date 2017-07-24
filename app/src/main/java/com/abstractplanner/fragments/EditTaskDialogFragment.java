@@ -3,10 +3,13 @@ package com.abstractplanner.fragments;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
@@ -28,6 +31,8 @@ import android.widget.TextView;
 import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
 import com.abstractplanner.adapters.DataAdapter;
+import com.abstractplanner.data.AbstractPlannerContract;
+import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.dto.Area;
 import com.abstractplanner.dto.Task;
 
@@ -53,7 +58,10 @@ public class EditTaskDialogFragment extends DialogFragment {
     private Calendar mTaskDate;
     private CheckBox mTaskDoneCheckBox;
     private Button mSaveTaskButton;
+
     private DataAdapter mAdapter;
+    private ArrayAdapter<String> mSpinnerAdapter;
+    private AbstractPlannerDatabaseHelper mDbHelper;
 
 /*    public EditTaskDialogFragment(Context context){
         super(context, android.R.style.F);
@@ -79,18 +87,21 @@ public class EditTaskDialogFragment extends DialogFragment {
         mSaveTaskButton = (Button) view.findViewById(R.id.button_add_task);
         mSaveTaskButton.setVisibility(View.GONE);
 
-        List<String> spinnerArray =  new ArrayList<String>();
-        List<Area> areas = ((MainActivity)getActivity()).areas;
+        mDbHelper = ((MainActivity)getActivity()).getDbHelper();
 
-        for(int i = 0; i < areas.size(); i++){
-            spinnerArray.add(areas.get(i).getName());
+        List<String> spinnerAreas = new ArrayList<String>();
+
+        Cursor areasCursor = mDbHelper.getAllAreas();
+        for(int i = 0; i < areasCursor.getCount(); i++){
+            areasCursor.moveToPosition(i);
+            spinnerAreas.add(areasCursor.getString(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_NAME)));
         }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                getContext(), android.R.layout.simple_spinner_item, spinnerArray);
+        mSpinnerAdapter = new ArrayAdapter<String>(
+                getContext(), android.R.layout.simple_spinner_item, spinnerAreas);
 
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mSpinnerSelectArea.setAdapter(adapter);
+        mSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mSpinnerSelectArea.setAdapter(mSpinnerAdapter);
 
         if(mTaskDate == null){
             mTaskDate = Calendar.getInstance();
@@ -98,11 +109,11 @@ public class EditTaskDialogFragment extends DialogFragment {
 
         setDateString();
 
-        if(areas.size() == 0) {
+        if(spinnerAreas.size() == 0) {
             mSpinnerError.setVisibility(View.VISIBLE);
         }
 
-        mSpinnerSelectArea.setSelection(spinnerArray.indexOf(mTask.getArea().getName()));
+        mSpinnerSelectArea.setSelection(spinnerAreas.indexOf(mTask.getArea().getName()));
         mTaskNameEditText.setText(mTask.getName());
         mTaskDescriptionEditText.setText(mTask.getDescription());
         mTaskDoneCheckBox.setChecked(mTask.isDone());
@@ -190,19 +201,13 @@ public class EditTaskDialogFragment extends DialogFragment {
 
         boolean error = false;
 
-        List<Area> areas = ((MainActivity)getActivity()).areas;
-
-        if(areas.size() == 0) {
+        if(mSpinnerAdapter.getCount() == 0) {
             mSpinnerError.setVisibility(View.VISIBLE);
             return;
         }
 
-        Area selectedArea = null;
         String selectedAreaName = mSpinnerSelectArea.getSelectedItem().toString();
-        for (Area a : areas) {
-            if (a.getName().equals(selectedAreaName))
-                selectedArea = a;
-        }
+        Area selectedArea = mDbHelper.getAreaByName(selectedAreaName);
 
         if(selectedArea == null)
             error = true;
@@ -227,18 +232,37 @@ public class EditTaskDialogFragment extends DialogFragment {
         if(error)
             return;
 
-        Task task = new Task(selectedArea, mTaskNameEditText.getText().toString(),
-                mTaskDescriptionEditText.getText().toString(), 0);
-        task.setDone(mTaskDoneCheckBox.isChecked());
+        // TODO : create new task in database
 
         mTaskDate.set(Calendar.HOUR_OF_DAY, 0);
         mTaskDate.set(Calendar.MINUTE, 0);
         mTaskDate.set(Calendar.SECOND, 0);
         mTaskDate.set(Calendar.MILLISECOND, 0);
 
-        mAdapter.saveEditedTask(mTask, mTaskPreviousDate, task, mTaskDate);
+        Task task = new Task(mTask.getId(), selectedArea, mTaskNameEditText.getText().toString(),
+                mTaskDescriptionEditText.getText().toString(), mTaskDate, mTaskDoneCheckBox.isChecked());
 
-        dismiss();
+        long id = mDbHelper.updateTask(task);
+
+        if(id < 0){
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setMessage("You already have task for "
+                    + DateUtils.formatDateTime(getContext(), task.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
+                    + " on " + task.getArea().getName() + ".")
+                    .setTitle("Try another day or area")
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    });
+
+            builder.show();
+        } else {
+            mAdapter.saveEditedTask(mTask, task);
+
+            dismiss();
+        }
     }
 
     // отображаем диалоговое окно для выбора даты
