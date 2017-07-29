@@ -157,6 +157,24 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
                 TaskEntry.COLUMN_DATE);
     }
 
+    public Cursor getTodayTasks(){
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Calendar today = Calendar.getInstance();
+        today.set(Calendar.HOUR_OF_DAY, 0);
+        today.set(Calendar.MINUTE, 0);
+        today.set(Calendar.SECOND, 0);
+        today.set(Calendar.MILLISECOND, 0);
+
+        return db.query(TaskEntry.TABLE_NAME,
+                null,
+                TaskEntry.COLUMN_STATUS + " = ? AND " + TaskEntry.COLUMN_DATE + " <= ?",
+                new String[]{String.valueOf(0), String.valueOf(today.getTimeInMillis())},
+                null,
+                null,
+                TaskEntry.COLUMN_DATE + " ASC");
+    }
+
     public long createTask(Task task){
         SQLiteDatabase db = this.getWritableDatabase();
 

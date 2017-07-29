@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Adapter;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -31,6 +32,7 @@ import android.widget.TextView;
 import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
 import com.abstractplanner.adapters.DataAdapter;
+import com.abstractplanner.adapters.TodayTasksAdapter;
 import com.abstractplanner.data.AbstractPlannerContract;
 import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.dto.Area;
@@ -59,7 +61,7 @@ public class EditTaskDialogFragment extends DialogFragment {
     private CheckBox mTaskDoneCheckBox;
     private Button mSaveTaskButton;
 
-    private DataAdapter mAdapter;
+    private Object mAdapter;
     private ArrayAdapter<String> mSpinnerAdapter;
     private AbstractPlannerDatabaseHelper mDbHelper;
 
@@ -232,8 +234,6 @@ public class EditTaskDialogFragment extends DialogFragment {
         if(error)
             return;
 
-        // TODO : create new task in database
-
         mTaskDate.set(Calendar.HOUR_OF_DAY, 0);
         mTaskDate.set(Calendar.MINUTE, 0);
         mTaskDate.set(Calendar.SECOND, 0);
@@ -259,7 +259,11 @@ public class EditTaskDialogFragment extends DialogFragment {
 
             builder.show();
         } else {
-            mAdapter.saveEditedTask(mTask, task);
+            if(mAdapter instanceof DataAdapter)
+                ((DataAdapter)mAdapter).saveEditedTask(mTask, task);
+            else
+                if(mAdapter instanceof TodayTasksAdapter)
+                    ((TodayTasksAdapter)mAdapter).saveEditedTask(task);
 
             dismiss();
         }
@@ -293,7 +297,7 @@ public class EditTaskDialogFragment extends DialogFragment {
         mTaskDate.set(Calendar.MILLISECOND, 0);
     }
 
-    public void setDataAdapter(DataAdapter adapter){
+    public void setAdapter(Object adapter){
         mAdapter = adapter;
     }
 }

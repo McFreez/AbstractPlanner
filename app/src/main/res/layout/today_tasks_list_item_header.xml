@@ -15,31 +15,26 @@
        limitations under the License.
 -->
 <!-- NOTE: should use FrameLayout or RelativeLayout for parent of the "@id/container" view (for Android 2.3 compatibility) -->
-<FrameLayout
+<RelativeLayout
     style="@style/commonListItemStyle"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/list_item_height"
-    android:background="@drawable/bg_swipe_item_neutral">
+    android:layout_height="@dimen/list_item_header_height"
+    android:background="@color/backgroundColor">
 
-    <FrameLayout
-        android:id="@+id/container"
+    <TextView
+        android:id="@+id/today_list_item_header_day"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/bg_item_normal_state"
-        android:clickable="true"
-        android:foreground="?attr/selectableItemBackground"
-        tools:ignore="UselessParent">
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+        android:textColor="@color/secondaryTextColor"
+        android:gravity="center_vertical"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        tools:ignore="RtlHardcoded"
+        tools:text="Today" />
 
-        <TextView
-            android:id="@android:id/text1"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="top|left"
-            android:gravity="center"
-            tools:ignore="RtlHardcoded"/>
-
-    </FrameLayout>
-
-</FrameLayout>
+</RelativeLayout>

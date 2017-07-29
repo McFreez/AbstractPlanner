@@ -7,14 +7,11 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.format.DateUtils;
-import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Adapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -28,7 +25,6 @@ import com.abstractplanner.dto.Day;
 import com.abstractplanner.dto.Task;
 import com.abstractplanner.fragments.CalendarGridFragment;
 import com.abstractplanner.fragments.EditTaskDialogFragment;
-import com.abstractplanner.table.CenterLayoutManager;
 import com.abstractplanner.table.DataRecyclerView;
 import com.abstractplanner.table.EndlessRecyclerViewScrollListener;
 
@@ -282,8 +278,6 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
             long taskDateMillis = taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_DATE));
             Calendar taskDate = Calendar.getInstance();
             taskDate.setTimeInMillis(taskDateMillis);
-            /*Log.e(LOG_TAG, "Day " + i + " is " + DateUtils.formatDateTime(mActivity, mDays.get(i).getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
-            + " Task");*/
             for (Day d : mDays){
                 if(d.getDate().compareTo(taskDate) == 0){
 
@@ -502,7 +496,7 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
                                                 EditTaskDialogFragment newFragment = new EditTaskDialogFragment();
                                                 newFragment.setTask(task);
                                                 newFragment.setTaskDate(calendarDate);
-                                                newFragment.setDataAdapter(DataAdapter.this);
+                                                newFragment.setAdapter(DataAdapter.this);
                                                 // The device is smaller, so show the fragment fullscreen
                                                 FragmentTransaction transaction = fragmentManager.beginTransaction();
                                                 // For a little polish, specify a transition animation

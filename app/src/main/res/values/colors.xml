@@ -8,13 +8,14 @@
     <color name="primaryTextColor">#212121</color>
     <color name="secondaryTextColor">#757575</color>
     <color name="dividerColor">#BDBDBD</color>
+    <color name="backgroundColor">#fff0f0f0</color>
 
     <color name="bg_swipe_item_neutral">@android:color/transparent</color>
     <color name="bg_swipe_item_pinned">#fff9930d</color>
     <color name="bg_swipe_item_dismiss">#ff2f8b2a</color>
     <color name="bg_swipe_item_gray">#999999</color>
 
-    <color name="bg_item_normal_state">#fff0f0f0</color>
-    <color name="bg_item_swiping_state">#ffddddff</color>
-    <color name="bg_item_swiping_active_state">#ff9999ff</color>
+    <color name="bg_item_normal_state">@android:color/background_light</color>
+    <color name="bg_item_swiping_state">@android:color/background_light</color>
+    <color name="bg_item_swiping_active_state">@color/colorPrimaryLight</color>
 </resources>

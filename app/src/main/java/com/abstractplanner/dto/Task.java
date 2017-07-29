@@ -10,7 +10,6 @@ public class Task {
     private String description;
     private Calendar date;
     private boolean done = false;
-    private int viewType;
 
     public Task() {
     }
@@ -20,7 +19,7 @@ public class Task {
         this.name = name;
         this.description = description;
         this.date = date;
-        this.viewType = 0;
+        this.done = done;
     }
 
     public Task(long id, Area area, String name, String description, Calendar date, boolean done) {
@@ -30,7 +29,6 @@ public class Task {
         this.description = description;
         this.date = date;
         this.done = done;
-        this.viewType = 0;
     }
 
     public long getId() {
@@ -79,13 +77,5 @@ public class Task {
 
     public void setDone(boolean done) {
         this.done = done;
-    }
-
-    public int getViewType() {
-        return viewType;
-    }
-
-    public void setViewType(int viewType) {
-        this.viewType = viewType;
     }
 }

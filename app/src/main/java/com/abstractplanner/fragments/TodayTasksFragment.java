@@ -11,6 +11,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
@@ -31,6 +32,8 @@ import java.util.Calendar;
 import java.util.List;
 
 public class TodayTasksFragment extends Fragment {
+
+    private TextView mNoTasksMessage;
 
     private RecyclerView mRecyclerView;
     private RecyclerView.LayoutManager mLayoutManager;
@@ -58,6 +61,8 @@ public class TodayTasksFragment extends Fragment {
 
         getActivity().setTitle("Today tasks");
 
+        mNoTasksMessage = (TextView) getView().findViewById(R.id.today_no_tasks_message);
+
         //noinspection ConstantConditions
         mRecyclerView = (RecyclerView) getView().findViewById(R.id.today_tasks_recycler_view);
         mLayoutManager = new LinearLayoutManager(getContext(),  LinearLayoutManager.VERTICAL, false);
@@ -70,23 +75,8 @@ public class TodayTasksFragment extends Fragment {
         // swipe manager
         mRecyclerViewSwipeManager = new RecyclerViewSwipeManager();
 
-        //List<Task> todayAndPreviousTasks = ((MainActivity)getActivity()).tasks;
-/*        List<Day> days = ((MainActivity)getActivity()).days;
-
-        Calendar today = Calendar.getInstance();
-        today.set(Calendar.HOUR_OF_DAY, 0);
-        today.set(Calendar.MINUTE, 0);
-        today.set(Calendar.SECOND, 0);
-        today.set(Calendar.MILLISECOND, 0);
-
-        for(int i = 0; i < days.size(); i++){
-            if(today.compareTo(days.get(i).getDate()) >= 0){
-                todayAndPreviousTasks.addAll(days.get(i).getTasks());
-            }
-        }*/
-
         //adapter
-        final TodayTasksAdapter myItemAdapter = new TodayTasksAdapter(getDataProvider());
+        final TodayTasksAdapter myItemAdapter = new TodayTasksAdapter(getDataProvider(), (MainActivity) getActivity());
         myItemAdapter.setEventListener(new TodayTasksAdapter.EventListener() {
             @Override
             public void onItemRemoved(int position) {
@@ -96,6 +86,16 @@ public class TodayTasksFragment extends Fragment {
             @Override
             public void onItemPinned(int position) {
                 //((MainActivity) getActivity()).onItemPinned(position);
+            }
+
+            @Override
+            public void onDatasetEmpty() {
+                showNoTasksMessage();
+            }
+
+            @Override
+            public void onDatasetFilled() {
+                hideNoTasksMessage();
             }
 
             @Override
@@ -117,6 +117,11 @@ public class TodayTasksFragment extends Fragment {
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(mWrappedAdapter);  // requires *wrapped* adapter
         mRecyclerView.setItemAnimator(animator);
+
+        if(mWrappedAdapter.getItemCount() == 0)
+            showNoTasksMessage();
+        else
+            hideNoTasksMessage();
 
         // additional decorations
         //noinspection StatementWithEmptyBody
@@ -184,6 +189,14 @@ public class TodayTasksFragment extends Fragment {
 
     public AbstractDataProvider getDataProvider() {
         return ((MainActivity) getActivity()).getDataProvider();
+    }
+
+    private void showNoTasksMessage(){
+        mNoTasksMessage.setVisibility(View.VISIBLE);
+    }
+
+    private void hideNoTasksMessage(){
+        mNoTasksMessage.setVisibility(View.GONE);
     }
 
     public void notifyItemChanged(int position) {

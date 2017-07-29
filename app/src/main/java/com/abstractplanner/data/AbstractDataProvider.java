@@ -16,6 +16,10 @@
 
 package com.abstractplanner.data;
 
+import com.abstractplanner.dto.Task;
+
+import java.util.Calendar;
+
 public abstract class AbstractDataProvider {
 
     public static abstract class Data {
@@ -27,6 +31,12 @@ public abstract class AbstractDataProvider {
 
         public abstract String getText();
 
+        public abstract Calendar getDate();
+
+        public abstract Task getTask();
+
+        public abstract void updateTask(Task task);
+
         public abstract void setPinned(boolean pinned);
 
         public abstract boolean isPinned();
@@ -36,7 +46,9 @@ public abstract class AbstractDataProvider {
 
     public abstract Data getItem(int index);
 
-    public abstract void removeItem(int position);
+    public abstract void removeItem(int position, boolean setDone);
+
+    public abstract void updateItem(int position);
 
     public abstract void moveItem(int fromPosition, int toPosition);
 
