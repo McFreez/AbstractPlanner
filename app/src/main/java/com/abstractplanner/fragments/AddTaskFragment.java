@@ -3,6 +3,7 @@ package com.abstractplanner.fragments;
 import android.app.DatePickerDialog;
 import android.content.DialogInterface;
 import android.database.Cursor;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputEditText;
@@ -47,8 +48,8 @@ public class AddTaskFragment extends Fragment {
     private TextInputEditText mTaskNameEditText;
     private TextInputLayout mTaskDescriptionLayout;
     private TextInputEditText mTaskDescriptionEditText;
-    private LinearLayout mTaskDateLayout;
-    private TextView mTaskDateTextView;
+    private TextInputLayout mTaskDateInputLayout;
+    private TextInputEditText mTaskDateEditText;
     private Calendar mTaskDate;
     private CheckBox mTaskDoneCheckBox;
     private Button mAddTaskButton;
@@ -63,15 +64,15 @@ public class AddTaskFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_add_task, container, false);
 
-
         mSpinnerSelectArea = (Spinner) view.findViewById(R.id.spinner_select_area);
         mSpinnerError = (TextView) view.findViewById(R.id.tv_areas_error);
         mTaskNameLayout = (TextInputLayout) view.findViewById(R.id.et_task_name_layout);
         mTaskNameEditText = (TextInputEditText) view.findViewById(R.id.et_task_name);
         mTaskDescriptionLayout = (TextInputLayout) view.findViewById(R.id.et_task_description_layout);
         mTaskDescriptionEditText = (TextInputEditText) view.findViewById(R.id.et_task_description);
-        mTaskDateLayout = (LinearLayout) view.findViewById(R.id.task_date_layout);
-        mTaskDateTextView = (TextView) view.findViewById(R.id.task_date);
+        mTaskDateInputLayout = (TextInputLayout) view.findViewById(R.id.et_task_date_layout);
+        mTaskDateEditText = (TextInputEditText) view.findViewById(R.id.et_task_date);
+        mTaskDateEditText.setKeyListener(null);
         mTaskDoneCheckBox = (CheckBox) view.findViewById(R.id.checkBox_task_done);
         mAddTaskButton = (Button) view.findViewById(R.id.button_add_task);
 
@@ -105,10 +106,20 @@ public class AddTaskFragment extends Fragment {
             mSpinnerError.setVisibility(View.VISIBLE);
         }
 
-        mTaskDateLayout.setOnClickListener(new View.OnClickListener() {
+        View.OnClickListener setDateClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 setDate(view);
+            }
+        };
+
+        mTaskDateInputLayout.setOnClickListener(setDateClickListener);
+        mTaskDateEditText.setOnClickListener(setDateClickListener);
+        mTaskDateEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if(b)
+                    setDate(view);
             }
         });
 
@@ -209,6 +220,10 @@ public class AddTaskFragment extends Fragment {
 
     // отображаем диалоговое окно для выбора даты
     private void setDate(View v) {
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(
+                INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
+
         new DatePickerDialog(getContext(), d,
                 mTaskDate.get(Calendar.YEAR),
                 mTaskDate.get(Calendar.MONTH),
@@ -217,7 +232,7 @@ public class AddTaskFragment extends Fragment {
     }
 
     private void setDateString(){
-        mTaskDateTextView.setText(DateUtils.formatDateTime(getContext(), mTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR));
+        mTaskDateEditText.setText(DateUtils.formatDateTime(getContext(), mTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR));
     }
 
     public void setPredefinedParameters(String areaName, Calendar date){

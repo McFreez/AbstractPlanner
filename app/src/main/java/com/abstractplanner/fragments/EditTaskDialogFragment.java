@@ -20,12 +20,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Adapter;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.DatePicker;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -54,8 +52,8 @@ public class EditTaskDialogFragment extends DialogFragment {
     private TextInputEditText mTaskNameEditText;
     private TextInputLayout mTaskDescriptionLayout;
     private TextInputEditText mTaskDescriptionEditText;
-    private LinearLayout mTaskDateLayout;
-    private TextView mTaskDateTextView;
+    private TextInputLayout mTaskDateInputLayout;
+    private TextInputEditText mTaskDateEditText;
     private Calendar mTaskPreviousDate;
     private Calendar mTaskDate;
     private CheckBox mTaskDoneCheckBox;
@@ -64,10 +62,6 @@ public class EditTaskDialogFragment extends DialogFragment {
     private Object mAdapter;
     private ArrayAdapter<String> mSpinnerAdapter;
     private AbstractPlannerDatabaseHelper mDbHelper;
-
-/*    public EditTaskDialogFragment(Context context){
-        super(context, android.R.style.F);
-    }*/
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -83,8 +77,9 @@ public class EditTaskDialogFragment extends DialogFragment {
         mTaskNameEditText = (TextInputEditText) view.findViewById(R.id.et_task_name);
         mTaskDescriptionLayout = (TextInputLayout) view.findViewById(R.id.et_task_description_layout);
         mTaskDescriptionEditText = (TextInputEditText) view.findViewById(R.id.et_task_description);
-        mTaskDateLayout = (LinearLayout) view.findViewById(R.id.task_date_layout);
-        mTaskDateTextView = (TextView) view.findViewById(R.id.task_date);
+        mTaskDateInputLayout = (TextInputLayout) view.findViewById(R.id.et_task_date_layout);
+        mTaskDateEditText = (TextInputEditText) view.findViewById(R.id.et_task_date);
+        mTaskDateEditText.setKeyListener(null);
         mTaskDoneCheckBox = (CheckBox) view.findViewById(R.id.checkBox_task_done);
         mSaveTaskButton = (Button) view.findViewById(R.id.button_add_task);
         mSaveTaskButton.setVisibility(View.GONE);
@@ -120,30 +115,40 @@ public class EditTaskDialogFragment extends DialogFragment {
         mTaskDescriptionEditText.setText(mTask.getDescription());
         mTaskDoneCheckBox.setChecked(mTask.isDone());
 
-        mTaskDateLayout.setOnClickListener(new View.OnClickListener() {
+        View.OnClickListener setDateClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 setDate(view);
+            }
+        };
+
+        mTaskDateInputLayout.setOnClickListener(setDateClickListener);
+        mTaskDateEditText.setOnClickListener(setDateClickListener);
+        mTaskDateEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if(b)
+                    setDate(view);
             }
         });
 
         mToolbar.setTitle("Edit task");
         mToolbar.setNavigationIcon(android.R.drawable.ic_menu_close_clear_cancel);
-        mToolbar.setPadding(0, getStatusBarHeight(), 0, 0);
+        //mToolbar.setPadding(0, getStatusBarHeight(), 0, 0);
         setHasOptionsMenu(true);
         ((MainActivity) getActivity()).setSupportActionBar(mToolbar);
 
         return view;
     }
 
-    public int getStatusBarHeight() {
+/*    public int getStatusBarHeight() {
         int result = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resourceId > 0) {
             result = getResources().getDimensionPixelSize(resourceId);
         }
         return result;
-    }
+    }*/
 
     /** The system calls this only when creating the layout in a dialog. */
     @Override
@@ -162,7 +167,7 @@ public class EditTaskDialogFragment extends DialogFragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         menu.clear();
-        getActivity().getMenuInflater().inflate(R.menu.add_task_dialog_menu, menu);
+        getActivity().getMenuInflater().inflate(R.menu.add_item_dialog_menu, menu);
     }
 
     @Override
@@ -271,6 +276,10 @@ public class EditTaskDialogFragment extends DialogFragment {
 
     // отображаем диалоговое окно для выбора даты
     private void setDate(View v) {
+        InputMethodManager inputMethodManager = (InputMethodManager)
+                getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
+
         new DatePickerDialog(getContext(), d,
                 mTaskDate.get(Calendar.YEAR),
                 mTaskDate.get(Calendar.MONTH),
@@ -279,7 +288,7 @@ public class EditTaskDialogFragment extends DialogFragment {
     }
 
     private void setDateString(){
-        mTaskDateTextView.setText(DateUtils.formatDateTime(getContext(), mTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR));
+        mTaskDateEditText.setText(DateUtils.formatDateTime(getContext(), mTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR));
     }
 
     public void setTask(Task task){

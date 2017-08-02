@@ -4,22 +4,23 @@ import android.graphics.drawable.NinePatchDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
-import com.abstractplanner.adapters.TodayTasksAdapter;
+import com.abstractplanner.adapters.NotificationsAdapter;
 import com.abstractplanner.data.AbstractDataProvider;
-import com.abstractplanner.data.TasksDataProvider;
+import com.abstractplanner.data.NotificationsDataProvider;
 import com.h6ah4i.android.widget.advrecyclerview.animator.GeneralItemAnimator;
 import com.h6ah4i.android.widget.advrecyclerview.animator.SwipeDismissItemAnimator;
 import com.h6ah4i.android.widget.advrecyclerview.decoration.ItemShadowDecorator;
@@ -28,9 +29,10 @@ import com.h6ah4i.android.widget.advrecyclerview.swipeable.RecyclerViewSwipeMana
 import com.h6ah4i.android.widget.advrecyclerview.touchguard.RecyclerViewTouchActionGuardManager;
 import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils;
 
-public class TodayTasksFragment extends Fragment {
+public class NotificationsFragment extends Fragment {
 
-    private RelativeLayout mNoTasksContainer;
+    private RelativeLayout mNoNotificationsContainer;
+    private FloatingActionButton mAddNotificationButton;
 
     private RecyclerView mRecyclerView;
     private RecyclerView.LayoutManager mLayoutManager;
@@ -39,7 +41,7 @@ public class TodayTasksFragment extends Fragment {
     private RecyclerViewSwipeManager mRecyclerViewSwipeManager;
     private RecyclerViewTouchActionGuardManager mRecyclerViewTouchActionGuardManager;
 
-    public TodayTasksFragment(){
+    public NotificationsFragment(){
         super();
     }
 
@@ -47,7 +49,7 @@ public class TodayTasksFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.fragment_today_tasks, container, false);
+        View view = inflater.inflate(R.layout.fragment_notifications, container, false);
 
         return view;
     }
@@ -56,12 +58,13 @@ public class TodayTasksFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        getActivity().setTitle("Today tasks");
+        getActivity().setTitle("Notifications");
 
-        mNoTasksContainer = (RelativeLayout) getView().findViewById(R.id.today_no_tasks_container);
+        mNoNotificationsContainer = (RelativeLayout) getView().findViewById(R.id.notification_no_notifications_container);
+        mAddNotificationButton = (FloatingActionButton) getView().findViewById(R.id.fab_add_notification);
 
         //noinspection ConstantConditions
-        mRecyclerView = (RecyclerView) getView().findViewById(R.id.today_tasks_recycler_view);
+        mRecyclerView = (RecyclerView) getView().findViewById(R.id.notifications_recycler_view);
         mLayoutManager = new LinearLayoutManager(getContext(),  LinearLayoutManager.VERTICAL, false);
 
         // touch guard manager  (this class is required to suppress scrolling while swipe-dismiss animation is running)
@@ -73,8 +76,8 @@ public class TodayTasksFragment extends Fragment {
         mRecyclerViewSwipeManager = new RecyclerViewSwipeManager();
 
         //adapter
-        final TodayTasksAdapter myItemAdapter = new TodayTasksAdapter(getDataProvider(), (MainActivity) getActivity());
-        myItemAdapter.setEventListener(new TodayTasksAdapter.EventListener() {
+        final NotificationsAdapter myItemAdapter = new NotificationsAdapter(getDataProvider(), (MainActivity) getActivity());
+        myItemAdapter.setEventListener(new NotificationsAdapter.EventListener() {
             @Override
             public void onItemRemoved(int position) {
                 //((MainActivity) getActivity()).onItemRemoved(position);
@@ -136,6 +139,26 @@ public class TodayTasksFragment extends Fragment {
         mRecyclerViewTouchActionGuardManager.attachRecyclerView(mRecyclerView);
         mRecyclerViewSwipeManager.attachRecyclerView(mRecyclerView);
 
+        mAddNotificationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                EditNotificationDialogFragment newFragment = new EditNotificationDialogFragment();
+                newFragment.setAdapter(myItemAdapter);
+/*                newFragment.setTask(task);
+                newFragment.setTaskDate(calendarDate);
+                newFragment.setAdapter(DataAdapter.this);*/
+                // The device is smaller, so show the fragment fullscreen
+                FragmentTransaction transaction = fragmentManager.beginTransaction();
+                // For a little polish, specify a transition animation
+                transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                // To make it fullscreen, use the 'content' root view as the container
+                // for the fragment, which is always the root view for the activity
+                transaction.add(/*android.R.id.content*/R.id.drawer_layout, newFragment)
+                        .addToBackStack(null).commit();
+            }
+        });
+
         // for debugging
 //        animator.setDebug(true);
 //        animator.setMoveDuration(2000);
@@ -185,15 +208,15 @@ public class TodayTasksFragment extends Fragment {
     }
 
     public AbstractDataProvider getDataProvider() {
-        return ((MainActivity) getActivity()).getDataProvider(TasksDataProvider.PROVIDER_ID);
+        return ((MainActivity) getActivity()).getDataProvider(NotificationsDataProvider.PROVIDER_ID);
     }
 
     private void showNoTasksMessage(){
-        mNoTasksContainer.setVisibility(View.VISIBLE);
+        mNoNotificationsContainer.setVisibility(View.VISIBLE);
     }
 
     private void hideNoTasksMessage(){
-        mNoTasksContainer.setVisibility(View.GONE);
+        mNoNotificationsContainer.setVisibility(View.GONE);
     }
 
     public void notifyItemChanged(int position) {

@@ -10,7 +10,7 @@
     android:layout_gravity="center">
 
     <RelativeLayout
-        android:id="@+id/today_no_tasks_container"
+        android:id="@+id/notification_no_notifications_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/colorPrimaryDark"
@@ -22,38 +22,38 @@
             app:sl_shadowed="true"
             app:sl_shadow_angle="45"
             app:sl_shadow_radius="3dp"
-            app:sl_shadow_distance="1dp"
+            app:sl_shadow_distance="2dp"
             app:sl_shadow_color="#80000000"
-            android:layout_above="@+id/today_no_tasks_message_main">
+            android:layout_above="@+id/notification_no_notifications_message_main">
 
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                app:srcCompat="@drawable/ic_today_white_96dp" />
+                app:srcCompat="@drawable/ic_notifications_white_96dp" />
 
         </com.gigamole.library.ShadowLayout>
 
         <TextView
-            android:id="@+id/today_no_tasks_message_main"
+            android:id="@+id/notification_no_notifications_message_main"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:layout_marginTop="16dp"
             android:gravity="center"
-            android:text='"Today tasks": it`s clear for now.'
+            android:text='"Notifications": it`s clear for now.'
             android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
             android:textColor="@color/textColor"
-            android:layout_above="@+id/today_no_tasks_message_detail"/>
+            android:layout_above="@+id/notification_no_notifications_message_detail"/>
 
         <TextView
-            android:id="@+id/today_no_tasks_message_detail"
+            android:id="@+id/notification_no_notifications_message_detail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:layout_marginTop="16dp"
             android:gravity="center"
-            android:text="Add task for today and it will \n appear here."
+            android:text="Add notification using button '+' and it will \n appear here."
             android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
             android:textColor="@color/textColor"
             android:textSize="14sp" />
@@ -61,12 +61,22 @@
     </RelativeLayout>
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/today_tasks_recycler_view"
+        android:id="@+id/notifications_recycler_view"
         style="@style/myRecyclerViewStyle"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_centerInParent="false" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_add_notification"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:clickable="true"
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_add_task_white_24dp"/>
 
 </RelativeLayout>

@@ -62,21 +62,21 @@ public class EditAreaDialogFragment extends DialogFragment {
 
         mToolbar.setTitle("Edit task");
         mToolbar.setNavigationIcon(android.R.drawable.ic_menu_close_clear_cancel);
-        mToolbar.setPadding(0, getStatusBarHeight(), 0, 0);
+        //mToolbar.setPadding(0, getStatusBarHeight(), 0, 0);
         setHasOptionsMenu(true);
         ((MainActivity) getActivity()).setSupportActionBar(mToolbar);
 
         return view;
     }
 
-    public int getStatusBarHeight() {
+/*    public int getStatusBarHeight() {
         int result = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resourceId > 0) {
             result = getResources().getDimensionPixelSize(resourceId);
         }
         return result;
-    }
+    }*/
 
     /** The system calls this only when creating the layout in a dialog. */
     @Override
@@ -95,7 +95,7 @@ public class EditAreaDialogFragment extends DialogFragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         menu.clear();
-        getActivity().getMenuInflater().inflate(R.menu.add_task_dialog_menu, menu);
+        getActivity().getMenuInflater().inflate(R.menu.add_item_dialog_menu, menu);
     }
 
     @Override

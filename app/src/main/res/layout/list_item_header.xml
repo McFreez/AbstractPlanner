@@ -24,7 +24,7 @@
     android:background="@color/backgroundColor">
 
     <TextView
-        android:id="@+id/today_list_item_header_day"
+        android:id="@+id/list_item_header_text"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginLeft="16dp"

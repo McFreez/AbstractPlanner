@@ -1,19 +1,3 @@
-/*
- *    Copyright (C) 2015 Haruki Hasegawa
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
-
 package com.abstractplanner.adapters;
 
 import android.app.DatePickerDialog;
@@ -23,6 +7,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,9 +19,9 @@ import android.widget.TextView;
 import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
 import com.abstractplanner.data.AbstractDataProvider;
-import com.abstractplanner.data.TasksDataProvider;
-import com.abstractplanner.dto.Task;
-import com.abstractplanner.fragments.EditTaskDialogFragment;
+import com.abstractplanner.data.NotificationsDataProvider;
+import com.abstractplanner.dto.Notification;
+import com.abstractplanner.fragments.EditNotificationDialogFragment;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemAdapter;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemConstants;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.action.SwipeResultAction;
@@ -47,11 +32,11 @@ import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractSwipeableItemView
 import com.h6ah4i.android.widget.advrecyclerview.utils.RecyclerViewAdapterUtils;
 
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 
-public class TodayTasksAdapter
-        extends RecyclerView.Adapter<RecyclerView.ViewHolder>
-        implements SwipeableItemAdapter<TodayTasksAdapter.MySwipeableViewHolder> {
-    private static final String TAG = "TodayTasksAdapter";
+public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
+        implements SwipeableItemAdapter<NotificationsAdapter.MySwipeableViewHolder> {
+    private static final String TAG = "NotificationsAdapter";
 
     // NOTE: Make accessible with short name
     private interface Swipeable extends SwipeableItemConstants {
@@ -60,7 +45,7 @@ public class TodayTasksAdapter
     private AbstractDataProvider mProvider;
     private MainActivity mActivity;
     private int previousItemCount = 0;
-    private EventListener mEventListener;
+    private NotificationsAdapter.EventListener mEventListener;
     private View.OnClickListener mItemViewOnClickListener;
     private View.OnClickListener mSwipeableViewContainerOnClickListener;
 
@@ -78,16 +63,14 @@ public class TodayTasksAdapter
 
     public static class MySwipeableViewHolder extends AbstractSwipeableItemViewHolder {
         public FrameLayout mContainer;
-        public TextView mTaskName;
-        public TextView mTaskAreaName;
-        public TextView mTaskDescription;
+        public TextView mMessage;
+        public TextView mDetails;
 
         public MySwipeableViewHolder(View v) {
             super(v);
             mContainer = (FrameLayout) v.findViewById(R.id.container);
-            mTaskName = (TextView) v.findViewById(R.id.today_list_task_name);
-            mTaskAreaName = (TextView) v.findViewById(R.id.today_list_task_area);
-            mTaskDescription = (TextView) v.findViewById(R.id.today_list_task_description);
+            mMessage = (TextView) v.findViewById(R.id.notifications_list_item_message);
+            mDetails = (TextView) v.findViewById(R.id.notifications_list_item_details);
         }
 
         @Override
@@ -98,19 +81,19 @@ public class TodayTasksAdapter
 
     public static class MyStaticViewHolder extends RecyclerView.ViewHolder{
 
-        public TextView mDay;
+        public TextView mType;
         public MyStaticViewHolder(View itemView) {
             super(itemView);
 
-            mDay = (TextView) itemView.findViewById(R.id.list_item_header_text);
+            mType = (TextView) itemView.findViewById(R.id.list_item_header_text);
         }
 
         public void bind(String day){
-            mDay.setText(day);
+            mType.setText(day);
         }
     }
 
-    public TodayTasksAdapter(AbstractDataProvider dataProvider, MainActivity activity) {
+    public NotificationsAdapter(AbstractDataProvider dataProvider, MainActivity activity) {
         mProvider = dataProvider;
         mActivity = activity;
         mItemViewOnClickListener = new View.OnClickListener() {
@@ -145,31 +128,58 @@ public class TodayTasksAdapter
         if(v.getTag() != null){
             final int position = (int) v.getTag();
 
-            final Task task = (Task) mProvider.getItem(position).getDataObject();
+            String type = "Type: ";
+            switch (((Notification)mProvider.getItem(position).getDataObject()).getType()){
+                case Notification.TYPE_ONE_TIME_ID:
+                    type += Notification.TYPE_ONE_TIME_NAME;
+                    break;
+                case Notification.TYPE_EVERY_DAY_ID:
+                    type += Notification.TYPE_EVERY_DAY_NAME;
+                    break;
+            }
 
-            String status;
-            if(task.isDone())
-                status = "Status: Done";
-            else
-                status = "Status: Undone";
+            final Calendar notificationDate = ((Notification)mProvider.getItem(position).getDataObject()).getDate();
+
+            String details = "";
+
+            switch (((Notification)mProvider.getItem(position).getDataObject()).getType()){
+                case Notification.TYPE_EVERY_DAY_ID:
+                    details = DateUtils.formatDateTime(getContext(), notificationDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_24HOUR);
+                    break;
+                case Notification.TYPE_ONE_TIME_ID:
+
+                    Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
+                    Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
+
+                    if(notificationDate.after(previousYear) && notificationDate.before(nextYear))
+                        details = DateUtils.formatDateTime(getContext(), notificationDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE)
+                                + " at "
+                                + DateUtils.formatDateTime(getContext(), notificationDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_24HOUR);
+                    else
+                        details = DateUtils.formatDateTime(getContext(), notificationDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
+                                + " at "
+                                + DateUtils.formatDateTime(getContext(), notificationDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_24HOUR);
+                    break;
+
+            }
+
             AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-            builder.setMessage(task.getDescription() + "\n\n" + status)
-                    .setTitle(task.getName())
+            builder.setMessage(details + "\n\n" + type)
+                    .setTitle(((Notification)mProvider.getItem(position).getDataObject()).getMessage())
                     .setNegativeButton("Edit", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             FragmentManager fragmentManager = mActivity.getSupportFragmentManager();
-                            EditTaskDialogFragment newFragment = new EditTaskDialogFragment();
-                            newFragment.setTask(task);
-                            newFragment.setTaskDate(task.getDate());
-                            newFragment.setAdapter(TodayTasksAdapter.this);
+                            EditNotificationDialogFragment newFragment = new EditNotificationDialogFragment();
+                            newFragment.setAdapter(NotificationsAdapter.this);
+                            newFragment.setNotificationToEdit(((Notification)mProvider.getItem(position).getDataObject()));
                             // The device is smaller, so show the fragment fullscreen
                             FragmentTransaction transaction = fragmentManager.beginTransaction();
                             // For a little polish, specify a transition animation
                             transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                             // To make it fullscreen, use the 'content' root view as the container
                             // for the fragment, which is always the root view for the activity
-                            transaction.add(R.id.drawer_layout, newFragment)
+                            transaction.add(/*android.R.id.content*/R.id.drawer_layout, newFragment)
                                     .addToBackStack(null).commit();
                         }
                     })
@@ -181,7 +191,6 @@ public class TodayTasksAdapter
                     });
 
             builder.show();
-
         }
 
         if (mEventListener != null) {
@@ -189,23 +198,22 @@ public class TodayTasksAdapter
         }
     }
 
-    public void saveEditedTask(Task task){
-        int position = getItemPositionById(task.getId());
+    public void saveNotification(Notification notification){
+        int position = getItemPositionById(notification.getId());
 
         if(position >= 0){
-            if(task.isDone()){
-                mProvider.removeItem(position, task.isDone());
-                notifyItemRemoved(position);
-            }else
-                if(((Task)mProvider.getItem(position).getDataObject()).getDate().compareTo(task.getDate()) == 0){
-                    mProvider.getItem(position).updateDataObject(task);
-                    notifyItemChanged(position);
-                } else {
-                    // int position = mProvider
-                    mProvider.getItem(position).updateDataObject(task);
-                    mProvider.updateItem(position);
-                    notifyDataSetChanged();
-                }
+            if(((Notification)mProvider.getItem(position).getDataObject()).getType() == notification.getType()){
+                mProvider.getItem(position).updateDataObject(notification);
+                notifyItemChanged(position);
+            }
+            else {
+                mProvider.getItem(position).updateDataObject(notification);
+                mProvider.updateItem(position);
+                notifyDataSetChanged();
+            }
+        } else {
+            mProvider.refreshData();
+            notifyDataSetChanged();
         }
     }
 
@@ -217,21 +225,21 @@ public class TodayTasksAdapter
     private int getItemPositionById(long id){
         for(int i = 0; i < getItemCount(); i++){
             if(mProvider.getItem(i).getDataObject() != null)
-                if(((Task)mProvider.getItem(i).getDataObject()).getId() == id){
+                if(((Notification)mProvider.getItem(i).getDataObject()).getId() == id){
                     return i;
                 }
         }
         return - 1;
     }
 
-/*    public Task getItemByPosition(int position){
-        return mTasks.get(position);
-    }
+    /*    public Task getItemByPosition(int position){
+            return mTasks.get(position);
+        }
 
-    public void removeByPosition(int position){
-        mTasks.remove(position);
-        //notifyDataSetChanged();
-    }*/
+        public void removeByPosition(int position){
+            mTasks.remove(position);
+            //notifyDataSetChanged();
+        }*/
     @Override
     public int getItemViewType(int position) {
         return mProvider.getItem(position).getViewType();
@@ -239,15 +247,15 @@ public class TodayTasksAdapter
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        if(viewType == TasksDataProvider.TaskData.ITEM_HEADER) {
+        if(viewType == NotificationsDataProvider.NotificationData.ITEM_HEADER) {
             final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
             final View v = inflater.inflate(R.layout.list_item_header, parent, false);
-            return new MyStaticViewHolder(v);
+            return new NotificationsAdapter.MyStaticViewHolder(v);
         }
         else{
             final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-            final View v = inflater.inflate(R.layout.today_tasks_list_item_normal, parent, false);
-            return new MySwipeableViewHolder(v);
+            final View v = inflater.inflate(R.layout.notifications_list_item_normal, parent, false);
+            return new NotificationsAdapter.MySwipeableViewHolder(v);
         }
     }
 
@@ -255,20 +263,19 @@ public class TodayTasksAdapter
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         int viewType = holder.getItemViewType();
 
-        if(viewType == TasksDataProvider.TaskData.ITEM_NORMAL){
-            bindSwipableViewHolder((MySwipeableViewHolder)holder, position);
+        if(viewType == NotificationsDataProvider.NotificationData.ITEM_NORMAL){
+            bindSwipableViewHolder((NotificationsAdapter.MySwipeableViewHolder)holder, position);
         } else
-            if(viewType == TasksDataProvider.TaskData.ITEM_HEADER){
-                final AbstractDataProvider.Data item = mProvider.getItem(position);
-                ((MyStaticViewHolder)holder).bind(item.getText());
-            }
+        if(viewType == NotificationsDataProvider.NotificationData.ITEM_HEADER){
+            final AbstractDataProvider.Data item = mProvider.getItem(position);
+            ((NotificationsAdapter.MyStaticViewHolder)holder).bind(item.getText());
+        }
     }
 
     //@Override
     ///public void onBindViewHolder(MySwipeableViewHolder holder, int position) {
-    public void bindSwipableViewHolder(MySwipeableViewHolder holder, int position) {
+    public void bindSwipableViewHolder(NotificationsAdapter.MySwipeableViewHolder holder, int position) {
         final AbstractDataProvider.Data item = mProvider.getItem(position);
-        Task task = (Task) item.getDataObject();
 
         // set listeners
         // (if the item is *pinned*, click event comes to the itemView)
@@ -277,22 +284,40 @@ public class TodayTasksAdapter
         holder.mContainer.setOnClickListener(mSwipeableViewContainerOnClickListener);
         holder.mContainer.setTag(position);
 
-        // set text
-        holder.mTaskName.setText(task.getName());
+        holder.mMessage.setText(((Notification)item.getDataObject()).getMessage());
 
-        holder.mTaskAreaName.setText(task.getArea().getName());
+        final Calendar notificationDate = ((Notification)item.getDataObject()).getDate();
 
-        holder.mTaskDescription.setText(task.getDescription());
+        switch (((Notification)item.getDataObject()).getType()){
+            case Notification.TYPE_EVERY_DAY_ID:
+                holder.mDetails.setText(DateUtils.formatDateTime(getContext(), notificationDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_24HOUR));
+                break;
+            case Notification.TYPE_ONE_TIME_ID:
+
+                Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
+                Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
+
+                if(notificationDate.after(previousYear) && notificationDate.before(nextYear))
+                    holder.mDetails.setText(DateUtils.formatDateTime(getContext(), notificationDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE)
+                            + " at "
+                            + DateUtils.formatDateTime(getContext(), notificationDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_24HOUR));
+                else
+                    holder.mDetails.setText(DateUtils.formatDateTime(getContext(), notificationDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
+                            + " at "
+                            + DateUtils.formatDateTime(getContext(), notificationDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_24HOUR));
+                break;
+
+        }
 
         // set background resource (target view ID: container)
         final int swipeState = holder.getSwipeStateFlags();
 
-        if ((swipeState & Swipeable.STATE_FLAG_IS_UPDATED) != 0) {
+        if ((swipeState & NotificationsAdapter.Swipeable.STATE_FLAG_IS_UPDATED) != 0) {
             int bgResId;
 
-            if ((swipeState & Swipeable.STATE_FLAG_IS_ACTIVE) != 0) {
+            if ((swipeState & NotificationsAdapter.Swipeable.STATE_FLAG_IS_ACTIVE) != 0) {
                 bgResId = R.drawable.bg_item_swiping_active_state;
-            } else if ((swipeState & Swipeable.STATE_FLAG_SWIPING) != 0) {
+            } else if ((swipeState & NotificationsAdapter.Swipeable.STATE_FLAG_SWIPING) != 0) {
                 bgResId = R.drawable.bg_item_swiping_state;
             } else {
                 bgResId = R.drawable.bg_item_normal_state;
@@ -303,7 +328,7 @@ public class TodayTasksAdapter
 
         // set swiping properties
         holder.setSwipeItemHorizontalSlideAmount(
-                item.isPinned() ? Swipeable.OUTSIDE_OF_THE_WINDOW_LEFT : 0);
+                item.isPinned() ? NotificationsAdapter.Swipeable.OUTSIDE_OF_THE_WINDOW_LEFT : 0);
     }
 
     @Override
@@ -313,9 +338,9 @@ public class TodayTasksAdapter
             if(itemCount == 0){
                 mEventListener.onDatasetEmpty();
             } else
-                if(previousItemCount == 0 && itemCount > 0){
-                    mEventListener.onDatasetFilled();
-                }
+            if(previousItemCount == 0 && itemCount > 0){
+                mEventListener.onDatasetFilled();
+            }
         }
         previousItemCount = itemCount;
 
@@ -323,22 +348,22 @@ public class TodayTasksAdapter
     }
 
     @Override
-    public int onGetSwipeReactionType(MySwipeableViewHolder holder, int position, int x, int y) {
-        return Swipeable.REACTION_CAN_SWIPE_BOTH_H;
+    public int onGetSwipeReactionType(NotificationsAdapter.MySwipeableViewHolder holder, int position, int x, int y) {
+        return NotificationsAdapter.Swipeable.REACTION_CAN_SWIPE_BOTH_H;
     }
 
     @Override
-    public void onSetSwipeBackground(MySwipeableViewHolder holder, int position, int type) {
+    public void onSetSwipeBackground(NotificationsAdapter.MySwipeableViewHolder holder, int position, int type) {
         int bgRes = 0;
         switch (type) {
-            case Swipeable.DRAWABLE_SWIPE_NEUTRAL_BACKGROUND:
+            case NotificationsAdapter.Swipeable.DRAWABLE_SWIPE_NEUTRAL_BACKGROUND:
                 bgRes = R.drawable.bg_swipe_item_neutral;
                 break;
-            case Swipeable.DRAWABLE_SWIPE_LEFT_BACKGROUND:
+            case NotificationsAdapter.Swipeable.DRAWABLE_SWIPE_LEFT_BACKGROUND:
                 bgRes = R.drawable.bg_swipe_item_left;
                 break;
-            case Swipeable.DRAWABLE_SWIPE_RIGHT_BACKGROUND:
-                bgRes = R.drawable.bg_swipe_item_right_done;
+            case NotificationsAdapter.Swipeable.DRAWABLE_SWIPE_RIGHT_BACKGROUND:
+                bgRes = R.drawable.bg_swipe_item_right_delete;
                 break;
         }
 
@@ -346,12 +371,12 @@ public class TodayTasksAdapter
     }
 
     @Override
-    public SwipeResultAction onSwipeItem(MySwipeableViewHolder holder, final int position, int result) {
+    public SwipeResultAction onSwipeItem(NotificationsAdapter.MySwipeableViewHolder holder, final int position, int result) {
         Log.d(TAG, "onSwipeItem(position = " + position + ", result = " + result + ")");
 
         switch (result) {
             // swipe right
-            case Swipeable.RESULT_SWIPED_RIGHT:
+            case NotificationsAdapter.Swipeable.RESULT_SWIPED_RIGHT:
                 /*if (mProvider.getItem(position).isPinned()) {
                     // pinned --- back to default position
                     return new UnpinResultAction(this, position);
@@ -359,36 +384,36 @@ public class TodayTasksAdapter
 
                 }*/
                 // not pinned --- remove
-                return new SwipeRightResultAction(this, position);
+                return new NotificationsAdapter.SwipeRightResultAction(this, position);
 
-                // swipe left -- pin
-            case Swipeable.RESULT_SWIPED_LEFT:
-                return new SwipeLeftResultAction(this, position);
+            // swipe left -- pin
+            case NotificationsAdapter.Swipeable.RESULT_SWIPED_LEFT:
+                //return new NotificationsAdapter.SwipeLeftResultAction(this, position);
             // other --- do nothing
-            case Swipeable.RESULT_CANCELED:
+            case NotificationsAdapter.Swipeable.RESULT_CANCELED:
             default:
                 if (position != RecyclerView.NO_POSITION) {
-                    return new UnpinResultAction(this, position);
+                    return new NotificationsAdapter.UnpinResultAction(this, position);
                 } else {
                     return null;
                 }
         }
     }
 
-    public EventListener getEventListener() {
+    public NotificationsAdapter.EventListener getEventListener() {
         return mEventListener;
     }
 
-    public void setEventListener(EventListener eventListener) {
+    public void setEventListener(NotificationsAdapter.EventListener eventListener) {
         mEventListener = eventListener;
     }
 
     private static class SwipeLeftResultAction extends SwipeResultActionMoveToSwipedDirection {
-        private TodayTasksAdapter mAdapter;
+        private NotificationsAdapter mAdapter;
         private final int mPosition;
         private boolean mSetPinned;
 
-        SwipeLeftResultAction(TodayTasksAdapter adapter, int position) {
+        SwipeLeftResultAction(NotificationsAdapter adapter, int position) {
             mAdapter = adapter;
             mPosition = position;
         }
@@ -396,9 +421,9 @@ public class TodayTasksAdapter
         DatePickerDialog.OnDateSetListener d = new DatePickerDialog.OnDateSetListener() {
             public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
                 AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
-                ((Task)item.getDataObject()).getDate().set(Calendar.YEAR, year);
-                ((Task)item.getDataObject()).getDate().set(Calendar.MONTH, monthOfYear);
-                ((Task)item.getDataObject()).getDate().set(Calendar.DAY_OF_MONTH, dayOfMonth);
+/*                item.getDataObject().getDate().set(Calendar.YEAR, year);
+                item.getDataObject().getDate().set(Calendar.MONTH, monthOfYear);
+                item.getDataObject().getDate().set(Calendar.DAY_OF_MONTH, dayOfMonth);*/
 
                 mAdapter.mProvider.updateItem(mPosition);
                 mAdapter.notifyDataSetChanged();
@@ -406,11 +431,11 @@ public class TodayTasksAdapter
         };
 
         private void setDate(/*View v*/) {
-            final AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
+/*            final AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
             DatePickerDialog datePickerDialog = new DatePickerDialog(mAdapter.getContext(), d,
-                    ((Task)item.getDataObject()).getDate().get(Calendar.YEAR),
-                    ((Task)item.getDataObject()).getDate().get(Calendar.MONTH),
-                    ((Task)item.getDataObject()).getDate().get(Calendar.DAY_OF_MONTH));
+                    item.getDataObject().getDate().get(Calendar.YEAR),
+                    item.getDataObject().getDate().get(Calendar.MONTH),
+                    item.getDataObject().getDate().get(Calendar.DAY_OF_MONTH));
 
             datePickerDialog.setButton(DatePickerDialog.BUTTON_NEGATIVE, mAdapter.getContext().getString(android.R.string.cancel), new DialogInterface.OnClickListener() {
                 @Override
@@ -420,7 +445,7 @@ public class TodayTasksAdapter
                     mSetPinned = false;
                 }
             });
-            datePickerDialog.show();
+            datePickerDialog.show();*/
         }
 
         @Override
@@ -460,10 +485,10 @@ public class TodayTasksAdapter
     }
 
     private static class SwipeRightResultAction extends SwipeResultActionRemoveItem {
-        private TodayTasksAdapter mAdapter;
+        private NotificationsAdapter mAdapter;
         private final int mPosition;
 
-        SwipeRightResultAction(TodayTasksAdapter adapter, int position) {
+        SwipeRightResultAction(NotificationsAdapter adapter, int position) {
             mAdapter = adapter;
             mPosition = position;
         }
@@ -494,10 +519,10 @@ public class TodayTasksAdapter
     }
 
     private static class UnpinResultAction extends SwipeResultActionDefault {
-        private TodayTasksAdapter mAdapter;
+        private NotificationsAdapter mAdapter;
         private final int mPosition;
 
-        UnpinResultAction(TodayTasksAdapter adapter, int position) {
+        UnpinResultAction(NotificationsAdapter adapter, int position) {
             mAdapter = adapter;
             mPosition = position;
         }

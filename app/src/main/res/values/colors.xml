@@ -13,6 +13,7 @@
     <color name="bg_swipe_item_neutral">@android:color/transparent</color>
     <color name="bg_swipe_item_pinned">#fff9930d</color>
     <color name="bg_swipe_item_dismiss">#ff2f8b2a</color>
+    <color name="bg_swipe_item_delete">@android:color/holo_red_dark</color>
     <color name="bg_swipe_item_gray">#999999</color>
 
     <color name="bg_item_normal_state">@android:color/background_light</color>

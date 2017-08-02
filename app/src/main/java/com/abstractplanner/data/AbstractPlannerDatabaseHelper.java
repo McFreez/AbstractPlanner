@@ -5,11 +5,13 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteDatabaseLockedException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.abstractplanner.data.AbstractPlannerContract.*;
 import com.abstractplanner.dto.Area;
+import com.abstractplanner.dto.Notification;
 import com.abstractplanner.dto.Task;
 
 import java.util.Calendar;
@@ -18,7 +20,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
 
     private static final String LOG_tAG = AbstractPlannerDatabaseHelper.class.getName();
 
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
     private static final String DATABASE_NAME = "abstractPlanner.db";
 
     public AbstractPlannerDatabaseHelper(Context context) {
@@ -42,17 +44,36 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
                 + TaskEntry.COLUMN_STATUS + " INTEGER NOT NULL,"
                 + " UNIQUE (" + TaskEntry.COLUMN_AREA_ID + "," + TaskEntry.COLUMN_DATE + ") ON CONFLICT FAIL);";
 
+        final String CREATE_TABLE_NOTIFICATION = "CREATE TABLE " + NotificationEntry.TABLE_NAME + " ("
+                + NotificationEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + NotificationEntry.COLUMN_MESSAGE + " TEXT NOT NULL,"
+                + NotificationEntry.COLUMN_DATE + " INTEGER NOT NULL,"
+                + NotificationEntry.COLUMN_TASK_ID + " INTEGER,"
+                + NotificationEntry.COLUMN_TYPE + " INTEGER NOT NULL" + ");";
+
         db.execSQL(CREATE_TABLE_AREA);
         db.execSQL(CREATE_TABLE_TASK);
+        db.execSQL(CREATE_TABLE_NOTIFICATION);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int i, int i1) {
-        db.execSQL("DROP TABLE IF EXISTS " + TaskEntry.TABLE_NAME);
-        db.execSQL("DROP TABLE IF EXISTS " + AreaEntry.TABLE_NAME);
+/*        db.execSQL("DROP TABLE IF EXISTS " + TaskEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + AreaEntry.TABLE_NAME);*/
 
-        onCreate(db);
+        final String CREATE_TABLE_NOTIFICATION = "CREATE TABLE " + NotificationEntry.TABLE_NAME + " ("
+                + NotificationEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + NotificationEntry.COLUMN_MESSAGE + " TEXT NOT NULL,"
+                + NotificationEntry.COLUMN_DATE + " INTEGER NOT NULL,"
+                + NotificationEntry.COLUMN_TASK_ID + " INTEGER,"
+                + NotificationEntry.COLUMN_TYPE + " INTEGER NOT NULL" + ");";
+
+        db.execSQL(CREATE_TABLE_NOTIFICATION);
+
+        //onCreate(db);
     }
+
+    // Areas
 
     public Cursor getAllAreas(){
         SQLiteDatabase db = this.getReadableDatabase();
@@ -145,6 +166,8 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
                 new String[]{ String.valueOf(area_id) });
     }
 
+    // Tasks
+
     public Cursor getTasksInRange(Calendar startDate, Calendar endDate){
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -173,6 +196,51 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
                 null,
                 null,
                 TaskEntry.COLUMN_DATE + " ASC");
+    }
+
+    public Cursor getAllAreaTasks(long area_id){
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        return db.query(TaskEntry.TABLE_NAME,
+                null,
+                TaskEntry.COLUMN_AREA_ID + " = ?",
+                new String[] { String.valueOf(area_id) },
+                null,
+                null,
+                null);
+    }
+
+    public Task getTaskByID(long task_id){
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor taskCursor = db.query(TaskEntry.TABLE_NAME,
+                null,
+                TaskEntry._ID + " = ?",
+                new String[]{ String.valueOf(task_id) },
+                null,
+                null,
+                null);
+
+        if(taskCursor != null)
+            taskCursor.moveToFirst();
+        else
+            return null;
+
+        Calendar taskDate = Calendar.getInstance();
+        taskDate.setTimeInMillis(taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_DATE)));
+
+        boolean isDone;
+        if(taskCursor.getInt(taskCursor.getColumnIndex(TaskEntry.COLUMN_STATUS)) == 1)
+            isDone = true;
+        else
+            isDone = false;
+
+        return new Task(taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry._ID)),
+                getAreaByID(taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_AREA_ID))),
+                taskCursor.getString(taskCursor.getColumnIndex(TaskEntry.COLUMN_NAME)),
+                taskCursor.getString(taskCursor.getColumnIndex(TaskEntry.COLUMN_DESCRIPTION)),
+                taskDate,
+                isDone);
     }
 
     public long createTask(Task task){
@@ -227,11 +295,101 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
     }
 
     private void deleteAllAreaTasks(long area_id){
+        Cursor areaTasksCursor = getAllAreaTasks(area_id);
+
+        while (areaTasksCursor.moveToNext()){
+            deleteAllTaskNotifications(areaTasksCursor.getLong(areaTasksCursor.getColumnIndex(TaskEntry._ID)));
+        }
+
         SQLiteDatabase db = this.getWritableDatabase();
 
         db.delete(TaskEntry.TABLE_NAME,
                 TaskEntry.COLUMN_AREA_ID + " = ?",
                 new String[]{ String.valueOf(area_id) });
+    }
+
+    // Notifications
+
+    public Cursor getAllNotifications(){
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        return db.query(
+                NotificationEntry.TABLE_NAME,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+/*    public Notification getNotificationByID(long notification_id){
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.query(NotificationEntry.TABLE_NAME,
+                null,
+                NotificationEntry._ID + " = ?",
+                )
+    }*/
+
+    public long createNotification(Notification notification){
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(NotificationEntry.COLUMN_MESSAGE, notification.getMessage());
+        values.put(NotificationEntry.COLUMN_DATE, notification.getDate().getTimeInMillis());
+        if(notification.getTask() != null)
+            values.put(NotificationEntry.COLUMN_TASK_ID, notification.getTask().getId());
+        else
+            values.putNull(NotificationEntry.COLUMN_TASK_ID);
+        values.put(NotificationEntry.COLUMN_TYPE, notification.getType());
+
+        return db.insert(NotificationEntry.TABLE_NAME,
+                null,
+                values);
+    }
+
+    public long updateNotification(Notification notification){
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(NotificationEntry.COLUMN_MESSAGE, notification.getMessage());
+        values.put(NotificationEntry.COLUMN_DATE, notification.getDate().getTimeInMillis());
+        if(notification.getTask() != null)
+            values.put(NotificationEntry.COLUMN_TASK_ID, notification.getTask().getId());
+        else
+            values.putNull(NotificationEntry.COLUMN_TASK_ID);
+        values.put(NotificationEntry.COLUMN_TYPE, notification.getType());
+
+
+        try{
+            long id = db.update(NotificationEntry.TABLE_NAME, values, NotificationEntry._ID + " = ?",
+                    new String[]{ String.valueOf(notification.getId()) });
+
+            return id;
+        }
+        catch (SQLiteConstraintException e){
+            Log.e(LOG_tAG, e.getMessage());
+            return -1;
+        }
+    }
+
+    public void deleteNotification(long notification_id){
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        db.delete(NotificationEntry.TABLE_NAME,
+                NotificationEntry._ID + " = ?",
+                new String[]{ String.valueOf(notification_id) });
+    }
+
+    private void deleteAllTaskNotifications(long task_id){
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        db.delete(NotificationEntry.TABLE_NAME,
+                NotificationEntry.COLUMN_TASK_ID + " = ?",
+                new String[]{ String.valueOf(task_id) });
     }
 
 }

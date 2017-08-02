@@ -19,6 +19,9 @@ import android.widget.SlidingDrawer;
 
 import com.abstractplanner.data.AbstractDataProvider;
 import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
+import com.abstractplanner.data.NotificationsDataProvider;
+import com.abstractplanner.data.NotificationsDataProviderFragment;
+import com.abstractplanner.data.TasksDataProvider;
 import com.abstractplanner.data.TasksDataProviderFragment;
 import com.abstractplanner.dto.Area;
 import com.abstractplanner.dto.Day;
@@ -26,6 +29,7 @@ import com.abstractplanner.dto.Task;
 import com.abstractplanner.fragments.AddAreaFragment;
 import com.abstractplanner.fragments.AddTaskFragment;
 import com.abstractplanner.fragments.CalendarGridFragment;
+import com.abstractplanner.fragments.NotificationsFragment;
 import com.abstractplanner.fragments.TodayTasksFragment;
 
 import java.util.ArrayList;
@@ -134,7 +138,7 @@ public class MainActivity extends AppCompatActivity
             case R.id.today_tasks:
                 fragment = new TodayTasksFragment();
                 getSupportFragmentManager().beginTransaction()
-                        .add(new TasksDataProviderFragment(), "data provider")
+                        .add(new TasksDataProviderFragment(), TasksDataProvider.PROVIDER_ID)
                         .commit();
                 break;
             case R.id.calendar_grid:
@@ -153,6 +157,20 @@ public class MainActivity extends AppCompatActivity
                         ((AddTaskFragment)fragment).setPredefinedParameters(areaName, date);
                     }
                 }
+                break;
+            case R.id.notifications_list:
+                fragment = new NotificationsFragment();
+                getSupportFragmentManager().beginTransaction()
+                        .add(new NotificationsDataProviderFragment(), NotificationsDataProvider.PROVIDER_ID)
+                        .commit();
+                /*if(additionalData != null){
+                    if(additionalData.containsKey("taskDay") && additionalData.containsKey("taskAreaName")) {
+                        Calendar date = (Calendar) additionalData.get("taskDay");
+                        String areaName = (String) additionalData.get("taskAreaName");
+
+                        ((AddTaskFragment)fragment).setPredefinedParameters(areaName, date);
+                    }
+                }*/
                 break;
         }
 
@@ -192,12 +210,23 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    public AbstractDataProvider getDataProvider() {
-        final Fragment fragment = getSupportFragmentManager().findFragmentByTag("data provider");
-        return ((TasksDataProviderFragment) fragment).getDataProvider();
+    public AbstractDataProvider getDataProvider(String providerID) {
+
+        final Fragment fragment = getSupportFragmentManager().findFragmentByTag(providerID);
+
+        switch (providerID){
+            case TasksDataProvider.PROVIDER_ID:
+                return ((TasksDataProviderFragment) fragment).getDataProvider();
+            case NotificationsDataProvider.PROVIDER_ID:
+                return ((NotificationsDataProviderFragment) fragment).getDataProvider();
+            default:
+                return null;
+
+        }
     }
 
     public AbstractPlannerDatabaseHelper getDbHelper(){
         return dbHelper;
     }
+
 }

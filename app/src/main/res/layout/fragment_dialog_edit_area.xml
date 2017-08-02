@@ -23,9 +23,15 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        layout="@layout/add_area_content"/>
+        android:layout_height="match_parent">
+
+        <include
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            layout="@layout/add_area_content"/>
+
+    </ScrollView>
 
 </LinearLayout>

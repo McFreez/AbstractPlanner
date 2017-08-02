@@ -22,4 +22,14 @@ public class AbstractPlannerContract {
         public static final String COLUMN_DATE = "date";
         public static final String COLUMN_STATUS = "status";
     }
+
+    public static final class NotificationEntry implements BaseColumns{
+
+        public static final String TABLE_NAME = "notification";
+
+        public static final String COLUMN_MESSAGE = "message";
+        public static final String COLUMN_DATE = "date";
+        public static final String COLUMN_TASK_ID = "task_id";
+        public static final String COLUMN_TYPE = "type";
+    }
 }

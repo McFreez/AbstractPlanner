@@ -18,6 +18,10 @@
             android:id="@+id/add_task"
             android:icon="@drawable/ic_library_add_black_48dp"
             android:title="Add task" />
+        <item
+            android:id="@+id/notifications_list"
+            android:icon="@drawable/ic_notifications_black_24dp"
+            android:title="Notifications" />
 <!--        <item
             android:id="@+id/nav_slideshow"
             android:icon="@drawable/ic_menu_slideshow"

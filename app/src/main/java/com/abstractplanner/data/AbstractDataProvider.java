@@ -31,11 +31,9 @@ public abstract class AbstractDataProvider {
 
         public abstract String getText();
 
-        public abstract Calendar getDate();
+        public abstract Object getDataObject();
 
-        public abstract Task getTask();
-
-        public abstract void updateTask(Task task);
+        public abstract void updateDataObject(Object dataObject);
 
         public abstract void setPinned(boolean pinned);
 
@@ -47,6 +45,8 @@ public abstract class AbstractDataProvider {
     public abstract Data getItem(int index);
 
     public abstract void removeItem(int position, boolean setDone);
+
+    public abstract void refreshData();
 
     public abstract void updateItem(int position);
 

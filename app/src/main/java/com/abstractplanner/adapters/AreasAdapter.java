@@ -83,7 +83,7 @@ public class AreasAdapter {
                                     transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                                     // To make it fullscreen, use the 'content' root view as the container
                                     // for the fragment, which is always the root view for the activity
-                                    transaction.add(android.R.id.content, newFragment)
+                                    transaction.add(R.id.drawer_layout, newFragment)
                                             .addToBackStack(null).commit();
                                 }
                             })

@@ -34,6 +34,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class TasksDataProvider extends AbstractDataProvider {
+
+    public static final String PROVIDER_ID = "today tasks data provider";
+
     private List<TaskData> mData;
     private Context mContext;
     private TaskData mLastRemovedData;
@@ -158,7 +161,7 @@ public class TasksDataProvider extends AbstractDataProvider {
     }
 
     @Override
-    public Data getItem(int index) {
+    public TaskData getItem(int index) {
         if (index < 0 || index >= getCount()) {
             throw new IndexOutOfBoundsException("index = " + index);
         }
@@ -201,13 +204,13 @@ public class TasksDataProvider extends AbstractDataProvider {
 
     @Override
     public void updateItem(int position){
-        long id = mDbHelper.updateTask(mData.get(position).getTask());
+        long id = mDbHelper.updateTask(mData.get(position).getDataObject());
 
         if(id < 0){
             AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
             builder.setMessage("You already have task for "
-                    + DateUtils.formatDateTime(mContext, mData.get(position).getTask().getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
-                    + " on " + mData.get(position).getTask().getArea().getName() + ".")
+                    + DateUtils.formatDateTime(mContext, mData.get(position).getDataObject().getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
+                    + " on " + mData.get(position).getDataObject().getArea().getName() + ".")
                     .setTitle("Try another day or area")
                     .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                         @Override
@@ -333,7 +336,7 @@ public class TasksDataProvider extends AbstractDataProvider {
         final TaskData removedItem = mData.remove(position);
 
         if(setDone) {
-            Task doneTask = removedItem.getTask();
+            Task doneTask = removedItem.getDataObject();
             doneTask.setDone(true);
 
             mDbHelper.updateTask(doneTask);
@@ -344,6 +347,12 @@ public class TasksDataProvider extends AbstractDataProvider {
 
         mLastRemovedData = removedItem;
         mLastRemovedPosition = position;
+    }
+
+    @Override
+    public void refreshData() {
+        mData.clear();
+        loadData();
     }
 
     public static final class TaskData extends Data {
@@ -409,7 +418,6 @@ public class TasksDataProvider extends AbstractDataProvider {
             return mText;
         }
 
-        @Override
         public Calendar getDate() {
             if(mViewType == ITEM_NORMAL){
                 mDate = mTask.getDate();
@@ -418,13 +426,13 @@ public class TasksDataProvider extends AbstractDataProvider {
         }
 
         @Override
-        public Task getTask() {
+        public Task getDataObject() {
             return mTask;
         }
 
         @Override
-        public void updateTask(Task task) {
-            mTask = task;
+        public void updateDataObject(Object objectData) {
+            mTask = (Task) objectData;
         }
 
         @Override
