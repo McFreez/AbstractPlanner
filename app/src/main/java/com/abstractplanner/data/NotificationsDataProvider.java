@@ -261,7 +261,7 @@ public class NotificationsDataProvider extends AbstractDataProvider {
             int id = idLong.intValue();
             alarmIntent.putExtra("id", id);
 
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, id, alarmIntent, 0);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, id, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             AlarmManager manager = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
             manager.cancel(pendingIntent);

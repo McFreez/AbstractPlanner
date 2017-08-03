@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -357,7 +358,6 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
 
         notifyDataSetChanged();
 
-
     }
 
     class DataViewHolder extends RecyclerView.ViewHolder{
@@ -467,8 +467,54 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
                                         @Override
                                         public void onClick(View view) {
                                             task.setDone(true);
-                                            mDbHelper.updateTask(task);
-                                            dataTaskViewHolder.taskStatus.setImageResource(R.drawable.checkbox_marked_circle_outline);
+                                            long status = mDbHelper.updateTask(task);
+                                            if(status < 0){
+                                                task.setDone(false);
+                                                if(status == -1){
+                                                    AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+                                                    builder.setMessage("You already have task for "
+                                                            + DateUtils.formatDateTime(mActivity, task.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
+                                                            + " on " + task.getArea().getName() + ".")
+                                                            .setTitle("Try another day or area")
+                                                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                                                @Override
+                                                                public void onClick(DialogInterface dialogInterface, int i) {
+                                                                    dialogInterface.dismiss();
+                                                                }
+                                                            });
+
+                                                    builder.show();
+                                                }
+                                                else
+                                                    if(status == -2){
+                                                        long undoneTaskDateMillis = mDbHelper.isAllPreviousAreaTasksDone(task);
+                                                        if(undoneTaskDateMillis > 0){
+                                                            Calendar undoneTaskDate = Calendar.getInstance();
+                                                            undoneTaskDate.setTimeInMillis(undoneTaskDateMillis);
+
+                                                            Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
+                                                            Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
+
+                                                            Calendar today = Calendar.getInstance();
+                                                            today.set(Calendar.HOUR_OF_DAY, 0);
+                                                            today.set(Calendar.MINUTE, 0);
+                                                            today.set(Calendar.SECOND, 0);
+                                                            today.set(Calendar.MILLISECOND, 0);
+
+                                                            String dateString;
+
+                                                            if(undoneTaskDate.after(previousYear) && undoneTaskDate.before(nextYear))
+                                                                dateString = DateUtils.formatDateTime(mActivity, undoneTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE);
+                                                            else
+                                                                dateString = DateUtils.formatDateTime(mActivity, undoneTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR);
+
+                                                            Snackbar.make(view, "Please finish task for " + dateString + " first", Snackbar.LENGTH_LONG).show();
+                                                        }
+                                                    }
+                                            }
+                                            else {
+                                                dataTaskViewHolder.taskStatus.setImageResource(R.drawable.checkbox_marked_circle_outline);
+                                            }
                                         }
                                     });
                                     snackbar.setActionTextColor(Color.GREEN);

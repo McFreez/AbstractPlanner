@@ -250,19 +250,55 @@ public class EditTaskDialogFragment extends DialogFragment {
         long id = mDbHelper.updateTask(task);
 
         if(id < 0){
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setMessage("You already have task for "
-                    + DateUtils.formatDateTime(getContext(), task.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
-                    + " on " + task.getArea().getName() + ".")
-                    .setTitle("Try another day or area")
-                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            dialogInterface.dismiss();
-                        }
-                    });
+            if (id == -1) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setMessage("You already have task for "
+                        + DateUtils.formatDateTime(getContext(), task.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
+                        + " on " + task.getArea().getName() + ".")
+                        .setTitle("Try another day or area")
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                            }
+                        });
 
-            builder.show();
+                builder.show();
+            } else if (id == -2) {
+                long undoneTaskDateMillis = mDbHelper.isAllPreviousAreaTasksDone(task);
+                if (undoneTaskDateMillis > 0) {
+                    Calendar undoneTaskDate = Calendar.getInstance();
+                    undoneTaskDate.setTimeInMillis(undoneTaskDateMillis);
+
+                    Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
+                    Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
+
+                    Calendar today = Calendar.getInstance();
+                    today.set(Calendar.HOUR_OF_DAY, 0);
+                    today.set(Calendar.MINUTE, 0);
+                    today.set(Calendar.SECOND, 0);
+                    today.set(Calendar.MILLISECOND, 0);
+
+                    String dateString;
+
+                    if (undoneTaskDate.after(previousYear) && undoneTaskDate.before(nextYear))
+                        dateString = DateUtils.formatDateTime(getContext(), undoneTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE);
+                    else
+                        dateString = DateUtils.formatDateTime(getContext(), undoneTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR);
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                    builder.setMessage("You have unfinished task for " + dateString + " in " + task.getArea().getName() + ". Finish it first, please.")
+                            .setTitle("Finish earlier task first")
+                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.dismiss();
+                                }
+                            });
+
+                    builder.show();
+                }
+            }
         } else {
             if(mAdapter instanceof DataAdapter)
                 ((DataAdapter)mAdapter).saveEditedTask(mTask, task);

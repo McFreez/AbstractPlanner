@@ -244,6 +244,12 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
     }
 
     public long createTask(Task task){
+        if(task.isDone()){
+            long dateInMilliseconds = isAllPreviousAreaTasksDone(task);
+            if(dateInMilliseconds > 0)
+                return -2;
+        }
+
         SQLiteDatabase db = this.getWritableDatabase();
 
         int status;
@@ -260,12 +266,28 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         values.put(TaskEntry.COLUMN_DATE, task.getDate().getTimeInMillis());
         values.put(TaskEntry.COLUMN_STATUS, status);
 
-        return db.insert(TaskEntry.TABLE_NAME,
-                null,
-                values);
+        try {
+            long id = db.insert(TaskEntry.TABLE_NAME,
+                    null,
+                    values);
+
+            return id;
+        } catch (SQLiteConstraintException e){
+            Log.e(LOG_tAG, e.getMessage());
+            return -1;
+        }
     }
 
     public long updateTask(Task task){
+
+        Task taskBeforeUpdate = getTaskByID(task.getId());
+
+        if(!taskBeforeUpdate.isDone() && task.isDone()){
+            long dateInMilliseconds = isAllPreviousAreaTasksDone(taskBeforeUpdate);
+            if(dateInMilliseconds > 0)
+                return -2;
+        }
+
         SQLiteDatabase db = this.getWritableDatabase();
 
         int status;
@@ -292,6 +314,25 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
             Log.e(LOG_tAG, e.getMessage());
             return -1;
         }
+    }
+
+    public long isAllPreviousAreaTasksDone(Task task){
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor tasksCursor = db.query(TaskEntry.TABLE_NAME,
+                null,
+                TaskEntry.COLUMN_AREA_ID + " = ? AND " + TaskEntry.COLUMN_DATE + " < ? AND " + TaskEntry.COLUMN_STATUS + " = ?",
+                new String[]{ String.valueOf(task.getArea().getId()), String.valueOf(task.getDate().getTimeInMillis()), String.valueOf(0) },
+                null,
+                null,
+                TaskEntry.COLUMN_DATE + " ASC");
+
+        if(tasksCursor.getCount() == 0)
+            return -1;
+
+        tasksCursor.moveToFirst();
+
+        return tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry.COLUMN_DATE));
     }
 
     private void deleteAllAreaTasks(long area_id){

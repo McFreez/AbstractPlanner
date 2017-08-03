@@ -264,21 +264,24 @@ public class EditNotificationDialogFragment extends DialogFragment {
     private void createOrUpdateNotification(Notification notification){
         AlarmManager manager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
 
+        Intent alarmIntent = new Intent(getActivity(), AlarmReceiver.class);
+
         if(mNotificationToEdit != null) {
-            Intent previousAlarmIntent = new Intent(getActivity(), AlarmReceiver.class);
-            previousAlarmIntent.putExtra("message", mNotificationToEdit.getMessage());
-            previousAlarmIntent.putExtra("type", Notification.getNotificationTypeName(mNotificationToEdit.getType()));
+            //Intent previousAlarmIntent = new Intent(getActivity(), AlarmReceiver.class);
+            alarmIntent.putExtra("message", mNotificationToEdit.getMessage());
+            alarmIntent.putExtra("type", Notification.getNotificationTypeName(mNotificationToEdit.getType()));
 
             Long previousIdLong = mNotificationToEdit.getId();
             int previousId = previousIdLong.intValue();
-            previousAlarmIntent.putExtra("id", previousId);
+            alarmIntent.putExtra("id", previousId);
 
-            PendingIntent previousPendingIntent = PendingIntent.getBroadcast(getContext(), previousId, previousAlarmIntent, 0);
+            PendingIntent previousPendingIntent = PendingIntent.getBroadcast(getContext(), previousId, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             manager.cancel(previousPendingIntent);
+
+            alarmIntent.getExtras().clear();
         }
 
-        Intent alarmIntent = new Intent(getActivity(), AlarmReceiver.class);
         alarmIntent.putExtra("message", notification.getMessage());
         alarmIntent.putExtra("type", Notification.getNotificationTypeName(notification.getType()));
 
@@ -286,7 +289,8 @@ public class EditNotificationDialogFragment extends DialogFragment {
         int id = idLong.intValue();
         alarmIntent.putExtra("id", id);
 
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), id, alarmIntent, 0);
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), id, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Calendar today = Calendar.getInstance();
 

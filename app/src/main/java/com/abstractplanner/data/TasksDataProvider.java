@@ -19,6 +19,7 @@ package com.abstractplanner.data;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.text.format.DateUtils;
 
@@ -206,20 +207,58 @@ public class TasksDataProvider extends AbstractDataProvider {
     public void updateItem(int position){
         long id = mDbHelper.updateTask(mData.get(position).getDataObject());
 
-        if(id < 0){
-            AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-            builder.setMessage("You already have task for "
-                    + DateUtils.formatDateTime(mContext, mData.get(position).getDataObject().getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
-                    + " on " + mData.get(position).getDataObject().getArea().getName() + ".")
-                    .setTitle("Try another day or area")
-                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            dialogInterface.dismiss();
-                        }
-                    });
+        Task task = mData.get(position).getDataObject();
 
-            builder.show();
+        if(id < 0) {
+            if (id == -1) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+                builder.setMessage("You already have task for "
+                        + DateUtils.formatDateTime(mContext, task.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
+                        + " on " + task.getArea().getName() + ".")
+                        .setTitle("Try another day or area")
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                            }
+                        });
+
+                builder.show();
+            } else if (id == -2) {
+                long undoneTaskDateMillis = mDbHelper.isAllPreviousAreaTasksDone(task);
+                if (undoneTaskDateMillis > 0) {
+                    Calendar undoneTaskDate = Calendar.getInstance();
+                    undoneTaskDate.setTimeInMillis(undoneTaskDateMillis);
+
+                    Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
+                    Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
+
+                    Calendar today = Calendar.getInstance();
+                    today.set(Calendar.HOUR_OF_DAY, 0);
+                    today.set(Calendar.MINUTE, 0);
+                    today.set(Calendar.SECOND, 0);
+                    today.set(Calendar.MILLISECOND, 0);
+
+                    String dateString;
+
+                    if (undoneTaskDate.after(previousYear) && undoneTaskDate.before(nextYear))
+                        dateString = DateUtils.formatDateTime(mContext, undoneTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE);
+                    else
+                        dateString = DateUtils.formatDateTime(mContext, undoneTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR);
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+                    builder.setMessage("You have unfinished task for " + dateString + " in " + task.getArea().getName() + ". Finish it first, please.")
+                            .setTitle("Finish earlier task first")
+                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.dismiss();
+                                }
+                            });
+
+                    builder.show();
+                }
+            }
 
             mData.get(position).setPinned(false);
         } else
@@ -324,6 +363,68 @@ public class TasksDataProvider extends AbstractDataProvider {
     @Override
     public void removeItem(int position, boolean setDone) {
 
+        if(setDone) {
+            Task doneTask = mData.get(position).getDataObject();
+            doneTask.setDone(true);
+
+            long status = mDbHelper.updateTask(doneTask);
+            if(status < 0){
+                if(status == -1){
+                    AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+                    builder.setMessage("You already have task for "
+                            + DateUtils.formatDateTime(mContext, doneTask.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
+                            + " on " + doneTask.getArea().getName() + ".")
+                            .setTitle("Try another day or area")
+                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.dismiss();
+                                }
+                            });
+
+                    builder.show();
+                    return;
+                }
+                else
+                if(status == -2){
+                    long undoneTaskDateMillis = mDbHelper.isAllPreviousAreaTasksDone(doneTask);
+                    if(undoneTaskDateMillis > 0){
+                        Calendar undoneTaskDate = Calendar.getInstance();
+                        undoneTaskDate.setTimeInMillis(undoneTaskDateMillis);
+
+                        Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
+                        Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
+
+                        Calendar today = Calendar.getInstance();
+                        today.set(Calendar.HOUR_OF_DAY, 0);
+                        today.set(Calendar.MINUTE, 0);
+                        today.set(Calendar.SECOND, 0);
+                        today.set(Calendar.MILLISECOND, 0);
+
+                        String dateString;
+
+                        if(undoneTaskDate.after(previousYear) && undoneTaskDate.before(nextYear))
+                            dateString = DateUtils.formatDateTime(mContext, undoneTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE);
+                        else
+                            dateString = DateUtils.formatDateTime(mContext, undoneTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR);
+
+                        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+                        builder.setMessage("You have unfinished task for " + dateString + " in " + doneTask.getArea().getName() + ". Finish it first, please.")
+                                .setTitle("Finish earlier task first")
+                                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        dialogInterface.dismiss();
+                                    }
+                                });
+
+                        builder.show();
+                        return;
+                    }
+                }
+            }
+        }
+
         boolean isLastInDate = false;
 
         if(position != 0 && mData.get(position - 1).getViewType() == TaskData.ITEM_HEADER) {
@@ -334,13 +435,6 @@ public class TasksDataProvider extends AbstractDataProvider {
 
         //noinspection UnnecessaryLocalVariable
         final TaskData removedItem = mData.remove(position);
-
-        if(setDone) {
-            Task doneTask = removedItem.getDataObject();
-            doneTask.setDone(true);
-
-            mDbHelper.updateTask(doneTask);
-        }
 
         if(isLastInDate)
             mData.remove(position - 1);

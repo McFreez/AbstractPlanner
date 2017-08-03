@@ -22,7 +22,7 @@ public class AlarmReceiver extends BroadcastReceiver{
     @Override
     public void onReceive(Context context, Intent intent) {
         mContext = context;
-        sendNotification(intent.getStringExtra("message"), intent.getStringExtra("type"), intent.getIntExtra("id", 0));
+        sendNotification(intent.getStringExtra("message"), intent.getStringExtra("type") + " notification", intent.getIntExtra("id", 0));
     }
 
     private void sendNotification(String messageBody, String messageTitle, int id){
@@ -36,7 +36,7 @@ public class AlarmReceiver extends BroadcastReceiver{
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext)
                 .setSmallIcon(R.drawable.ic_notifications_white_96dp)
                 .setLargeIcon(largeIcon())
-                .setContentTitle(messageTitle + " notification")
+                .setContentTitle(messageTitle)
                 .setContentText(messageBody)
                 .setAutoCancel(true)
                 .setSound(defaultSoundUri)
