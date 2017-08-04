@@ -1,11 +1,13 @@
 package com.abstractplanner.adapters;
 
+import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
 import android.util.Log;
@@ -21,7 +23,9 @@ import com.abstractplanner.R;
 import com.abstractplanner.data.AbstractDataProvider;
 import com.abstractplanner.data.NotificationsDataProvider;
 import com.abstractplanner.dto.Notification;
+import com.abstractplanner.dto.Task;
 import com.abstractplanner.fragments.EditNotificationDialogFragment;
+import com.abstractplanner.fragments.RescheduleNotificationDialogFragment;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemAdapter;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemConstants;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.action.SwipeResultAction;
@@ -114,7 +118,7 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
         setHasStableIds(true);
     }
 
-    public Context getContext(){
+    public AppCompatActivity getContext(){
         return mActivity;
     }
 
@@ -163,8 +167,14 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
 
             }
 
+            String task = "";
+
+            if(((Notification)mProvider.getItem(position).getDataObject()).getTask() != null){
+                task = "For task: " + ((Notification)mProvider.getItem(position).getDataObject()).getTask().getName() + " - " + ((Notification)mProvider.getItem(position).getDataObject()).getTask().getArea().getName();
+            }
+
             AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-            builder.setMessage(details + "\n\n" + type)
+            builder.setMessage(details + "\n" + task + "\n" + type)
                     .setTitle(((Notification)mProvider.getItem(position).getDataObject()).getMessage())
                     .setNegativeButton("Edit", new DialogInterface.OnClickListener() {
                         @Override
@@ -360,7 +370,7 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
                 bgRes = R.drawable.bg_swipe_item_neutral;
                 break;
             case NotificationsAdapter.Swipeable.DRAWABLE_SWIPE_LEFT_BACKGROUND:
-                bgRes = R.drawable.bg_swipe_item_left;
+                bgRes = R.drawable.bg_swipe_item_left_reschedule;
                 break;
             case NotificationsAdapter.Swipeable.DRAWABLE_SWIPE_RIGHT_BACKGROUND:
                 bgRes = R.drawable.bg_swipe_item_right_delete;
@@ -388,7 +398,7 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
 
             // swipe left -- pin
             case NotificationsAdapter.Swipeable.RESULT_SWIPED_LEFT:
-                //return new NotificationsAdapter.SwipeLeftResultAction(this, position);
+                return new NotificationsAdapter.SwipeLeftResultAction(this, position);
             // other --- do nothing
             case NotificationsAdapter.Swipeable.RESULT_CANCELED:
             default:
@@ -418,20 +428,20 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
             mPosition = position;
         }
 
-        DatePickerDialog.OnDateSetListener d = new DatePickerDialog.OnDateSetListener() {
+/*        DatePickerDialog.OnDateSetListener d = new DatePickerDialog.OnDateSetListener() {
             public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
                 AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
-/*                item.getDataObject().getDate().set(Calendar.YEAR, year);
+*//*                item.getDataObject().getDate().set(Calendar.YEAR, year);
                 item.getDataObject().getDate().set(Calendar.MONTH, monthOfYear);
-                item.getDataObject().getDate().set(Calendar.DAY_OF_MONTH, dayOfMonth);*/
+                item.getDataObject().getDate().set(Calendar.DAY_OF_MONTH, dayOfMonth);*//*
 
                 mAdapter.mProvider.updateItem(mPosition);
                 mAdapter.notifyDataSetChanged();
             }
         };
 
-        private void setDate(/*View v*/) {
-/*            final AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
+        private void setDate(*//*View v*//*) {
+*//*            final AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
             DatePickerDialog datePickerDialog = new DatePickerDialog(mAdapter.getContext(), d,
                     item.getDataObject().getDate().get(Calendar.YEAR),
                     item.getDataObject().getDate().get(Calendar.MONTH),
@@ -445,20 +455,37 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
                     mSetPinned = false;
                 }
             });
-            datePickerDialog.show();*/
-        }
+            datePickerDialog.show();*//*
+        }*/
 
         @Override
         protected void onPerformAction() {
             super.onPerformAction();
 
-            AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
+            final AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
             if (!item.isPinned()) {
                 item.setPinned(true);
                 mAdapter.notifyItemChanged(mPosition);
                 mSetPinned = true;
             }
-            setDate();
+            //setDate();
+            //showDeferDialog();
+            RescheduleNotificationDialogFragment dialogFragment = new RescheduleNotificationDialogFragment();
+            dialogFragment.setNotification((Notification) mAdapter.mProvider.getItem(mPosition).getDataObject());
+            dialogFragment.setEventListener(new RescheduleNotificationDialogFragment.EventListener() {
+                @Override
+                public void onNotificationDefered() {
+                    mAdapter.notifyItemChanged(mPosition);
+                }
+
+                @Override
+                public void onDismissed() {
+                    mSetPinned = false;
+                    item.setPinned(false);
+                    mAdapter.notifyItemChanged(mPosition);
+                }
+            });
+            dialogFragment.show(mAdapter.getContext().getSupportFragmentManager(), "RescheduleNotification");
 
             /*mAdapter.mProvider.removeItem(mPosition);
             mAdapter.notifyItemRemoved(mPosition);*/

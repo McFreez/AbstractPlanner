@@ -22,6 +22,7 @@ import android.content.DialogInterface;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -35,7 +36,9 @@ import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
 import com.abstractplanner.data.AbstractDataProvider;
 import com.abstractplanner.data.TasksDataProvider;
+import com.abstractplanner.dto.Notification;
 import com.abstractplanner.dto.Task;
+import com.abstractplanner.fragments.EditNotificationDialogFragment;
 import com.abstractplanner.fragments.EditTaskDialogFragment;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemAdapter;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemConstants;
@@ -131,7 +134,7 @@ public class TodayTasksAdapter
         setHasStableIds(true);
     }
 
-    public Context getContext(){
+    public AppCompatActivity getContext(){
         return mActivity;
     }
 
@@ -335,7 +338,7 @@ public class TodayTasksAdapter
                 bgRes = R.drawable.bg_swipe_item_neutral;
                 break;
             case Swipeable.DRAWABLE_SWIPE_LEFT_BACKGROUND:
-                bgRes = R.drawable.bg_swipe_item_left;
+                bgRes = R.drawable.bg_swipe_item_left_notify;
                 break;
             case Swipeable.DRAWABLE_SWIPE_RIGHT_BACKGROUND:
                 bgRes = R.drawable.bg_swipe_item_right_done;
@@ -393,7 +396,7 @@ public class TodayTasksAdapter
             mPosition = position;
         }
 
-        DatePickerDialog.OnDateSetListener d = new DatePickerDialog.OnDateSetListener() {
+/*        DatePickerDialog.OnDateSetListener d = new DatePickerDialog.OnDateSetListener() {
             public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
                 AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
                 ((Task)item.getDataObject()).getDate().set(Calendar.YEAR, year);
@@ -405,7 +408,7 @@ public class TodayTasksAdapter
             }
         };
 
-        private void setDate(/*View v*/) {
+        private void setDate(*//*View v*//*) {
             final AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
             DatePickerDialog datePickerDialog = new DatePickerDialog(mAdapter.getContext(), d,
                     ((Task)item.getDataObject()).getDate().get(Calendar.YEAR),
@@ -421,19 +424,37 @@ public class TodayTasksAdapter
                 }
             });
             datePickerDialog.show();
+        }*/
+
+        private void createNotification(){
+            FragmentManager fragmentManager = mAdapter.getContext().getSupportFragmentManager();
+            EditNotificationDialogFragment newFragment = new EditNotificationDialogFragment();
+            //newFragment.setAdapter(NotificationsAdapter.this);
+            //newFragment.setNotificationToEdit(((Notification)mProvider.getItem(position).getDataObject()));
+            newFragment.setNotificationTask((Task)mAdapter.mProvider.getItem(mPosition).getDataObject());
+            // The device is smaller, so show the fragment fullscreen
+            FragmentTransaction transaction = fragmentManager.beginTransaction();
+            // For a little polish, specify a transition animation
+            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            // To make it fullscreen, use the 'content' root view as the container
+            // for the fragment, which is always the root view for the activity
+            transaction.add(/*android.R.id.content*/R.id.drawer_layout, newFragment)
+                    .addToBackStack(null).commit();
         }
 
         @Override
         protected void onPerformAction() {
             super.onPerformAction();
 
-            AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
+/*            AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
             if (!item.isPinned()) {
                 item.setPinned(true);
                 mAdapter.notifyItemChanged(mPosition);
                 mSetPinned = true;
-            }
-            setDate();
+            }*/
+            //setDate();
+
+            createNotification();
 
             /*mAdapter.mProvider.removeItem(mPosition);
             mAdapter.notifyItemRemoved(mPosition);*/

@@ -221,7 +221,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
                 null,
                 null);
 
-        if(taskCursor != null)
+        if(taskCursor != null && taskCursor.getCount() > 0)
             taskCursor.moveToFirst();
         else
             return null;

@@ -115,7 +115,10 @@ public class EditTaskDialogFragment extends DialogFragment {
         mTaskDescriptionEditText.setText(mTask.getDescription());
         mTaskDoneCheckBox.setChecked(mTask.isDone());
 
-        View.OnClickListener setDateClickListener = new View.OnClickListener() {
+        mSpinnerSelectArea.setEnabled(false);
+        mTaskDateInputLayout.setEnabled(false);
+
+/*        View.OnClickListener setDateClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 setDate(view);
@@ -130,7 +133,7 @@ public class EditTaskDialogFragment extends DialogFragment {
                 if(b)
                     setDate(view);
             }
-        });
+        });*/
 
         mToolbar.setTitle("Edit task");
         mToolbar.setNavigationIcon(android.R.drawable.ic_menu_close_clear_cancel);

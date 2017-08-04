@@ -34,7 +34,7 @@ public class AlarmReceiver extends BroadcastReceiver{
 
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext)
-                .setSmallIcon(R.drawable.ic_notifications_white_96dp)
+                .setSmallIcon(R.drawable.ic_event_note_white_24dp)
                 .setLargeIcon(largeIcon())
                 .setContentTitle(messageTitle)
                 .setContentText(messageBody)
@@ -51,7 +51,7 @@ public class AlarmReceiver extends BroadcastReceiver{
 
     private Bitmap largeIcon() {
         Resources res = mContext.getResources();
-        Bitmap largeIcon = BitmapFactory.decodeResource(res, R.drawable.ic_notifications_white_96dp);
+        Bitmap largeIcon = BitmapFactory.decodeResource(res, R.drawable.ic_event_note_white_24dp);
         return largeIcon;
     }
 }

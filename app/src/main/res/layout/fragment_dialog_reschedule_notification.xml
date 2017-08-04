@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="40dp"
+    android:layout_marginRight="40dp"
+    android:layout_marginTop="24dp"
+    android:layout_marginBottom="24dp"
+    android:layout_gravity="center">
+
+    <LinearLayout
+        android:layout_width="300dp"
+        android:layout_height="125dp"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/notification_defer_for_30_min"
+            android:layout_width="150dp"
+            android:layout_height="125dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:background="?attr/selectableItemBackground">
+
+            <ImageView
+                android:src="@drawable/ic_time_gray_48dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:lines="1"
+                android:text="defer for 30 min"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+                android:textColor="@color/primaryTextColor"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/notification_defer_for_30_min_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:lines="1"
+                tools:text="8:30"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/notification_defer_for_1_hour"
+            android:layout_width="150dp"
+            android:layout_height="125dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:background="?attr/selectableItemBackground">
+
+            <ImageView
+                android:src="@drawable/ic_time_gray_48dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:lines="1"
+                android:text="defer for 1 hour"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+                android:textColor="@color/primaryTextColor"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/notification_defer_for_1_hour_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:lines="1"
+                tools:text="9:00"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="300dp"
+        android:layout_height="125dp"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/notification_defer_for_3_hours"
+            android:layout_width="150dp"
+            android:layout_height="125dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:background="?attr/selectableItemBackground">
+
+            <ImageView
+                android:src="@drawable/ic_time_gray_48dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:lines="1"
+                android:text="defer for 3 hours"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+                android:textColor="@color/primaryTextColor"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/notification_defer_for_3_hours_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:lines="1"
+                tools:text="11:00"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/notification_defer_for_6_hours"
+            android:layout_width="150dp"
+            android:layout_height="125dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:background="?attr/selectableItemBackground">
+
+            <ImageView
+                android:src="@drawable/ic_time_gray_48dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:lines="1"
+                android:text="defer for 6 hours"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+                android:textColor="@color/primaryTextColor"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/notification_defer_for_6_hours_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:lines="1"
+                tools:text="14:00"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/dividerColor"/>
+
+    <FrameLayout
+        android:layout_width="300dp"
+        android:layout_height="100dp"
+        android:background="@color/backgroundColor">
+
+        <LinearLayout
+            android:id="@+id/notification_select_exact_time"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_margin="16dp"
+                android:src="@drawable/calendar_clock" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="16dp"
+                android:text="Select exact time"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+                android:textColor="@color/primaryTextColor"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</LinearLayout>

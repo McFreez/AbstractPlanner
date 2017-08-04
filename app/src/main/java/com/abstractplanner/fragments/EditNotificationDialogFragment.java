@@ -35,6 +35,7 @@ import com.abstractplanner.R;
 import com.abstractplanner.adapters.NotificationsAdapter;
 import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.dto.Notification;
+import com.abstractplanner.dto.Task;
 import com.abstractplanner.recievers.AlarmReceiver;
 
 import java.util.ArrayList;
@@ -54,9 +55,12 @@ public class EditNotificationDialogFragment extends DialogFragment {
     private TextInputEditText mDateEditText;
     private TextInputLayout mTimeLayout;
     private TextInputEditText mTimeEditText;
+    private TextInputLayout mNotificationTaskLayout;
+    private TextInputEditText mNotificationTaskEditText;
 
     private Calendar mNotificationDateTime;
     private Notification mNotificationToEdit;
+    private Task mNotificationTask;
 
     private AbstractPlannerDatabaseHelper mDbHelper;
     private NotificationsAdapter mAdapter;
@@ -78,6 +82,10 @@ public class EditNotificationDialogFragment extends DialogFragment {
         mTimeLayout = (TextInputLayout) view.findViewById(R.id.et_notification_time_layout);
         mTimeEditText = (TextInputEditText) view.findViewById(R.id.et_notification_time);
         mTimeEditText.setKeyListener(null);
+        mNotificationTaskLayout = (TextInputLayout) view.findViewById(R.id.et_notification_task_layout);
+        mNotificationTaskEditText = (TextInputEditText) view.findViewById(R.id.et_notification_task);
+        mNotificationTaskLayout.setEnabled(false);
+        mNotificationTaskLayout.setVisibility(View.GONE);
 
         mDbHelper = ((MainActivity)getActivity()).getDbHelper();
 
@@ -95,13 +103,31 @@ public class EditNotificationDialogFragment extends DialogFragment {
         if(mNotificationDateTime == null)
             mNotificationDateTime = Calendar.getInstance();
 
+        if(mNotificationTask != null)
+            if(mNotificationDateTime.before(mNotificationTask.getDate()))
+                mNotificationDateTime.set(mNotificationTask.getDate().get(Calendar.YEAR), mNotificationTask.getDate().get(Calendar.MONTH), mNotificationTask.getDate().get(Calendar.DAY_OF_MONTH));
+
         setDateString();
         setTimeString();
 
         if(mNotificationToEdit != null) {
             mMessageEditText.setText(mNotificationToEdit.getMessage());
             mNotificationTypeSpinner.setSelection(spinnerNotificationTypes.indexOf(Notification.getNotificationTypeName(mNotificationToEdit.getType())));
+            if(mNotificationToEdit.getTask() != null) {
+                mNotificationTaskLayout.setVisibility(View.VISIBLE);
+                mNotificationTaskEditText.setText(mNotificationToEdit.getTask().getName() + " - " + mNotificationToEdit.getTask().getArea().getName());
+                mNotificationTypeSpinner.setSelection(spinnerNotificationTypes.indexOf(Notification.TYPE_ONE_TIME_NAME));
+                mNotificationTypeSpinner.setEnabled(false);
+            }
         }
+        else
+            if(mNotificationTask != null){
+                mNotificationTaskLayout.setVisibility(View.VISIBLE);
+                mNotificationTaskEditText.setText(mNotificationTask.getName() + " - " + mNotificationTask.getArea().getName());
+                mNotificationTypeSpinner.setSelection(spinnerNotificationTypes.indexOf(Notification.TYPE_ONE_TIME_NAME));
+                mNotificationTypeSpinner.setEnabled(false);
+            }
+
 
         View.OnClickListener setDateClickListener = new View.OnClickListener() {
             @Override
@@ -196,12 +222,12 @@ public class EditNotificationDialogFragment extends DialogFragment {
 
         if (id == R.id.action_save) {
             // handle confirmation button click here
-            if(mAdapter != null){
+            //if(mAdapter != null){
                 InputMethodManager inputMethodManager = (InputMethodManager)
                         getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                 inputMethodManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
                 saveNotification();
-            }
+            //}
             return true;
         } else if (id == android.R.id.home) {
             // handle close button click here
@@ -235,6 +261,7 @@ public class EditNotificationDialogFragment extends DialogFragment {
 
         Notification notification = new Notification(mMessageEditText.getText().toString(),
                 mNotificationDateTime,
+                mNotificationTask,
                 Notification.getNotificationTypeID(selectedNotificationType));
 
         long id;
@@ -256,7 +283,8 @@ public class EditNotificationDialogFragment extends DialogFragment {
                 notification.setId(id);
 
             createOrUpdateNotification(notification);
-            mAdapter.saveNotification(notification);
+            if(mAdapter != null)
+                mAdapter.saveNotification(notification);
             dismiss();
         }
     }
@@ -390,5 +418,9 @@ public class EditNotificationDialogFragment extends DialogFragment {
                         notificationToEdit.getDate().get(Calendar.HOUR_OF_DAY),
                         notificationToEdit.getDate().get(Calendar.MINUTE));
             }
+    }
+
+    public void setNotificationTask(Task task){
+        mNotificationTask = task;
     }
 }

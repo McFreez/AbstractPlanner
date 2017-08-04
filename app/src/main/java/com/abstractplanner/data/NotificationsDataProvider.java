@@ -10,6 +10,7 @@ import android.support.v7.app.AlertDialog;
 import android.text.format.DateUtils;
 
 import com.abstractplanner.dto.Notification;
+import com.abstractplanner.dto.Task;
 import com.abstractplanner.recievers.AlarmReceiver;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.RecyclerViewSwipeManager;
 
@@ -63,6 +64,7 @@ public class NotificationsDataProvider extends AbstractDataProvider {
                     notificationDate.setTimeInMillis(notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_DATE)));
 
                     long taskID = notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TASK_ID));
+                    Task task = mDbHelper.getTaskByID(taskID);
 
                     mData.add(new NotificationData(id,
                             viewType,
@@ -70,7 +72,7 @@ public class NotificationsDataProvider extends AbstractDataProvider {
                             new Notification(notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry._ID)),
                                     notificationsCursor.getString(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_MESSAGE)),
                                     notificationDate,
-                                    null,
+                                    task,
                                     notificationsCursor.getInt(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TYPE)))));
                 }
             }
@@ -94,6 +96,7 @@ public class NotificationsDataProvider extends AbstractDataProvider {
                     notificationDate.setTimeInMillis(notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_DATE)));
 
                     long taskID = notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TASK_ID));
+                    Task task = mDbHelper.getTaskByID(taskID);
 
                     mData.add(new NotificationData(id,
                             viewType,
@@ -101,7 +104,7 @@ public class NotificationsDataProvider extends AbstractDataProvider {
                             new Notification(notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry._ID)),
                                     notificationsCursor.getString(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_MESSAGE)),
                                     notificationDate,
-                                    null,
+                                    task,
                                     notificationsCursor.getInt(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TYPE)))));
                 }
             }
