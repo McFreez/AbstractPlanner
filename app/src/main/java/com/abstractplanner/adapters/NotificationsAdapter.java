@@ -394,6 +394,7 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
 
                 }*/
                 // not pinned --- remove
+                //final SwipeResultAction resultAction;
                 return new NotificationsAdapter.SwipeRightResultAction(this, position);
 
             // swipe left -- pin

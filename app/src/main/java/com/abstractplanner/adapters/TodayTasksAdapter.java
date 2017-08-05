@@ -38,8 +38,10 @@ import com.abstractplanner.data.AbstractDataProvider;
 import com.abstractplanner.data.TasksDataProvider;
 import com.abstractplanner.dto.Notification;
 import com.abstractplanner.dto.Task;
+import com.abstractplanner.fragments.AddTaskNotificationDialogFragment;
 import com.abstractplanner.fragments.EditNotificationDialogFragment;
 import com.abstractplanner.fragments.EditTaskDialogFragment;
+import com.abstractplanner.fragments.RescheduleNotificationDialogFragment;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemAdapter;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemConstants;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.action.SwipeResultAction;
@@ -227,14 +229,6 @@ public class TodayTasksAdapter
         return - 1;
     }
 
-/*    public Task getItemByPosition(int position){
-        return mTasks.get(position);
-    }
-
-    public void removeByPosition(int position){
-        mTasks.remove(position);
-        //notifyDataSetChanged();
-    }*/
     @Override
     public int getItemViewType(int position) {
         return mProvider.getItem(position).getViewType();
@@ -396,68 +390,30 @@ public class TodayTasksAdapter
             mPosition = position;
         }
 
-/*        DatePickerDialog.OnDateSetListener d = new DatePickerDialog.OnDateSetListener() {
-            public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-                AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
-                ((Task)item.getDataObject()).getDate().set(Calendar.YEAR, year);
-                ((Task)item.getDataObject()).getDate().set(Calendar.MONTH, monthOfYear);
-                ((Task)item.getDataObject()).getDate().set(Calendar.DAY_OF_MONTH, dayOfMonth);
-
-                mAdapter.mProvider.updateItem(mPosition);
-                mAdapter.notifyDataSetChanged();
-            }
-        };
-
-        private void setDate(*//*View v*//*) {
-            final AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
-            DatePickerDialog datePickerDialog = new DatePickerDialog(mAdapter.getContext(), d,
-                    ((Task)item.getDataObject()).getDate().get(Calendar.YEAR),
-                    ((Task)item.getDataObject()).getDate().get(Calendar.MONTH),
-                    ((Task)item.getDataObject()).getDate().get(Calendar.DAY_OF_MONTH));
-
-            datePickerDialog.setButton(DatePickerDialog.BUTTON_NEGATIVE, mAdapter.getContext().getString(android.R.string.cancel), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    item.setPinned(false);
-                    mAdapter.notifyItemChanged(mPosition);
-                    mSetPinned = false;
-                }
-            });
-            datePickerDialog.show();
-        }*/
-
-        private void createNotification(){
-            FragmentManager fragmentManager = mAdapter.getContext().getSupportFragmentManager();
-            EditNotificationDialogFragment newFragment = new EditNotificationDialogFragment();
-            //newFragment.setAdapter(NotificationsAdapter.this);
-            //newFragment.setNotificationToEdit(((Notification)mProvider.getItem(position).getDataObject()));
-            newFragment.setNotificationTask((Task)mAdapter.mProvider.getItem(mPosition).getDataObject());
-            // The device is smaller, so show the fragment fullscreen
-            FragmentTransaction transaction = fragmentManager.beginTransaction();
-            // For a little polish, specify a transition animation
-            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-            // To make it fullscreen, use the 'content' root view as the container
-            // for the fragment, which is always the root view for the activity
-            transaction.add(/*android.R.id.content*/R.id.drawer_layout, newFragment)
-                    .addToBackStack(null).commit();
-        }
-
         @Override
         protected void onPerformAction() {
             super.onPerformAction();
 
-/*            AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
+
+            final AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
             if (!item.isPinned()) {
                 item.setPinned(true);
                 mAdapter.notifyItemChanged(mPosition);
                 mSetPinned = true;
-            }*/
-            //setDate();
+            }
 
-            createNotification();
+            AddTaskNotificationDialogFragment dialogFragment = new AddTaskNotificationDialogFragment();
+            dialogFragment.setTask((Task) mAdapter.mProvider.getItem(mPosition).getDataObject());
+            dialogFragment.setEventListener(new AddTaskNotificationDialogFragment.EventListener() {
+                @Override
+                public void onDismissed() {
+                    mSetPinned = false;
+                    item.setPinned(false);
+                    mAdapter.notifyItemChanged(mPosition);
+                }
+            });
+            dialogFragment.show(mAdapter.getContext().getSupportFragmentManager(), "CreateNotification");
 
-            /*mAdapter.mProvider.removeItem(mPosition);
-            mAdapter.notifyItemRemoved(mPosition);*/
         }
 
         @Override

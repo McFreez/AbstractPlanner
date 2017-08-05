@@ -222,11 +222,14 @@ public class RescheduleNotificationDialogFragment extends DialogFragment {
 
         if(mNotificationToDefer != null) {
             alarmIntent.putExtra("message", mNotificationToDefer.getMessage());
-            alarmIntent.putExtra("type", Notification.getNotificationTypeName(mNotificationToDefer.getType()));
+            if(mNotificationToDefer.getTask() != null)
+                alarmIntent.putExtra("title", mNotificationToDefer.getTask().getArea().getName());
+            else
+                alarmIntent.putExtra("title", Notification.getNotificationTypeName(mNotificationToDefer.getType()) + " notification");
+            alarmIntent.putExtra("id", mNotificationToDefer.getId());
 
             Long previousIdLong = mNotificationToDefer.getId();
             int previousId = previousIdLong.intValue();
-            alarmIntent.putExtra("id", previousId);
 
             PendingIntent previousPendingIntent = PendingIntent.getBroadcast(getContext(), previousId, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -236,11 +239,14 @@ public class RescheduleNotificationDialogFragment extends DialogFragment {
         }
 
         alarmIntent.putExtra("message", mNotificationToDefer.getMessage());
-        alarmIntent.putExtra("type", Notification.getNotificationTypeName(mNotificationToDefer.getType()));
+        if(mNotificationToDefer.getTask() != null)
+            alarmIntent.putExtra("title", mNotificationToDefer.getTask().getArea().getName());
+        else
+            alarmIntent.putExtra("title", Notification.getNotificationTypeName(mNotificationToDefer.getType()) + " notification");
+        alarmIntent.putExtra("id", mNotificationToDefer.getId());
 
         Long idLong = mNotificationToDefer.getId();
         int id = idLong.intValue();
-        alarmIntent.putExtra("id", id);
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), id, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 

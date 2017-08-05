@@ -366,14 +366,37 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         );
     }
 
-/*    public Notification getNotificationByID(long notification_id){
+    public Notification getNotificationByID(long notification_id){
         SQLiteDatabase db = this.getReadableDatabase();
 
-        Cursor cursor = db.query(NotificationEntry.TABLE_NAME,
+        Cursor notificationCursor = db.query(NotificationEntry.TABLE_NAME,
                 null,
                 NotificationEntry._ID + " = ?",
-                )
-    }*/
+                new String[]{ String.valueOf(notification_id) },
+                null,
+                null,
+                null);
+
+        if(notificationCursor != null && notificationCursor.getCount() > 0){
+            notificationCursor.moveToFirst();
+
+            Calendar notificationDate = Calendar.getInstance();
+            notificationDate.setTimeInMillis(notificationCursor.getLong(notificationCursor.getColumnIndex(NotificationEntry.COLUMN_DATE)));
+
+            long taskID = notificationCursor.getLong(notificationCursor.getColumnIndex(NotificationEntry.COLUMN_TASK_ID));
+            Task task = getTaskByID(taskID);
+
+            Notification notification = new Notification(notificationCursor.getLong(notificationCursor.getColumnIndex(NotificationEntry._ID)),
+                    notificationCursor.getString(notificationCursor.getColumnIndex(NotificationEntry.COLUMN_MESSAGE)),
+                    notificationDate,
+                    task,
+                    notificationCursor.getInt(notificationCursor.getColumnIndex(NotificationEntry.COLUMN_TYPE)));
+
+            return notification;
+        }
+        else
+            return null;
+    }
 
     public long createNotification(Notification notification){
         SQLiteDatabase db = this.getWritableDatabase();

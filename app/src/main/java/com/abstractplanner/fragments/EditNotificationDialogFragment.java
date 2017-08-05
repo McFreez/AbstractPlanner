@@ -297,11 +297,15 @@ public class EditNotificationDialogFragment extends DialogFragment {
         if(mNotificationToEdit != null) {
             //Intent previousAlarmIntent = new Intent(getActivity(), AlarmReceiver.class);
             alarmIntent.putExtra("message", mNotificationToEdit.getMessage());
-            alarmIntent.putExtra("type", Notification.getNotificationTypeName(mNotificationToEdit.getType()));
+            if(mNotificationToEdit.getTask() != null)
+                alarmIntent.putExtra("title", mNotificationToEdit.getTask().getArea().getName());
+            else
+                alarmIntent.putExtra("title", Notification.getNotificationTypeName(mNotificationToEdit.getType()) + " notification");
+
+            alarmIntent.putExtra("id", mNotificationToEdit.getId());
 
             Long previousIdLong = mNotificationToEdit.getId();
             int previousId = previousIdLong.intValue();
-            alarmIntent.putExtra("id", previousId);
 
             PendingIntent previousPendingIntent = PendingIntent.getBroadcast(getContext(), previousId, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -311,12 +315,15 @@ public class EditNotificationDialogFragment extends DialogFragment {
         }
 
         alarmIntent.putExtra("message", notification.getMessage());
-        alarmIntent.putExtra("type", Notification.getNotificationTypeName(notification.getType()));
+        if(notification.getTask() != null)
+            alarmIntent.putExtra("title", notification.getTask().getArea().getName());
+        else
+            alarmIntent.putExtra("title", Notification.getNotificationTypeName(notification.getType()) + " notification");
+
+        alarmIntent.putExtra("id", notification.getId());
 
         Long idLong = notification.getId();
         int id = idLong.intValue();
-        alarmIntent.putExtra("id", id);
-
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), id, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 

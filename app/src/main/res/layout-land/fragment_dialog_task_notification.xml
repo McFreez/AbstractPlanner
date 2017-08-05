@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
@@ -46,10 +47,11 @@
                     android:textSize="14sp" />
 
                 <TextView
+                    android:id="@+id/task_notify_in_30_min_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:lines="1"
-                    android:text="8:30"
+                    tools:text="8:30"
                     android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
                     android:textSize="12sp" />
 
@@ -89,10 +91,11 @@
                     android:textSize="14sp" />
 
                 <TextView
+                    android:id="@+id/task_notify_in_1_hour_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:lines="1"
-                    android:text="9:00"
+                    tools:text="9:00"
                     android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
                     android:textSize="12sp" />
 
@@ -139,10 +142,11 @@
                     android:textSize="14sp" />
 
                 <TextView
+                    android:id="@+id/task_notify_in_3_hours_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:lines="1"
-                    android:text="11:00"
+                    tools:text="11:00"
                     android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
                     android:textSize="12sp" />
 
@@ -182,10 +186,11 @@
                     android:textSize="14sp" />
 
                 <TextView
+                    android:id="@+id/task_notify_in_6_hours_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:lines="1"
-                    android:text="14:00"
+                    tools:text="14:00"
                     android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
                     android:textSize="12sp" />
 

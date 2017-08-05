@@ -258,11 +258,14 @@ public class NotificationsDataProvider extends AbstractDataProvider {
 
             Intent alarmIntent = new Intent(mContext, AlarmReceiver.class);
             alarmIntent.putExtra("message", removedNotification.getMessage());
-            alarmIntent.putExtra("type", Notification.getNotificationTypeName(removedNotification.getType()));
+            if(removedNotification.getTask() != null)
+                alarmIntent.putExtra("title", removedNotification.getTask().getArea().getName());
+            else
+                alarmIntent.putExtra("title", Notification.getNotificationTypeName(removedNotification.getType()) + " notification");
+            alarmIntent.putExtra("id", removedNotification.getId());
 
             Long idLong = removedNotification.getId();
             int id = idLong.intValue();
-            alarmIntent.putExtra("id", id);
 
             PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, id, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 

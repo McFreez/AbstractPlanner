@@ -15,6 +15,7 @@ import android.support.v4.app.NotificationCompat;
 
 import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
+import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 
 public class AlarmReceiver extends BroadcastReceiver{
 
@@ -22,10 +23,10 @@ public class AlarmReceiver extends BroadcastReceiver{
     @Override
     public void onReceive(Context context, Intent intent) {
         mContext = context;
-        sendNotification(intent.getStringExtra("message"), intent.getStringExtra("type") + " notification", intent.getIntExtra("id", 0));
+        sendNotification(intent.getStringExtra("message"), intent.getStringExtra("title"), intent.getLongExtra("id", 0));
     }
 
-    private void sendNotification(String messageBody, String messageTitle, int id){
+    private void sendNotification(String messageBody, String messageTitle, long id){
 
         Intent intent = new Intent(mContext, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -35,7 +36,7 @@ public class AlarmReceiver extends BroadcastReceiver{
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext)
                 .setSmallIcon(R.drawable.ic_event_note_white_24dp)
-                .setLargeIcon(largeIcon())
+/*                .setLargeIcon(largeIcon())*/
                 .setContentTitle(messageTitle)
                 .setContentText(messageBody)
                 .setAutoCancel(true)
@@ -46,7 +47,17 @@ public class AlarmReceiver extends BroadcastReceiver{
         NotificationManager notificationManager =
                 (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        notificationManager.notify(id/* ID of notification */, notificationBuilder.build());
+        Long idLong = id;
+        int intId = idLong.intValue();
+
+        notificationManager.notify(intId/* ID of notification */, notificationBuilder.build());
+
+        AbstractPlannerDatabaseHelper dbHelper = new AbstractPlannerDatabaseHelper(mContext);
+
+        com.abstractplanner.dto.Notification notification = dbHelper.getNotificationByID(id);
+        if(notification != null)
+            if(notification.getType() == com.abstractplanner.dto.Notification.TYPE_ONE_TIME_ID)
+                dbHelper.deleteNotification(notification.getId());
     }
 
     private Bitmap largeIcon() {
