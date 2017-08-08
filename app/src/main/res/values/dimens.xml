@@ -15,7 +15,7 @@
     <dimen name="task_text_size">12sp</dimen>
 
     <dimen name="list_item_elevation">2dp</dimen>
-    <dimen name="list_item_height">84dp</dimen>
+    <dimen name="list_item_height">88dp</dimen>
     <dimen name="list_item_notification_height">72dp</dimen>
     <dimen name="list_item_header_height">48dp</dimen>
 </resources>

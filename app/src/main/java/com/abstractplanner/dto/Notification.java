@@ -8,6 +8,8 @@ public class Notification {
     public static final String TYPE_ONE_TIME_NAME = "One time";
     public static final int TYPE_EVERY_DAY_ID = 2;
     public static final String TYPE_EVERY_DAY_NAME = "Every day";
+    public static final int TYPE_SYSTEM_ID = 3;
+    public static final String TYPE_SYSTEM_NAME = "System notification";
 
     public static int getNotificationTypeID(String name){
         switch (name){
@@ -15,6 +17,8 @@ public class Notification {
                 return TYPE_ONE_TIME_ID;
             case TYPE_EVERY_DAY_NAME:
                 return TYPE_EVERY_DAY_ID;
+            case TYPE_SYSTEM_NAME:
+                return TYPE_SYSTEM_ID;
             default:
                 return TYPE_ONE_TIME_ID;
         }
@@ -26,6 +30,8 @@ public class Notification {
                 return TYPE_ONE_TIME_NAME;
             case TYPE_EVERY_DAY_ID:
                 return TYPE_EVERY_DAY_NAME;
+            case TYPE_SYSTEM_ID:
+                return TYPE_SYSTEM_NAME;
             default:
                 return TYPE_ONE_TIME_NAME;
         }

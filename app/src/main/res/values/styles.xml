@@ -6,11 +6,17 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+        <!--<item name="android:statusBarColor">@android:color/transparent</item>-->
 <!--        <item name="textColorPrimary">@color/primaryTextColor</item>
         <item name="textColorSecondary">@color/secondaryTextColor</item>
         <item name="colorBackground">@color/colorPrimaryLight</item>-->
         <!--<item name="android:colorButtonNormal">@color/colorPrimary</item>-->
+    </style>
+
+    <style name="AppTheme.Settings">
+        <item name="windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -36,8 +42,8 @@
     </style>
 
     <style name="commonListItemStyle">
-        <item name="android:elevation">@dimen/list_item_elevation</item>
-        <item name="android:outlineProvider">bounds</item>
+<!--        <item name="android:elevation">@dimen/list_item_elevation</item>
+        <item name="android:outlineProvider">bounds</item>-->
     </style>
 
 <!--    <style name="DialogFragmentStyle" parent="@android:style/Theme.Dialog">

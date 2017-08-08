@@ -36,7 +36,7 @@ import com.abstractplanner.adapters.NotificationsAdapter;
 import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.dto.Notification;
 import com.abstractplanner.dto.Task;
-import com.abstractplanner.recievers.AlarmReceiver;
+import com.abstractplanner.receivers.AlarmReceiver;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -119,6 +119,19 @@ public class EditNotificationDialogFragment extends DialogFragment {
                 mNotificationTypeSpinner.setSelection(spinnerNotificationTypes.indexOf(Notification.TYPE_ONE_TIME_NAME));
                 mNotificationTypeSpinner.setEnabled(false);
             }
+
+            if(mNotificationToEdit.getType() == Notification.TYPE_SYSTEM_ID){
+                mNotificationTypeSpinner.setVisibility(View.GONE);
+                View splitter = view.findViewById(R.id.spinner_splitter);
+                splitter.setVisibility(View.GONE);
+
+                mDateLayout.setVisibility(View.GONE);
+                mDateEditText.setVisibility(View.GONE);
+                mMessageLayout.setEnabled(false);
+/*                mNotificationDateTime.setTimeInMillis(mNotificationToEdit.getDate().getTimeInMillis());
+                setDateString();
+                setTimeString();*/
+            }
         }
         else
             if(mNotificationTask != null){
@@ -171,9 +184,32 @@ public class EditNotificationDialogFragment extends DialogFragment {
                 switch (selectedItem){
                     case Notification.TYPE_EVERY_DAY_NAME:
                         mDateLayout.setEnabled(false);
+
+                        mDateLayout.setOnClickListener(null);
+                        mDateEditText.setOnClickListener(null);
+                        mDateEditText.setOnFocusChangeListener(null);
+
                         break;
                     case Notification.TYPE_ONE_TIME_NAME:
                         mDateLayout.setEnabled(true);
+
+                        View.OnClickListener setDateClickListener = new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                setDate(view);
+                            }
+                        };
+
+                        mDateLayout.setOnClickListener(setDateClickListener);
+                        mDateEditText.setOnClickListener(setDateClickListener);
+                        mDateEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                            @Override
+                            public void onFocusChange(View view, boolean b) {
+                                if(b)
+                                    setDate(view);
+                            }
+                        });
+
                         break;
                 }
             }
@@ -264,6 +300,10 @@ public class EditNotificationDialogFragment extends DialogFragment {
                 mNotificationTask,
                 Notification.getNotificationTypeID(selectedNotificationType));
 
+        if(mNotificationToEdit != null)
+            if(mNotificationToEdit.getType() == Notification.TYPE_SYSTEM_ID)
+                notification.setType(Notification.TYPE_SYSTEM_ID);
+
         long id;
         boolean updated = false;
         if(mNotificationToEdit == null)
@@ -340,9 +380,20 @@ public class EditNotificationDialogFragment extends DialogFragment {
                 notificationDate.set(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH));
 
                 if(today.after(notificationDate))
-                    notificationDate.add(Calendar.DAY_OF_MONTH, 1);
+                    notificationDate.add(Calendar.DATE, 1);
 
                 manager.setRepeating(AlarmManager.RTC_WAKEUP, notificationDate.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+                break;
+            case Notification.TYPE_SYSTEM_ID:
+
+                Calendar notifDate = notification.getDate();
+                notifDate.set(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH));
+
+                if(today.after(notifDate))
+                    notifDate.add(Calendar.DATE, 1);
+
+                manager.setRepeating(AlarmManager.RTC_WAKEUP, notifDate.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+                break;
         }
     }
 

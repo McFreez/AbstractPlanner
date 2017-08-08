@@ -45,8 +45,10 @@ public class DataRecyclerView extends RecyclerView {
     }
 
     public void followedScrollToPosition(int position){
+        CenterLayoutManager layoutManager = (CenterLayoutManager) getLayoutManager();
         followedScrollingToPosition = true;
-        scrollToPosition(position);
+        layoutManager.scrollToPositionWithOffset(position, 0);
+        //scrollToPosition(position);
     }
 
     @Override
@@ -138,10 +140,10 @@ public class DataRecyclerView extends RecyclerView {
 
         int todayPosition = adapter.getCurrentDayPosition();
         if(todayPosition >= 0) {
+            //layoutManager.scrollToPositionWithOffset(todayPosition, 0);
             followedScrollToPosition(todayPosition);
             daysView.followedScrollToPosition(todayPosition);
             smoothScrollToPosition(todayPosition);
         }
     }
 }
-

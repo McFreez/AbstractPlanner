@@ -44,6 +44,21 @@ public class DaysAdapter extends RecyclerView.Adapter<DaysAdapter.DaysViewHolder
         return viewHolder;
     }
 
+    public int getCurrentDayPosition(){
+        Calendar today = Calendar.getInstance();
+        today.set(Calendar.HOUR_OF_DAY, 0);
+        today.set(Calendar.MINUTE, 0);
+        today.set(Calendar.SECOND, 0);
+        today.set(Calendar.MILLISECOND, 0);
+
+        for(int i = 0; i < mDays.size(); i++){
+            if(mDays.get(i).getDate().compareTo(today) == 0)
+                return i;
+        }
+
+        return -1;
+    }
+
     @Override
     public void onBindViewHolder(DaysViewHolder holder, int position) {
         holder.bind(mDays.get(position).getDate());

@@ -27,8 +27,8 @@
             android:layout_above="@+id/today_no_tasks_message_main">
 
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
                 android:layout_gravity="center"
                 app:srcCompat="@drawable/ic_today_white_96dp" />
 

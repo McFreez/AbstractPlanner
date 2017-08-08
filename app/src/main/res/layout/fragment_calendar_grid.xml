@@ -133,7 +133,7 @@
                             android:id="@+id/button_add_area"
                             android:layout_width="match_parent"
                             android:layout_height="56dp"
-                            android:src="@drawable/ic_add_row_orange_24dp"
+                            android:src="@drawable/ic_add_row_white_24dp"
                             style="@style/SelectableItemBackground"
                             android:clickable="true"
                             android:padding="8dp"/>

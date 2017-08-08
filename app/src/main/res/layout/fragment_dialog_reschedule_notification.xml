@@ -2,8 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_width="300dp"
+    android:layout_height="350dp"
     android:layout_marginLeft="40dp"
     android:layout_marginRight="40dp"
     android:layout_marginTop="24dp"
@@ -11,14 +11,15 @@
     android:layout_gravity="center">
 
     <LinearLayout
-        android:layout_width="300dp"
+        android:layout_width="match_parent"
         android:layout_height="125dp"
         android:orientation="horizontal">
 
         <LinearLayout
             android:id="@+id/notification_defer_for_30_min"
-            android:layout_width="150dp"
-            android:layout_height="125dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
             android:orientation="vertical"
             android:gravity="center"
             android:clickable="true"
@@ -53,8 +54,9 @@
 
         <LinearLayout
             android:id="@+id/notification_defer_for_1_hour"
-            android:layout_width="150dp"
-            android:layout_height="125dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
             android:orientation="vertical"
             android:gravity="center"
             android:clickable="true"
@@ -90,14 +92,15 @@
     </LinearLayout>
 
     <LinearLayout
-        android:layout_width="300dp"
+        android:layout_width="match_parent"
         android:layout_height="125dp"
         android:orientation="horizontal">
 
         <LinearLayout
             android:id="@+id/notification_defer_for_3_hours"
-            android:layout_width="150dp"
-            android:layout_height="125dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
             android:orientation="vertical"
             android:gravity="center"
             android:clickable="true"
@@ -132,8 +135,9 @@
 
         <LinearLayout
             android:id="@+id/notification_defer_for_6_hours"
-            android:layout_width="150dp"
-            android:layout_height="125dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
             android:orientation="vertical"
             android:gravity="center"
             android:clickable="true"
@@ -173,7 +177,7 @@
         android:background="@color/dividerColor"/>
 
     <FrameLayout
-        android:layout_width="300dp"
+        android:layout_width="match_parent"
         android:layout_height="100dp"
         android:background="@color/backgroundColor">
 

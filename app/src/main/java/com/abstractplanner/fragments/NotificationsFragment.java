@@ -1,5 +1,6 @@
 package com.abstractplanner.fragments;
 
+import android.content.SharedPreferences;
 import android.graphics.drawable.NinePatchDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -9,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -29,7 +31,8 @@ import com.h6ah4i.android.widget.advrecyclerview.swipeable.RecyclerViewSwipeMana
 import com.h6ah4i.android.widget.advrecyclerview.touchguard.RecyclerViewTouchActionGuardManager;
 import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils;
 
-public class NotificationsFragment extends Fragment {
+public class NotificationsFragment extends Fragment
+    implements SharedPreferences.OnSharedPreferenceChangeListener{
 
     private RelativeLayout mNoNotificationsContainer;
     private FloatingActionButton mAddNotificationButton;
@@ -219,6 +222,22 @@ public class NotificationsFragment extends Fragment {
         mNoNotificationsContainer.setVisibility(View.GONE);
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        /* Unregister the preference change listener */
+        PreferenceManager.getDefaultSharedPreferences(getContext())
+                .unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        /* Register the preference change listener */
+        PreferenceManager.getDefaultSharedPreferences(getContext())
+                .registerOnSharedPreferenceChangeListener(this);
+    }
+
     public void notifyItemChanged(int position) {
         mAdapter.notifyItemChanged(position);
     }
@@ -226,5 +245,10 @@ public class NotificationsFragment extends Fragment {
     public void notifyItemInserted(int position) {
         mAdapter.notifyItemInserted(position);
         mRecyclerView.scrollToPosition(position);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        ((NotificationsAdapter)mAdapter).refreshData();
     }
 }

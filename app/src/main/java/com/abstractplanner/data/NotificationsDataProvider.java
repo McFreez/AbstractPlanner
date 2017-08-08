@@ -3,20 +3,19 @@ package com.abstractplanner.data;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.support.v7.app.AlertDialog;
-import android.text.format.DateUtils;
+import android.support.v7.preference.PreferenceManager;
 
+import com.abstractplanner.R;
 import com.abstractplanner.dto.Notification;
 import com.abstractplanner.dto.Task;
-import com.abstractplanner.recievers.AlarmReceiver;
+import com.abstractplanner.receivers.AlarmReceiver;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.RecyclerViewSwipeManager;
 
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -49,8 +48,55 @@ public class NotificationsDataProvider extends AbstractDataProvider {
 
             for(int i = 0; i < notificationsCursor.getCount(); i++){
                 notificationsCursor.moveToPosition(i);
+
+                if(notificationsCursor.getInt(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TYPE)) ==
+                    Notification.getNotificationTypeID(Notification.TYPE_SYSTEM_NAME)){
+
+                    String message = notificationsCursor.getString(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_MESSAGE));
+
+                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+                    boolean isNotificationEnabled = false;
+
+                    if(message.equals(mContext.getString(R.string.tomorrow_tasks_notification_message))){
+                        isNotificationEnabled = sharedPreferences.getBoolean(mContext.getString(R.string.tomorrow_tasks_notification_key), true);
+                    }
+
+                    if(!isNotificationEnabled)
+                        continue;
+
+                    if(!isEveryDayHeaderInserted){
+                        insertHeader("Every day", false);
+                        isEveryDayHeaderInserted = true;
+                    }
+
+                    final long id = mData.size();
+                    final int viewType = NotificationData.ITEM_STATIC;
+                    final int swipeReaction = RecyclerViewSwipeManager.REACTION_CAN_SWIPE_UP | RecyclerViewSwipeManager.REACTION_CAN_SWIPE_DOWN;
+
+                    Calendar notificationDate = Calendar.getInstance();
+                    notificationDate.setTimeInMillis(notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_DATE)));
+
+                    long taskID = notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TASK_ID));
+                    Task task = mDbHelper.getTaskByID(taskID);
+
+                    mData.add(new NotificationData(id,
+                            viewType,
+                            swipeReaction,
+                            new Notification(notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry._ID)),
+                                    message,
+                                    notificationDate,
+                                    task,
+                                    notificationsCursor.getInt(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TYPE)))));
+
+                }
+            }
+
+            for(int i = 0; i < notificationsCursor.getCount(); i++){
+                notificationsCursor.moveToPosition(i);
+
                 if(notificationsCursor.getInt(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TYPE)) ==
                         Notification.getNotificationTypeID(Notification.TYPE_EVERY_DAY_NAME)){
+
                     if(!isEveryDayHeaderInserted){
                         insertHeader("Every day", false);
                         isEveryDayHeaderInserted = true;
@@ -74,6 +120,7 @@ public class NotificationsDataProvider extends AbstractDataProvider {
                                     notificationDate,
                                     task,
                                     notificationsCursor.getInt(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TYPE)))));
+
                 }
             }
 
@@ -292,6 +339,7 @@ public class NotificationsDataProvider extends AbstractDataProvider {
 
         public static final int ITEM_NORMAL = 0;
         public static final int ITEM_HEADER = 1;
+        public static final int ITEM_STATIC = 2;
 
         private final long mId;
         private Notification mNotification;

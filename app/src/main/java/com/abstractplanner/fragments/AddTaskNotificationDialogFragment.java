@@ -1,18 +1,21 @@
 package com.abstractplanner.fragments;
 
 import android.app.AlarmManager;
+import android.app.Dialog;
 import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -22,7 +25,7 @@ import com.abstractplanner.R;
 import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.dto.Notification;
 import com.abstractplanner.dto.Task;
-import com.abstractplanner.recievers.AlarmReceiver;
+import com.abstractplanner.receivers.AlarmReceiver;
 
 import java.util.Calendar;
 
@@ -84,7 +87,7 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                 //notificationTime.set(mTaskToNotify.getDate().get(Calendar.YEAR), mTaskToNotify.getDate().get(Calendar.MONTH), mTaskToNotify.getDate().get(Calendar.DAY_OF_MONTH));
                 notificationTime.add(Calendar.MINUTE, 30);
 
-                Notification notification = new Notification("You have unfinished task " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
+                Notification notification = new Notification("You have unfinished task: " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
 
                 long id = mDbHelper.createNotification(notification);
 
@@ -109,7 +112,7 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                 //notificationTime.set(mTaskToNotify.getDate().get(Calendar.YEAR), mTaskToNotify.getDate().get(Calendar.MONTH), mTaskToNotify.getDate().get(Calendar.DAY_OF_MONTH));
                 notificationTime.add(Calendar.HOUR, 1);
 
-                Notification notification = new Notification("You have unfinished task " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
+                Notification notification = new Notification("You have unfinished task: " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
 
                 long id = mDbHelper.createNotification(notification);
 
@@ -134,7 +137,7 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                 //notificationTime.set(mTaskToNotify.getDate().get(Calendar.YEAR), mTaskToNotify.getDate().get(Calendar.MONTH), mTaskToNotify.getDate().get(Calendar.DAY_OF_MONTH));
                 notificationTime.add(Calendar.HOUR, 3);
 
-                Notification notification = new Notification("You have unfinished task " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
+                Notification notification = new Notification("You have unfinished task: " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
 
                 long id = mDbHelper.createNotification(notification);
 
@@ -159,7 +162,7 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                 //notificationTime.set(mTaskToNotify.getDate().get(Calendar.YEAR), mTaskToNotify.getDate().get(Calendar.MONTH), mTaskToNotify.getDate().get(Calendar.DAY_OF_MONTH));
                 notificationTime.add(Calendar.HOUR, 6);
 
-                Notification notification = new Notification("You have unfinished task " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
+                Notification notification = new Notification("You have unfinished task: " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
 
                 long id = mDbHelper.createNotification(notification);
 
@@ -185,6 +188,30 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
         });
 
         return view;
+    }
+
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        // The only reason you might override this method when using onCreateView() is
+        // to modify any dialog characteristics. For example, the dialog includes a
+        // title by default, but your custom layout might not need it. So here you can
+        // remove the dialog title, but you must call the superclass to get the Dialog.
+
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+        return dialog;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        if(mEventListener != null)
+            mEventListener.onDismissed();
+
+        this.dismiss();
     }
 
     @Override
@@ -271,7 +298,7 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                 notificationDate.set(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH));
 
                 if(today.after(notificationDate))
-                    notificationDate.add(Calendar.DAY_OF_MONTH, 1);
+                    notificationDate.add(Calendar.DATE, 1);
 
                 manager.setRepeating(AlarmManager.RTC_WAKEUP, notificationDate.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
         }

@@ -1,4 +1,4 @@
-package com.abstractplanner.recievers;
+package com.abstractplanner.receivers;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -28,15 +28,37 @@ public class AlarmReceiver extends BroadcastReceiver{
 
     private void sendNotification(String messageBody, String messageTitle, long id){
 
+        if(messageBody == null || messageTitle == null)
+            return;
+
+        if(messageBody.equals("") || messageTitle.equals(""))
+            return;
+
+        Long idLong = id;
+        int intId = idLong.intValue();
+
+        AbstractPlannerDatabaseHelper dbHelper = new AbstractPlannerDatabaseHelper(mContext);
+
+        com.abstractplanner.dto.Notification notification = dbHelper.getNotificationByID(id);
+
+        if(notification != null)
+            if(notification.getType() == com.abstractplanner.dto.Notification.TYPE_SYSTEM_ID && dbHelper.isTasksForTomorrowSet())
+                return;
+
+        int requestCode = 0;
         Intent intent = new Intent(mContext, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        if(notification != null)
+            if(notification.getType() == com.abstractplanner.dto.Notification.TYPE_SYSTEM_ID) {
+                requestCode = com.abstractplanner.dto.Notification.TYPE_SYSTEM_ID;
+                intent.putExtra("showCalendar", true);
+            }
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0 /*Request code */, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(mContext, requestCode /*Request code */, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext)
                 .setSmallIcon(R.drawable.ic_event_note_white_24dp)
-/*                .setLargeIcon(largeIcon())*/
                 .setContentTitle(messageTitle)
                 .setContentText(messageBody)
                 .setAutoCancel(true)
@@ -44,17 +66,15 @@ public class AlarmReceiver extends BroadcastReceiver{
                 .setContentIntent(pendingIntent)
                 .setPriority(Notification.PRIORITY_HIGH);
 
+        if(notification != null)
+            if (notification.getType() == com.abstractplanner.dto.Notification.TYPE_SYSTEM_ID)
+                notificationBuilder.setSmallIcon(R.drawable.ic_calendar_plus_white_24dp);
+
         NotificationManager notificationManager =
                 (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        Long idLong = id;
-        int intId = idLong.intValue();
-
         notificationManager.notify(intId/* ID of notification */, notificationBuilder.build());
 
-        AbstractPlannerDatabaseHelper dbHelper = new AbstractPlannerDatabaseHelper(mContext);
-
-        com.abstractplanner.dto.Notification notification = dbHelper.getNotificationByID(id);
         if(notification != null)
             if(notification.getType() == com.abstractplanner.dto.Notification.TYPE_ONE_TIME_ID)
                 dbHelper.deleteNotification(notification.getId());

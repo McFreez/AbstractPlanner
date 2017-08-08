@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.os.Parcel;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
@@ -140,6 +141,9 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
                 case Notification.TYPE_EVERY_DAY_ID:
                     type += Notification.TYPE_EVERY_DAY_NAME;
                     break;
+                case Notification.TYPE_SYSTEM_ID:
+                    type += Notification.TYPE_EVERY_DAY_NAME;
+                    break;
             }
 
             final Calendar notificationDate = ((Notification)mProvider.getItem(position).getDataObject()).getDate();
@@ -164,7 +168,9 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
                                 + " at "
                                 + DateUtils.formatDateTime(getContext(), notificationDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_24HOUR);
                     break;
-
+                case Notification.TYPE_SYSTEM_ID:
+                    details = DateUtils.formatDateTime(getContext(), notificationDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_24HOUR);
+                    break;
             }
 
             String task = "";
@@ -175,25 +181,29 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
 
             AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
             builder.setMessage(details + "\n" + task + "\n" + type)
-                    .setTitle(((Notification)mProvider.getItem(position).getDataObject()).getMessage())
-                    .setNegativeButton("Edit", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            FragmentManager fragmentManager = mActivity.getSupportFragmentManager();
-                            EditNotificationDialogFragment newFragment = new EditNotificationDialogFragment();
-                            newFragment.setAdapter(NotificationsAdapter.this);
-                            newFragment.setNotificationToEdit(((Notification)mProvider.getItem(position).getDataObject()));
-                            // The device is smaller, so show the fragment fullscreen
-                            FragmentTransaction transaction = fragmentManager.beginTransaction();
-                            // For a little polish, specify a transition animation
-                            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-                            // To make it fullscreen, use the 'content' root view as the container
-                            // for the fragment, which is always the root view for the activity
-                            transaction.add(/*android.R.id.content*/R.id.drawer_layout, newFragment)
-                                    .addToBackStack(null).commit();
-                        }
-                    })
-                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    .setTitle(((Notification)mProvider.getItem(position).getDataObject()).getMessage());
+
+            if(((Notification)mProvider.getItem(position).getDataObject()).getType() != Notification.TYPE_SYSTEM_ID) {
+                    builder.setNegativeButton("Edit", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        FragmentManager fragmentManager = mActivity.getSupportFragmentManager();
+                        EditNotificationDialogFragment newFragment = new EditNotificationDialogFragment();
+                        newFragment.setAdapter(NotificationsAdapter.this);
+                        newFragment.setNotificationToEdit(((Notification) mProvider.getItem(position).getDataObject()));
+                        // The device is smaller, so show the fragment fullscreen
+                        FragmentTransaction transaction = fragmentManager.beginTransaction();
+                        // For a little polish, specify a transition animation
+                        transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                        // To make it fullscreen, use the 'content' root view as the container
+                        // for the fragment, which is always the root view for the activity
+                        transaction.add(/*android.R.id.content*/R.id.drawer_layout, newFragment)
+                                .addToBackStack(null).commit();
+                    }
+                });
+            }
+
+            builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             dialogInterface.dismiss();
@@ -222,9 +232,13 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
                 notifyDataSetChanged();
             }
         } else {
-            mProvider.refreshData();
-            notifyDataSetChanged();
+            refreshData();
         }
+    }
+
+    public void refreshData(){
+        mProvider.refreshData();
+        notifyDataSetChanged();
     }
 
     @Override
@@ -242,14 +256,6 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
         return - 1;
     }
 
-    /*    public Task getItemByPosition(int position){
-            return mTasks.get(position);
-        }
-
-        public void removeByPosition(int position){
-            mTasks.remove(position);
-            //notifyDataSetChanged();
-        }*/
     @Override
     public int getItemViewType(int position) {
         return mProvider.getItem(position).getViewType();
@@ -273,7 +279,7 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         int viewType = holder.getItemViewType();
 
-        if(viewType == NotificationsDataProvider.NotificationData.ITEM_NORMAL){
+        if(viewType == NotificationsDataProvider.NotificationData.ITEM_NORMAL || viewType == NotificationsDataProvider.NotificationData.ITEM_STATIC){
             bindSwipableViewHolder((NotificationsAdapter.MySwipeableViewHolder)holder, position);
         } else
         if(viewType == NotificationsDataProvider.NotificationData.ITEM_HEADER){
@@ -315,6 +321,9 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
                     holder.mDetails.setText(DateUtils.formatDateTime(getContext(), notificationDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
                             + " at "
                             + DateUtils.formatDateTime(getContext(), notificationDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_24HOUR));
+                break;
+            case Notification.TYPE_SYSTEM_ID:
+                holder.mDetails.setText(DateUtils.formatDateTime(getContext(), notificationDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_24HOUR));
                 break;
 
         }
@@ -359,7 +368,11 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     @Override
     public int onGetSwipeReactionType(NotificationsAdapter.MySwipeableViewHolder holder, int position, int x, int y) {
-        return NotificationsAdapter.Swipeable.REACTION_CAN_SWIPE_BOTH_H;
+
+        if(mProvider.getItem(position).getViewType() == NotificationsDataProvider.NotificationData.ITEM_STATIC)
+            return Swipeable.REACTION_CAN_SWIPE_LEFT;
+        else
+            return NotificationsAdapter.Swipeable.REACTION_CAN_SWIPE_BOTH_H;
     }
 
     @Override
@@ -429,36 +442,6 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
             mPosition = position;
         }
 
-/*        DatePickerDialog.OnDateSetListener d = new DatePickerDialog.OnDateSetListener() {
-            public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-                AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
-*//*                item.getDataObject().getDate().set(Calendar.YEAR, year);
-                item.getDataObject().getDate().set(Calendar.MONTH, monthOfYear);
-                item.getDataObject().getDate().set(Calendar.DAY_OF_MONTH, dayOfMonth);*//*
-
-                mAdapter.mProvider.updateItem(mPosition);
-                mAdapter.notifyDataSetChanged();
-            }
-        };
-
-        private void setDate(*//*View v*//*) {
-*//*            final AbstractDataProvider.Data item = mAdapter.mProvider.getItem(mPosition);
-            DatePickerDialog datePickerDialog = new DatePickerDialog(mAdapter.getContext(), d,
-                    item.getDataObject().getDate().get(Calendar.YEAR),
-                    item.getDataObject().getDate().get(Calendar.MONTH),
-                    item.getDataObject().getDate().get(Calendar.DAY_OF_MONTH));
-
-            datePickerDialog.setButton(DatePickerDialog.BUTTON_NEGATIVE, mAdapter.getContext().getString(android.R.string.cancel), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    item.setPinned(false);
-                    mAdapter.notifyItemChanged(mPosition);
-                    mSetPinned = false;
-                }
-            });
-            datePickerDialog.show();*//*
-        }*/
-
         @Override
         protected void onPerformAction() {
             super.onPerformAction();
@@ -474,6 +457,16 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
             RescheduleNotificationDialogFragment dialogFragment = new RescheduleNotificationDialogFragment();
             dialogFragment.setNotification((Notification) mAdapter.mProvider.getItem(mPosition).getDataObject());
             dialogFragment.setEventListener(new RescheduleNotificationDialogFragment.EventListener() {
+                @Override
+                public int describeContents() {
+                    return 0;
+                }
+
+                @Override
+                public void writeToParcel(Parcel parcel, int i) {
+
+                }
+
                 @Override
                 public void onNotificationDefered() {
                     mAdapter.notifyItemChanged(mPosition);

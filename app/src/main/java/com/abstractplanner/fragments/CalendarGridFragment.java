@@ -77,7 +77,7 @@ public class CalendarGridFragment extends Fragment{
         progressBarContainer.setVisibility(View.VISIBLE);*/
 
         layoutManager_data = new CenterLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
-        final LinearLayoutManager layoutManager_days = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+        final CenterLayoutManager layoutManager_days = new CenterLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
 
         areasContainer = (LinearLayout) view.findViewById(R.id.areas_container);
 
@@ -174,6 +174,7 @@ public class CalendarGridFragment extends Fragment{
             }
         };
         dataRecyclerView.addOnScrollListener(dataRecyclerViewScrollListener);
+        //daysRecyclerView.scrollToToday();
         dataRecyclerView.scrollToToday();
 
         buttonAddArea = (ImageView) view.findViewById(R.id.button_add_area);
@@ -192,6 +193,8 @@ public class CalendarGridFragment extends Fragment{
         super.onViewCreated(view, savedInstanceState);
 
         ((MainActivity)getActivity()).setShortAppBar(mShortToolbar);
+
+        //dataRecyclerView.smoothScrollToToday();
     }
 
     @Override

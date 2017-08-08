@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteDatabaseLockedException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.abstractplanner.R;
 import com.abstractplanner.data.AbstractPlannerContract.*;
 import com.abstractplanner.dto.Area;
 import com.abstractplanner.dto.Notification;
@@ -398,6 +399,38 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
             return null;
     }
 
+    public Notification getNotificationByMessageAndType(String message, int type){
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor notificationCursor = db.query(NotificationEntry.TABLE_NAME,
+                null,
+                NotificationEntry.COLUMN_MESSAGE + " = ? AND " + NotificationEntry.COLUMN_TYPE + " = ?",
+                new String[]{ message, String.valueOf(type) },
+                null,
+                null,
+                null);
+
+        if(notificationCursor != null && notificationCursor.getCount() > 0){
+            notificationCursor.moveToFirst();
+
+            Calendar notificationDate = Calendar.getInstance();
+            notificationDate.setTimeInMillis(notificationCursor.getLong(notificationCursor.getColumnIndex(NotificationEntry.COLUMN_DATE)));
+
+            long taskID = notificationCursor.getLong(notificationCursor.getColumnIndex(NotificationEntry.COLUMN_TASK_ID));
+            Task task = getTaskByID(taskID);
+
+            Notification notification = new Notification(notificationCursor.getLong(notificationCursor.getColumnIndex(NotificationEntry._ID)),
+                    notificationCursor.getString(notificationCursor.getColumnIndex(NotificationEntry.COLUMN_MESSAGE)),
+                    notificationDate,
+                    task,
+                    notificationCursor.getInt(notificationCursor.getColumnIndex(NotificationEntry.COLUMN_TYPE)));
+
+            return notification;
+        }
+        else
+            return null;
+    }
+
     public long createNotification(Notification notification){
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -413,6 +446,20 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         return db.insert(NotificationEntry.TABLE_NAME,
                 null,
                 values);
+    }
+
+    public Notification createSystemNotification(String message){
+        Calendar time = Calendar.getInstance();
+        time.set(Calendar.HOUR, 20);
+        time.set(Calendar.MINUTE, 0);
+        time.set(Calendar.SECOND, 0);
+        Notification notification = new Notification(message, time, Notification.TYPE_SYSTEM_ID);
+        long id = createNotification(notification);
+
+        if(id <= 0)
+            return null;
+
+        return notification;
     }
 
     public long updateNotification(Notification notification){
@@ -454,6 +501,45 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         db.delete(NotificationEntry.TABLE_NAME,
                 NotificationEntry.COLUMN_TASK_ID + " = ?",
                 new String[]{ String.valueOf(task_id) });
+    }
+
+    public boolean isTasksForTomorrowSet(){
+        Cursor allAreasCursor = getAllAreas();
+
+        if(allAreasCursor == null || allAreasCursor.getCount() <= 0)
+            return true;
+
+        int areasCount = allAreasCursor.getCount();
+
+        Cursor tomorrowTasksCursor = getAllTasksForTomorrow();
+
+        if(tomorrowTasksCursor == null || tomorrowTasksCursor.getCount() <= 0){
+            return false;
+        }
+
+        return areasCount <= tomorrowTasksCursor.getCount();
+
+    }
+
+    private Cursor getAllTasksForTomorrow(){
+        Calendar tomorrow = Calendar.getInstance();
+        tomorrow.set(Calendar.HOUR_OF_DAY, 0);
+        tomorrow.set(Calendar.MINUTE, 0);
+        tomorrow.set(Calendar.SECOND, 0);
+        tomorrow.set(Calendar.MILLISECOND, 0);
+        tomorrow.add(Calendar.DATE, 1);
+
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        return db.query(TaskEntry.TABLE_NAME,
+                null,
+                TaskEntry.COLUMN_DATE + " = ?",
+                new String[]{ String.valueOf(tomorrow.getTimeInMillis()) },
+                null,
+                null,
+                null);
+
     }
 
 }

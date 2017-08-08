@@ -1,6 +1,10 @@
 package com.abstractplanner;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -9,13 +13,12 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.Toolbar;
-import android.view.DragEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.SlidingDrawer;
 
 import com.abstractplanner.data.AbstractDataProvider;
 import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
@@ -23,22 +26,20 @@ import com.abstractplanner.data.NotificationsDataProvider;
 import com.abstractplanner.data.NotificationsDataProviderFragment;
 import com.abstractplanner.data.TasksDataProvider;
 import com.abstractplanner.data.TasksDataProviderFragment;
-import com.abstractplanner.dto.Area;
-import com.abstractplanner.dto.Day;
-import com.abstractplanner.dto.Task;
+import com.abstractplanner.dto.Notification;
 import com.abstractplanner.fragments.AddAreaFragment;
 import com.abstractplanner.fragments.AddTaskFragment;
 import com.abstractplanner.fragments.CalendarGridFragment;
 import com.abstractplanner.fragments.NotificationsFragment;
 import com.abstractplanner.fragments.TodayTasksFragment;
+import com.abstractplanner.receivers.AlarmReceiver;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener,
+        SharedPreferences.OnSharedPreferenceChangeListener{
 
     private AbstractPlannerDatabaseHelper dbHelper;
 
@@ -60,13 +61,116 @@ public class MainActivity extends AppCompatActivity
         mNavigationView = (NavigationView) findViewById(R.id.nav_view);
         mNavigationView.setNavigationItemSelectedListener(this);
 
+        dbHelper = new AbstractPlannerDatabaseHelper(this);
+
         if(savedInstanceState == null) {
-            displaySelectedScreen(R.id.today_tasks, null);
+            checkFirstRun();
+            Intent intentThatRunsThisActivity = getIntent();
+            if(intentThatRunsThisActivity != null && intentThatRunsThisActivity.getExtras() != null && intentThatRunsThisActivity.getExtras().containsKey("showCalendar"))
+                displaySelectedScreen(R.id.calendar_grid, null);
+            else
+                displaySelectedScreen(R.id.today_tasks, null);
         }
 
-        dbHelper = new AbstractPlannerDatabaseHelper(this);
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(this);
     }
 
+    private void checkFirstRun() {
+
+        //final String PREFS_NAME = "MyPrefsFile";
+        final String PREF_VERSION_CODE_KEY = "version_code";
+        final int DOESNT_EXIST = -1;
+
+        // Get current version code
+        int currentVersionCode = BuildConfig.VERSION_CODE;
+
+        // Get saved version code
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        int savedVersionCode = prefs.getInt(PREF_VERSION_CODE_KEY, DOESNT_EXIST);
+
+        // Check for first run or upgrade
+        if (currentVersionCode == savedVersionCode) {
+
+            // This is just a normal run
+            return;
+
+        } else if (savedVersionCode == DOESNT_EXIST) {
+
+            boolean isNotificationEnabled = prefs.getBoolean(getString(R.string.tomorrow_tasks_notification_key), true);
+            if(!isNotificationEnabled)
+                prefs.edit().putBoolean(getString(R.string.tomorrow_tasks_notification_key), true).apply();
+
+            createSystemNotification();
+
+        } else if (currentVersionCode > savedVersionCode) {
+            boolean isNotificationEnabled = prefs.getBoolean(getString(R.string.tomorrow_tasks_notification_key), true);
+            if(!isNotificationEnabled)
+                prefs.edit().putBoolean(getString(R.string.tomorrow_tasks_notification_key), true).apply();
+
+            createSystemNotification();
+        }
+
+        // Update the shared preferences with the current version code
+        prefs.edit().putInt(PREF_VERSION_CODE_KEY, currentVersionCode).apply();
+    }
+
+    private void createSystemNotification(){
+
+        Notification notification = dbHelper.getNotificationByMessageAndType(getString(R.string.tomorrow_tasks_notification_message), Notification.TYPE_SYSTEM_ID);
+
+        if(notification == null){
+            notification = dbHelper.createSystemNotification(getString(R.string.tomorrow_tasks_notification_message));
+            if(notification == null)
+                return;
+        }
+
+        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        Intent alarmIntent = new Intent(this, AlarmReceiver.class);
+
+        alarmIntent.putExtra("message", notification.getMessage());
+        alarmIntent.putExtra("title", "Remind");
+        alarmIntent.putExtra("id", notification.getId());
+
+        Long idLong = notification.getId();
+        int id = idLong.intValue();
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, id, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Calendar today = Calendar.getInstance();
+
+        Calendar notificationDate = notification.getDate();
+        notificationDate.set(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH));
+
+        if (today.after(notificationDate))
+            notificationDate.add(Calendar.DATE, 1);
+
+        manager.setRepeating(AlarmManager.RTC_WAKEUP, notificationDate.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        /*
+         * Set this flag to true so that when control returns to MainActivity, it can refresh the
+         * data.
+         *
+         * This isn't the ideal solution because there really isn't a need to perform another
+         * GET request just to change the units, but this is the simplest solution that gets the
+         * job done for now. Later in this course, we are going to show you more elegant ways to
+         * handle converting the units from celsius to fahrenheit and back without hitting the
+         * network again by keeping a copy of the data in a manageable format.
+         */
+        //PREFERENCES_HAVE_BEEN_UPDATED = true;
+    }
     @Override
     public void setTitle(CharSequence title) {
         super.setTitle(title);
@@ -125,6 +229,8 @@ public class MainActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent startSettingsActivity = new Intent(this, SettingsActivity.class);
+            startActivity(startSettingsActivity);
             return true;
         }
 
@@ -172,9 +278,14 @@ public class MainActivity extends AppCompatActivity
                     }
                 }*/
                 break;
+            case R.id.action_settings:
+                Intent startSettingsActivity = new Intent(this, SettingsActivity.class);
+                startActivity(startSettingsActivity);
+                break;
         }
 
-        mNavigationView.getMenu().findItem(id).setChecked(true);
+        if(id != R.id.action_settings)
+            mNavigationView.getMenu().findItem(id).setChecked(true);
 
         if(fragment != null){
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
