@@ -26,7 +26,9 @@ import com.abstractplanner.data.NotificationsDataProvider;
 import com.abstractplanner.data.NotificationsDataProviderFragment;
 import com.abstractplanner.data.TasksDataProvider;
 import com.abstractplanner.data.TasksDataProviderFragment;
+import com.abstractplanner.dto.Area;
 import com.abstractplanner.dto.Notification;
+import com.abstractplanner.dto.Task;
 import com.abstractplanner.fragments.AddAreaFragment;
 import com.abstractplanner.fragments.AddTaskFragment;
 import com.abstractplanner.fragments.CalendarGridFragment;
@@ -102,6 +104,40 @@ public class MainActivity extends AppCompatActivity
                 prefs.edit().putBoolean(getString(R.string.tomorrow_tasks_notification_key), true).apply();
 
             createSystemNotification();
+
+            Area sport = new Area("Sport", "My sport tasks");
+            Area english = new Area("English", "English learning");
+
+            long sportAreaID = dbHelper.createArea(sport);
+            long englishAreaID = dbHelper.createArea(english);
+
+            if(sportAreaID >= 0)
+                sport.setId(sportAreaID);
+
+            if(englishAreaID >= 0)
+                english.setId(englishAreaID);
+
+            Calendar taskDate = Calendar.getInstance();
+            taskDate.set(Calendar.HOUR_OF_DAY, 0);
+            taskDate.set(Calendar.MINUTE, 0);
+            taskDate.set(Calendar.SECOND, 0);
+            taskDate.set(Calendar.MILLISECOND, 0);
+
+            taskDate.add(Calendar.DATE, -1);
+
+            Task gym = new Task(sport, "Gym", "Go to gym at 18:00", taskDate, true);
+            Task learnText = new Task(english, "Learn text", "Learn big text", taskDate, false);
+
+            long gymId = dbHelper.createTask(gym);
+            long learnTextId = dbHelper.createTask(learnText);
+
+            taskDate.add(Calendar.DATE, 1);
+
+            Task newEx = new Task(sport, "New exercises", "Find new exercises", taskDate, false);
+            Task newWords = new Task(english, "New words", "Learn 10 new words", taskDate, false);
+
+            long newExID = dbHelper.createTask(newEx);
+            long newWordsID = dbHelper.createTask(newWords);
 
         } else if (currentVersionCode > savedVersionCode) {
             boolean isNotificationEnabled = prefs.getBoolean(getString(R.string.tomorrow_tasks_notification_key), true);

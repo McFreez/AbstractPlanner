@@ -21,7 +21,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
 
     private static final String LOG_tAG = AbstractPlannerDatabaseHelper.class.getName();
 
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
     private static final String DATABASE_NAME = "abstractPlanner.db";
 
     public AbstractPlannerDatabaseHelper(Context context) {
@@ -59,19 +59,20 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int i, int i1) {
-/*        db.execSQL("DROP TABLE IF EXISTS " + TaskEntry.TABLE_NAME);
-        db.execSQL("DROP TABLE IF EXISTS " + AreaEntry.TABLE_NAME);*/
+        db.execSQL("DROP TABLE IF EXISTS " + NotificationEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + TaskEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + AreaEntry.TABLE_NAME);
 
-        final String CREATE_TABLE_NOTIFICATION = "CREATE TABLE " + NotificationEntry.TABLE_NAME + " ("
+/*        final String CREATE_TABLE_NOTIFICATION = "CREATE TABLE " + NotificationEntry.TABLE_NAME + " ("
                 + NotificationEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + NotificationEntry.COLUMN_MESSAGE + " TEXT NOT NULL,"
                 + NotificationEntry.COLUMN_DATE + " INTEGER NOT NULL,"
                 + NotificationEntry.COLUMN_TASK_ID + " INTEGER,"
                 + NotificationEntry.COLUMN_TYPE + " INTEGER NOT NULL" + ");";
 
-        db.execSQL(CREATE_TABLE_NOTIFICATION);
+        db.execSQL(CREATE_TABLE_NOTIFICATION);*/
 
-        //onCreate(db);
+        onCreate(db);
     }
 
     // Areas
@@ -450,7 +451,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
 
     public Notification createSystemNotification(String message){
         Calendar time = Calendar.getInstance();
-        time.set(Calendar.HOUR, 20);
+        time.set(Calendar.HOUR_OF_DAY, 20);
         time.set(Calendar.MINUTE, 0);
         time.set(Calendar.SECOND, 0);
         Notification notification = new Notification(message, time, Notification.TYPE_SYSTEM_ID);
