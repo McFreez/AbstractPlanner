@@ -2,13 +2,35 @@
 <resources>
     <color name="colorPrimary">#795548</color>
     <color name="colorPrimaryDark">#5d4037</color>
-    <color name="colorAccent">#ff9800</color>
+    <color name="colorAccent">#FFC107<!--ff9800--></color>
     <color name="colorPrimaryLight">#d7ccc8</color>
     <color name="textColor">#ffffff</color>
     <color name="primaryTextColor">#212121</color>
     <color name="secondaryTextColor">#757575</color>
     <color name="dividerColor">#BDBDBD</color>
+
+<!--    <color name="colorPrimary">#FF9800</color>
+    <color name="colorPrimaryDark">#F57C00</color>
+    <color name="colorAccent">#795548</color>
+    <color name="colorPrimaryLight">#FFE0B2</color>
+    <color name="textColor">#212121</color>
+    <color name="primaryTextColor">#212121</color>
+    <color name="secondaryTextColor">#757575</color>
+    <color name="dividerColor">#BDBDBD</color>-->
+
     <color name="backgroundColor">#fff0f0f0</color>
+
+    <color name="gradient_red_1">#B71C1C</color>
+    <color name="gradient_red_2">#C62828</color>
+    <color name="gradient_red_3">#D32F2F</color>
+    <color name="gradient_red_4">#E53935</color>
+    <color name="gradient_red_5">#F44336</color>
+    <color name="gradient_red_6">#EF5350</color>
+
+    <color name="areas_background">#E6795548</color>
+    <color name="calendar_background">#fed24f</color>
+    <color name="today_color">#fed24f</color>
+    <color name="task_background">#9b8379</color>
 
     <color name="bg_swipe_item_neutral">@android:color/transparent</color>
     <color name="bg_swipe_item_pinned">#fff9930d</color>

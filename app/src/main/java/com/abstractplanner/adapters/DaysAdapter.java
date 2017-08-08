@@ -2,7 +2,6 @@ package com.abstractplanner.adapters;
 
 
 import android.content.Context;
-import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
@@ -103,10 +102,13 @@ public class DaysAdapter extends RecyclerView.Adapter<DaysAdapter.DaysViewHolder
             today.set(Calendar.MILLISECOND, 0);
 
             if(date.compareTo(today) == 0){
-                dayTitle.setBackgroundColor(mContext.getResources().getColor(R.color.colorAccent));
+                dayTitle.setBackgroundColor(mContext.getResources().getColor(R.color.calendar_background));
+                dayTitle.setTextColor(mContext.getResources().getColor(R.color.colorPrimary));
             }
-            else
+            else {
                 dayTitle.setBackgroundColor(mContext.getResources().getColor(R.color.colorPrimary));
+                dayTitle.setTextColor(mContext.getResources().getColor(R.color.textColor));
+            }
 
             if(date.after(previousYear) && date.before(nextYear))
                 dayTitle.setText(DateUtils.formatDateTime(mContext, date.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE));

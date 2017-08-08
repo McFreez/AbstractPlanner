@@ -12,7 +12,6 @@ import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -388,8 +387,6 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
                 viewHolder.taskShortDescriptionContainer.setBackgroundColor(Color.GRAY);
                 viewHolder.addTaskButton.setBackgroundColor(Color.GRAY);
 
-
-
                 view.setTag(viewHolder);
 
                 taskContainers.add(view);
@@ -397,7 +394,7 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
             }
         }
 
-        void bind(Day day){
+        void bind(final Day day){
 
             for(View v : taskContainers){
                 DataTaskViewHolder viewHolder = (DataTaskViewHolder) v.getTag();
@@ -409,13 +406,18 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
                 today.set(Calendar.MILLISECOND, 0);
                 if(today.compareTo(day.getDate()) == 0)
                 {
-                    v.setBackgroundColor(mActivity.getResources().getColor(R.color.colorAccent));
-                    viewHolder.taskShortDescriptionContainer.setBackgroundColor(mActivity.getResources().getColor(R.color.colorAccent));
-                    viewHolder.addTaskButton.setBackgroundColor(mActivity.getResources().getColor(R.color.colorAccent));
+                    v.setBackgroundColor(mActivity.getResources().getColor(R.color.today_color));
+                    viewHolder.taskShortDescriptionContainer.setBackgroundColor(mActivity.getResources().getColor(R.color.today_color));
+                    viewHolder.addTaskButton.setBackgroundColor(mActivity.getResources().getColor(R.color.today_color));
+                    viewHolder.addTaskButton.setImageResource(R.drawable.ic_add_task_brown_24dp);
                 }else {
-                    v.setBackgroundColor(mActivity.getResources().getColor(R.color.colorPrimaryLight));
+                    /*v.setBackgroundColor(mActivity.getResources().getColor(R.color.colorPrimaryLight));
                     viewHolder.taskShortDescriptionContainer.setBackgroundColor(Color.GRAY);
-                    viewHolder.addTaskButton.setBackgroundColor(Color.GRAY);
+                    viewHolder.addTaskButton.setBackgroundColor(Color.GRAY);*/
+                    v.setBackgroundColor(mActivity.getResources().getColor(R.color.calendar_background));
+                    viewHolder.taskShortDescriptionContainer.setBackgroundColor(mActivity.getResources().getColor(R.color.task_background));
+                    viewHolder.addTaskButton.setBackgroundColor(mActivity.getResources().getColor(R.color.task_background));
+                    viewHolder.addTaskButton.setImageResource(R.drawable.ic_add_task_white_24dp);
                 }
                 final Calendar calendarDate = new GregorianCalendar(
                         day.getDate().get(Calendar.YEAR), day.getDate().get(Calendar.MONTH), day.getDate().get(Calendar.DAY_OF_MONTH));;
@@ -438,10 +440,25 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
                         viewHolder.taskName.setText(t.getName());
 
                         if(t.isDone()){
-                            viewHolder.taskStatus.setImageResource(R.drawable.checkbox_marked_circle_outline);
+                            if(today.compareTo(day.getDate()) == 0) {
+                                viewHolder.taskName.setTextColor(mActivity.getResources().getColor(R.color.colorPrimary));
+                                viewHolder.taskStatus.setImageResource(R.drawable.checkbox_marked_circle_outline_brown);
+                            }
+                            else {
+                                viewHolder.taskName.setTextColor(mActivity.getResources().getColor(R.color.textColor));
+                                viewHolder.taskStatus.setImageResource(R.drawable.checkbox_marked_circle_outline);
+                            }
                         }
-                        else
-                            viewHolder.taskStatus.setImageResource(R.drawable.checkbox_blank_circle_outline);
+                        else {
+                            if(today.compareTo(day.getDate()) == 0) {
+                                viewHolder.taskName.setTextColor(mActivity.getResources().getColor(R.color.colorPrimary));
+                                viewHolder.taskStatus.setImageResource(R.drawable.checkbox_blank_circle_outline_brown);
+                            }
+                            else {
+                                viewHolder.taskName.setTextColor(mActivity.getResources().getColor(R.color.textColor));
+                                viewHolder.taskStatus.setImageResource(R.drawable.checkbox_blank_circle_outline);
+                            }
+                        }
 
                         final Task task = t;
                         final DataTaskViewHolder dataTaskViewHolder = viewHolder;
@@ -457,7 +474,15 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
                                         public void onClick(View view) {
                                             task.setDone(false);
                                             mDbHelper.updateTask(task);
-                                            dataTaskViewHolder.taskStatus.setImageResource(R.drawable.checkbox_blank_circle_outline);
+                                            if(today.compareTo(day.getDate()) == 0) {
+                                                dataTaskViewHolder.taskName.setTextColor(mActivity.getResources().getColor(R.color.colorPrimary));
+                                                dataTaskViewHolder.taskStatus.setImageResource(R.drawable.checkbox_blank_circle_outline_brown);
+                                            }
+                                            else {
+                                                dataTaskViewHolder.taskName.setTextColor(mActivity.getResources().getColor(R.color.textColor));
+                                                dataTaskViewHolder.taskStatus.setImageResource(R.drawable.checkbox_blank_circle_outline);
+                                            }
+                                            //dataTaskViewHolder.taskStatus.setImageResource(R.drawable.checkbox_blank_circle_outline);
                                         }
                                     });
                                     snackbar.setActionTextColor(Color.RED);
@@ -513,7 +538,14 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
                                                     }
                                             }
                                             else {
-                                                dataTaskViewHolder.taskStatus.setImageResource(R.drawable.checkbox_marked_circle_outline);
+                                                if(today.compareTo(day.getDate()) == 0) {
+                                                    dataTaskViewHolder.taskName.setTextColor(mActivity.getResources().getColor(R.color.colorPrimary));
+                                                    dataTaskViewHolder.taskStatus.setImageResource(R.drawable.checkbox_marked_circle_outline_brown);
+                                                }
+                                                else {
+                                                    dataTaskViewHolder.taskName.setTextColor(mActivity.getResources().getColor(R.color.textColor));
+                                                    dataTaskViewHolder.taskStatus.setImageResource(R.drawable.checkbox_marked_circle_outline);
+                                                }
                                             }
                                         }
                                     });

@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/calendar_background"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.abstractplanner.MainActivity">
 
@@ -74,7 +76,7 @@
         <LinearLayout
             android:layout_width="?attr/actionBarSize"
             android:layout_height="match_parent"
-            android:background="@color/secondaryTextColor">
+            android:background="@color/areas_background">
 
             <com.abstractplanner.table.AreasScrollView
                 android:id="@+id/areas_scroll"
@@ -85,6 +87,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/calendar_item_content_top_bottom_padding" />
 
                     <LinearLayout
                         android:id="@+id/areas_container"
@@ -118,22 +124,27 @@
                     android:layout_height="match_parent"
                     android:orientation="vertical">
 
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/calendar_item_content_top_bottom_padding"
+                        android:background="@color/calendar_background"/>
+
                     <com.abstractplanner.table.DataRecyclerView
                         android:id="@+id/rv_data"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:overScrollMode="never"
-                        android:scrollbars="vertical"/>
+                        android:scrollbars="vertical" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
-                        android:background="@color/colorAccent">
+                        android:background="@color/calendar_background">
                         <ImageView
                             android:id="@+id/button_add_area"
                             android:layout_width="match_parent"
                             android:layout_height="56dp"
-                            android:src="@drawable/ic_add_row_white_24dp"
+                            android:src="@drawable/ic_add_row_brown_24dp"
                             style="@style/SelectableItemBackground"
                             android:clickable="true"
                             android:padding="8dp"/>
