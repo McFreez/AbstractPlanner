@@ -30,6 +30,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.DatePicker;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.abstractplanner.MainActivity;
@@ -83,6 +84,7 @@ public class TodayTasksAdapter
 
     public static class MySwipeableViewHolder extends AbstractSwipeableItemViewHolder {
         public FrameLayout mContainer;
+        public LinearLayout mStatusContainer;
         public TextView mTaskName;
         public TextView mTaskAreaName;
         public TextView mTaskDescription;
@@ -90,6 +92,7 @@ public class TodayTasksAdapter
         public MySwipeableViewHolder(View v) {
             super(v);
             mContainer = (FrameLayout) v.findViewById(R.id.container);
+            mStatusContainer = (LinearLayout) v.findViewById(R.id.today_tasks_status_container);
             mTaskName = (TextView) v.findViewById(R.id.today_list_task_name);
             mTaskAreaName = (TextView) v.findViewById(R.id.today_list_task_area);
             mTaskDescription = (TextView) v.findViewById(R.id.today_list_task_description);
@@ -280,6 +283,12 @@ public class TodayTasksAdapter
         holder.mTaskAreaName.setText(task.getArea().getName());
 
         holder.mTaskDescription.setText(task.getDescription());
+
+        int colorResID = ((TasksDataProvider.TaskData) item).getStatusColor();
+
+        if(colorResID != 0) {
+            holder.mStatusContainer.setBackgroundColor(colorResID);
+        }
 
         // set background resource (target view ID: container)
         final int swipeState = holder.getSwipeStateFlags();

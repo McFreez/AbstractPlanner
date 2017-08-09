@@ -19,10 +19,15 @@ package com.abstractplanner.data;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.format.DateUtils;
+import android.util.Log;
 
+import com.abstractplanner.R;
 import com.abstractplanner.data.AbstractPlannerContract.*;
 
 import com.abstractplanner.dto.Task;
@@ -115,6 +120,8 @@ public class TasksDataProvider extends AbstractDataProvider {
                                 isDone)));
             }
         }
+
+        setColors();
     }
 
     private void insertHeader(final long taskDateTimeInMillis, Context context, int insertIndex){
@@ -154,6 +161,178 @@ public class TasksDataProvider extends AbstractDataProvider {
             mData.add(new TaskData(id, viewType, swipeReaction, day, taskDate));
         else
             mData.add(insertIndex, new TaskData(id, viewType, swipeReaction, day, taskDate));
+    }
+
+    private void setColors(){
+
+        if(mData.size() == 0)
+            return;
+
+        int headersCount = 0;
+
+        for(int i = 0; i < mData.size(); i++)
+            if(mData.get(i).getViewType() == TaskData.ITEM_HEADER)
+                headersCount++;
+
+        if(headersCount <= 6){
+            setColors6Headers();
+            return;
+        }
+
+        setColorsMoreThan6Headers(headersCount);
+    }
+
+    private void setColors6Headers(){
+
+        int colorIndex = 0;
+
+        int[] taskColors = {
+                ResourcesCompat.getColor(mContext.getResources(), R.color.status_red_6, null),
+                ResourcesCompat.getColor(mContext.getResources(), R.color.status_red_5, null),
+                ResourcesCompat.getColor(mContext.getResources(), R.color.status_red_4, null),
+                ResourcesCompat.getColor(mContext.getResources(), R.color.status_red_3, null),
+                ResourcesCompat.getColor(mContext.getResources(), R.color.status_red_2, null),
+                ResourcesCompat.getColor(mContext.getResources(), R.color.status_red_1, null),
+        };
+
+        for(int i = mData.size() - 1; i >= 0; i--){
+            if(mData.get(i).getViewType() == TaskData.ITEM_HEADER){
+                colorIndex ++;
+
+                if(colorIndex >= taskColors.length)
+                    break;
+
+                continue;
+            }
+
+            mData.get(i).setStatusColor(taskColors[colorIndex]);
+        }
+    }
+
+    private void setColorsMoreThan6Headers(final int headersCount){
+
+        int headersLeft = headersCount;
+        /*Calendar latestDate = Calendar.getInstance();
+        latestDate.setTimeInMillis(mData.get(1).getDataObject().getDate().getTimeInMillis());*/
+        long latestDateMillis = mData.get(1).getDataObject().getDate().getTimeInMillis();
+
+        /*Calendar earliestDate = Calendar.getInstance();
+        earliestDate.setTimeInMillis(mData.get(mData.size() - 1).getDataObject().getDate().getTimeInMillis());*/
+        long earliestDateMillis = mData.get(mData.size() - 1).getDataObject().getDate().getTimeInMillis();
+
+        long diff = earliestDateMillis - latestDateMillis;
+
+        int colorIndex = 0;
+
+        int[] taskColors = {
+                ResourcesCompat.getColor(mContext.getResources(), R.color.status_red_6, null),
+                ResourcesCompat.getColor(mContext.getResources(), R.color.status_red_5, null),
+                ResourcesCompat.getColor(mContext.getResources(), R.color.status_red_4, null),
+                ResourcesCompat.getColor(mContext.getResources(), R.color.status_red_3, null),
+                ResourcesCompat.getColor(mContext.getResources(), R.color.status_red_2, null),
+                ResourcesCompat.getColor(mContext.getResources(), R.color.status_red_1, null),
+        };
+
+        long step = diff / taskColors.length - 1;
+
+        Calendar taskDateStep1 = Calendar.getInstance();
+        taskDateStep1.setTimeInMillis(earliestDateMillis);
+
+        Calendar taskDateStep2 = Calendar.getInstance();
+        taskDateStep2.setTimeInMillis(earliestDateMillis - step);
+
+        Calendar taskDateStep3 = Calendar.getInstance();
+        taskDateStep3.setTimeInMillis(earliestDateMillis - step * 2);
+
+        Calendar taskDateStep4 = Calendar.getInstance();
+        taskDateStep4.setTimeInMillis(earliestDateMillis - step * 3);
+
+        Calendar taskDateStep5 = Calendar.getInstance();
+        taskDateStep5.setTimeInMillis(earliestDateMillis - step * 4);
+
+        Calendar taskDateStep6 = Calendar.getInstance();
+        taskDateStep6.setTimeInMillis(latestDateMillis);
+
+        int taskDateIndex = 0;
+
+        Calendar[] taskDateSteps = {
+                taskDateStep1,
+                taskDateStep2,
+                taskDateStep3,
+                taskDateStep4,
+                taskDateStep5,
+                taskDateStep6
+        };
+
+        boolean everyHeaderChange = false;
+
+        for(int i = mData.size() - 1; i >= 0; i--){
+            if(mData.get(i).getViewType() == TaskData.ITEM_HEADER){
+                if(i == 0)
+                    break;
+
+                if(everyHeaderChange){
+                    colorIndex++;
+                    //Log.e("TaskDataProvider", "every header change index : " + colorIndex + " i : " + i + " headers left " + headersLeft);
+                    continue;
+                }
+
+                headersLeft--;
+
+                if(headersLeft == taskColors.length - colorIndex - 1){
+                    everyHeaderChange = true;
+                    colorIndex++;
+                    //Log.e("TaskDataProvider", "headers left and colors comparing index : " + colorIndex + " i : " + i + " headers left " + headersLeft);
+                    continue;
+                }
+
+/*                Log.e("TaskDataProvider", "first comparing : " + mData.get(i - 1).getDataObject().getDate().compareTo(taskDateSteps[taskDateIndex])
+                        + " second comparing + 1 : " + mData.get(i - 1).getDataObject().getDate().compareTo(taskDateSteps[taskDateIndex + 1]));*/
+
+                if(mData.get(i - 1).getDataObject().getDate().compareTo(taskDateSteps[taskDateIndex]) <= 0
+                        && mData.get(i - 1).getDataObject().getDate().compareTo(taskDateSteps[taskDateIndex + 1]) >= 0){
+                    //Log.e("TaskDataProvider", " Stay on color : " + colorIndex);
+
+                    continue;
+                } else {
+                    if(taskDateSteps.length <= taskDateIndex + 2)
+                        continue;
+
+/*                    Log.e("TaskDataProvider", "first comparing + 1 : " + mData.get(i - 1).getDataObject().getDate().compareTo(taskDateSteps[taskDateIndex + 1])
+                            + " second comparing + 2 : " + mData.get(i - 1).getDataObject().getDate().compareTo(taskDateSteps[taskDateIndex + 2]));*/
+
+                    if (mData.get(i - 1).getDataObject().getDate().compareTo(taskDateSteps[taskDateIndex + 1]) <= 0
+                            && mData.get(i - 1).getDataObject().getDate().compareTo(taskDateSteps[taskDateIndex + 2]) >= 0) {
+                        taskDateIndex++;
+                        colorIndex++;
+
+                        //Log.e("TaskDataProvider", " + 1 + 2 : " + colorIndex);
+
+                        continue;
+                    } else {
+                        long earliestDateTiM = mData.get(i - 1).getDataObject().getDate().getTimeInMillis();
+
+                        long diffTiM = earliestDateTiM - latestDateMillis;
+
+                        for (int j = taskDateSteps.length - 2; j > taskDateIndex; j--) {
+                            taskDateSteps[j].setTimeInMillis(taskDateSteps[j + 1].getTimeInMillis() + diffTiM);
+                        }
+
+                        taskDateSteps[taskDateIndex + 1].setTimeInMillis(earliestDateTiM);
+
+                        taskDateIndex++;
+                        colorIndex++;
+
+                        //Log.e("TaskDataProvider", " recalculate date : " + colorIndex);
+
+                        continue;
+                    }
+                }
+            }
+
+            mData.get(i).setStatusColor(taskColors[colorIndex]);
+            //Log.e("TaskDataProvider", " SET COLOR " + colorIndex);
+        }
     }
 
     @Override
@@ -460,6 +639,7 @@ public class TasksDataProvider extends AbstractDataProvider {
         private Calendar mDate;
         private final int mViewType;
         private boolean mPinned;
+        private int mColor;
 
         TaskData(long id, int viewType, int swipeReaction, Task task) {
             mDate = task.getDate();
@@ -467,6 +647,7 @@ public class TasksDataProvider extends AbstractDataProvider {
             mViewType = viewType;
             mTask = task;
             mText = makeText(task.getId(), task.getName(), swipeReaction);
+            mColor = 0;
         }
 
         TaskData(long id, int viewType, int swipeReaction, String day, Calendar date) {
@@ -475,6 +656,7 @@ public class TasksDataProvider extends AbstractDataProvider {
             mTask = null;
             mText = day;
             mDate = date;
+            mColor = 0;
         }
 
         private static String makeText(long id, String text, int swipeReaction) {
@@ -485,6 +667,14 @@ public class TasksDataProvider extends AbstractDataProvider {
             sb.append(text);
 
             return sb.toString();
+        }
+
+        public void setStatusColor(int color){
+            mColor = color;
+        }
+
+        public int getStatusColor(){
+            return mColor;
         }
 
         @Override

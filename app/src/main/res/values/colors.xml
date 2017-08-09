@@ -20,12 +20,12 @@
 
     <color name="backgroundColor">#fff0f0f0</color>
 
-    <color name="gradient_red_1">#B71C1C</color>
-    <color name="gradient_red_2">#C62828</color>
-    <color name="gradient_red_3">#D32F2F</color>
-    <color name="gradient_red_4">#E53935</color>
-    <color name="gradient_red_5">#F44336</color>
-    <color name="gradient_red_6">#EF5350</color>
+    <color name="status_red_1">#B71C1C</color>
+    <color name="status_red_2">#C62828</color>
+    <color name="status_red_3">#D32F2F</color>
+    <color name="status_red_4">#E53935</color>
+    <color name="status_red_5">#F44336</color>
+    <color name="status_red_6">#EF5350</color>
 
     <color name="areas_background">#E6795548</color>
     <color name="calendar_background">#fed24f</color>

@@ -37,28 +37,27 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-<!--            <LinearLayout
+            <LinearLayout
                 android:id="@+id/today_tasks_status_container"
                 android:orientation="vertical"
-                android:layout_width="8dp"
+                android:layout_width="4dp"
                 android:layout_height="match_parent"
-                android:layout_alignParentStart="true"
-                android:background="@color/gradient_red_6"/>
+                android:layout_alignParentStart="true"/>
 
-&lt;!&ndash;            <LinearLayout
+<!--            <LinearLayout
                 android:id="@+id/today_tasks_status_gradient"
                 android:orientation="vertical"
                 android:layout_width="40dp"
                 android:layout_height="match_parent"
                 android:layout_toEndOf="@+id/today_tasks_status_container"
-                android:background="@drawable/today_tasks_gradient_1"/>&ndash;&gt;
+                android:background="@drawable/today_tasks_gradient_1"/>-->
 
             <RelativeLayout
                 android:layout_alignParentEnd="true"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:layout_toEndOf="@+id/today_tasks_status_container">-->
+                android:layout_toEndOf="@+id/today_tasks_status_container">
 
                 <TextView
                     android:id="@+id/today_list_task_area"
@@ -107,7 +106,7 @@
                     tools:ignore="RtlHardcoded"
                     tools:text="Item Description" />
 
-            <!--</RelativeLayout>-->
+            </RelativeLayout>
 
         </RelativeLayout>
 
