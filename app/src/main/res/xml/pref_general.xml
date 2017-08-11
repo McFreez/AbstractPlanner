@@ -23,6 +23,12 @@
         android:title="Tomorrow tasks"
         android:summary="Remind me to set tasks for tomorrow"
         android:defaultValue="true" />
-    
+
+    <ListPreference
+        android:defaultValue="@string/pref_areas_sort_by_tasks"
+        android:entries="@array/pref_areas_sort_options"
+        android:entryValues="@array/pref_areas_sort_values"
+        android:key="@string/pref_areas_sort_key"
+        android:title="@string/pref_areas_sort_label" />
 
 </PreferenceScreen>

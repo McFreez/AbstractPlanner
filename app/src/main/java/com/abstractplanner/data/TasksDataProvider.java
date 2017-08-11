@@ -212,12 +212,9 @@ public class TasksDataProvider extends AbstractDataProvider {
     private void setColorsMoreThan6Headers(final int headersCount){
 
         int headersLeft = headersCount;
-        /*Calendar latestDate = Calendar.getInstance();
-        latestDate.setTimeInMillis(mData.get(1).getDataObject().getDate().getTimeInMillis());*/
+
         long latestDateMillis = mData.get(1).getDataObject().getDate().getTimeInMillis();
 
-        /*Calendar earliestDate = Calendar.getInstance();
-        earliestDate.setTimeInMillis(mData.get(mData.size() - 1).getDataObject().getDate().getTimeInMillis());*/
         long earliestDateMillis = mData.get(mData.size() - 1).getDataObject().getDate().getTimeInMillis();
 
         long diff = earliestDateMillis - latestDateMillis;
@@ -323,7 +320,7 @@ public class TasksDataProvider extends AbstractDataProvider {
                         taskDateIndex++;
                         colorIndex++;
 
-                        //Log.e("TaskDataProvider", " recalculate date : " + colorIndex);
+                        //Log.e("Tas kDataProvider", " recalculate date : " + colorIndex);
 
                         continue;
                     }

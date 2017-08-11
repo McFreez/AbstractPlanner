@@ -305,14 +305,6 @@ public class MainActivity extends AppCompatActivity
                 getSupportFragmentManager().beginTransaction()
                         .add(new NotificationsDataProviderFragment(), NotificationsDataProvider.PROVIDER_ID)
                         .commit();
-                /*if(additionalData != null){
-                    if(additionalData.containsKey("taskDay") && additionalData.containsKey("taskAreaName")) {
-                        Calendar date = (Calendar) additionalData.get("taskDay");
-                        String areaName = (String) additionalData.get("taskAreaName");
-
-                        ((AddTaskFragment)fragment).setPredefinedParameters(areaName, date);
-                    }
-                }*/
                 break;
             case R.id.action_settings:
                 Intent startSettingsActivity = new Intent(this, SettingsActivity.class);
@@ -320,8 +312,13 @@ public class MainActivity extends AppCompatActivity
                 break;
         }
 
-        if(id != R.id.action_settings)
+        if(id != R.id.action_settings) {
+            int size = mNavigationView.getMenu().size();
+            for (int i = 0; i < size; i++) {
+                mNavigationView.getMenu().getItem(i).setChecked(false);
+            }
             mNavigationView.getMenu().findItem(id).setChecked(true);
+        }
 
         if(fragment != null){
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();

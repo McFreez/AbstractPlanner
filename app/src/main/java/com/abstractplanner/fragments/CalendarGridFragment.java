@@ -1,10 +1,12 @@
 package com.abstractplanner.fragments;
 
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
@@ -30,9 +32,12 @@ import com.abstractplanner.table.DaysRecyclerView;
 import com.abstractplanner.table.EndlessRecyclerViewScrollListener;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
-public class CalendarGridFragment extends Fragment{
+public class CalendarGridFragment extends Fragment
+    implements SharedPreferences.OnSharedPreferenceChangeListener{
 
     private static final String LOG_TAG = "CalendarGridFragment";
 
@@ -45,9 +50,6 @@ public class CalendarGridFragment extends Fragment{
     private DataAdapter dataAdapter;
 
     private Toolbar mShortToolbar;
-/*    private LinearLayout gridUpLayout;
-    private LinearLayout areasAndDataContainer;
-    private LinearLayout progressBarContainer;*/
     private AreasScrollView areasScrollView;
     private LinearLayout areasContainer;
     private DataRecyclerView dataRecyclerView;
@@ -59,6 +61,8 @@ public class CalendarGridFragment extends Fragment{
     private ImageView buttonAddArea;
 
     private AbstractPlannerDatabaseHelper dbHelper;
+
+    private boolean isAreasSortingChanged = false;
 
 
     @Nullable
@@ -111,40 +115,20 @@ public class CalendarGridFragment extends Fragment{
                     areasCursor.getString(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_DESCRIPTION))));
         }
 
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String value = sharedPreferences.getString(getString(R.string.pref_areas_sort_key), "");
+        if(value.equals(getString(R.string.pref_areas_sort_by_tasks))) {
+            Collections.sort(areas, new Comparator<Area>() {
+                @Override
+                public int compare(Area a, Area b) {
 
-/*        // fake data
-        if(areas.size() == 0) {
-            dbHelper.createArea(new Area("Area 1", "dgdsfgsd"));
-            dbHelper.createArea(new Area("Area 2", "fsdgdsfgsd"));
-            dbHelper.createArea(new Area("Area 3", "dgdsfgsd"));
-            dbHelper.createArea(new Area("Area 4", "fsdgdsfgsd"));
-            dbHelper.createArea(new Area("Area 5", "dgdsfgsd"));
-            dbHelper.createArea(new Area("Area 6", "fsdgdsfgsd"));
-            //areas.add(new Area("Area 1", "dgdsfgsd"));
-            //dbHelper.createArea(new Area("Area 1", "dgdsfgsd"));
-*//*            areas.add(new Area("Area 2", "fsdgdsfgsd"));
-            areas.add(new Area("Area 3", "dgdsfgsd"));
-            areas.add(new Area("Area 4", "fsdgdsfgsd"));
-            areas.add(new Area("Area 5", "dgdsfgsd"));
-            areas.add(new Area("Area 6", "fsdgdsfgsd"));*//*
-*//*            areas.add(new Area("Area 7", "dgdsfgsd"));
-            areas.add(new Area("Area 8", "fsdgdsfgsd"));
-            areas.add(new Area("Area 9", "dgdsfgsd"));
-            areas.add(new Area("Area 10", "fsdgdsfgsd"));
-            areas.add(new Area("Area 11", "dgdsfgsd"));
-            areas.add(new Area("Area 12", "fsdgdsfgsd"));
-            areas.add(new Area("Area 13", "dgdsfgsd"));
-            areas.add(new Area("Area 14", "fsdgdsfgsd"));
-            areas.add(new Area("Area 15", "dgdsfgsd"));
-            areas.add(new Area("Area 16", "fsdgdsfgsd"));*//*
-        }*/
+                    int aCount = dbHelper.getUndoneTasksInAreaCount(a.getId());
+                    int bCount = dbHelper.getUndoneTasksInAreaCount(b.getId());
 
-/*        areasCursor = dbHelper.getAllAreas();
-        for(int i = 0; i < areasCursor.getCount(); i++){
-            areasCursor.moveToPosition(i);
-            areas.add(new Area(areasCursor.getString(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_NAME)),
-                    areasCursor.getString(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_DESCRIPTION))));
-        }*/
+                    return aCount > bCount ? -1 : (aCount < bCount) ? 1 : 0;
+                }
+            });
+        }
 
         daysAdapter = new DaysAdapter(mDays);
         daysRecyclerView.setAdapter(daysAdapter);
@@ -189,6 +173,30 @@ public class CalendarGridFragment extends Fragment{
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+
+        if(isAreasSortingChanged)
+            ((MainActivity)getActivity()).displaySelectedScreen(R.id.calendar_grid, null);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        /* Unregister the preference change listener */
+        PreferenceManager.getDefaultSharedPreferences(getContext())
+                .unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        /* Register the preference change listener */
+        PreferenceManager.getDefaultSharedPreferences(getContext())
+                .registerOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
@@ -204,4 +212,10 @@ public class CalendarGridFragment extends Fragment{
         super.onDestroyView();
     }
 
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if(key.equals(getString(R.string.pref_areas_sort_key))){
+            isAreasSortingChanged = true;
+        }
+    }
 }

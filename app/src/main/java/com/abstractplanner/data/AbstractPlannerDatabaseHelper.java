@@ -212,6 +212,26 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
                 null);
     }
 
+    // Returns count of undone tasks in area
+    // including today and past days tasks
+    public int getUndoneTasksInAreaCount(long area_id){
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Calendar today = Calendar.getInstance();
+        today.set(Calendar.HOUR_OF_DAY, 0);
+        today.set(Calendar.MINUTE, 0);
+        today.set(Calendar.SECOND, 0);
+        today.set(Calendar.MILLISECOND, 0);
+
+        return db.query(TaskEntry.TABLE_NAME,
+                null,
+                TaskEntry.COLUMN_AREA_ID + " = ? AND " + TaskEntry.COLUMN_DATE + " <= ? AND " + TaskEntry.COLUMN_STATUS + " = ?",
+                new String[]{ String.valueOf(area_id), String.valueOf(today.getTimeInMillis()), String.valueOf(0) },
+                null,
+                null,
+                null).getCount();
+    }
+
     public Task getTaskByID(long task_id){
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -530,7 +550,6 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         tomorrow.set(Calendar.MILLISECOND, 0);
         tomorrow.add(Calendar.DATE, 1);
 
-
         SQLiteDatabase db = this.getReadableDatabase();
 
         return db.query(TaskEntry.TABLE_NAME,
@@ -540,7 +559,6 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
                 null,
                 null,
                 null);
-
     }
 
 }

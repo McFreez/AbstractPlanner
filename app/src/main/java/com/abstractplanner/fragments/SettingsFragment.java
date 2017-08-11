@@ -42,7 +42,10 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
             ListPreference listPreference = (ListPreference) preference;
             int prefIndex = listPreference.findIndexOfValue(stringValue);
             if (prefIndex >= 0) {
-                preference.setSummary(listPreference.getEntries()[prefIndex]);
+                if(key.equals(getString(R.string.pref_areas_sort_key)))
+                    preference.setSummary("By " + listPreference.getEntries()[prefIndex]);
+                else
+                    preference.setSummary(listPreference.getEntries()[prefIndex]);
             }
         } else {
             // For other preferences, set the summary to the value's simple string representation.
@@ -83,6 +86,16 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
                         clearNotification(notification);
                 }
             }
+            else
+                if(p instanceof ListPreference){
+                    String value = sharedPreferences.getString(p.getKey(), "");
+                    setPreferenceSummary(p, value);
+/*                    ListPreference listPreference = (ListPreference) p;
+                    int prefIndex = listPreference.findIndexOfValue(sharedPreferences.getString(p.getKey(),""));
+                    if (prefIndex >= 0) {
+                        p.setSummary(listPreference.getEntries()[prefIndex]);
+                    }*/
+                }
         }
     }
 
@@ -146,22 +159,32 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        Preference preference = findPreference(key);
 
-        AbstractPlannerDatabaseHelper dbHelper = new AbstractPlannerDatabaseHelper(getContext());
+        if(preference != null){
+            if(preference instanceof ListPreference){
+                setPreferenceSummary(preference, sharedPreferences.getString(key, ""));
+            } else
+                if(preference instanceof SwitchPreferenceCompat){
+                    AbstractPlannerDatabaseHelper dbHelper = new AbstractPlannerDatabaseHelper(getContext());
 
-        boolean isNotificationEnabled = sharedPreferences.getBoolean(key, true);
+                    boolean isNotificationEnabled = sharedPreferences.getBoolean(key, true);
 
-        Notification notification = dbHelper.getNotificationByMessageAndType(getString(R.string.tomorrow_tasks_notification_message), Notification.TYPE_SYSTEM_ID);
+                    Notification notification = dbHelper.getNotificationByMessageAndType(getString(R.string.tomorrow_tasks_notification_message), Notification.TYPE_SYSTEM_ID);
 
-        if(notification == null && isNotificationEnabled){
-            notification = dbHelper.createSystemNotification(getString(R.string.tomorrow_tasks_notification_message));
-            if(notification == null)
-                return;
+                    if(notification == null && isNotificationEnabled){
+                        notification = dbHelper.createSystemNotification(getString(R.string.tomorrow_tasks_notification_message));
+                        if(notification == null)
+                            return;
+                    }
+
+                    if(isNotificationEnabled)
+                        createNotification(notification);
+                    else
+                        clearNotification(notification);
+            }
         }
 
-        if(isNotificationEnabled)
-            createNotification(notification);
-        else
-            clearNotification(notification);
+
     }
 }

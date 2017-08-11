@@ -8,4 +8,22 @@
     <string name="action_settings">Settings</string>
     <string name="tomorrow_tasks_notification_key">tomorrow_tasks_notification_preference</string>
     <string name="tomorrow_tasks_notification_message">Create tasks for tomorrow</string>
+
+    <string name="pref_areas_sort_label"
+        translatable="false">Areas sorting</string>
+
+    <string name="pref_areas_sort_label_by_date"
+        translatable="false">Date</string>
+
+    <string name="pref_areas_sort_label_by_tasks"
+        translatable="false">Undone tasks</string>
+
+    <string name="pref_areas_sort_key"
+        translatable="false">areas_sort_by</string>
+
+    <string name="pref_areas_sort_by_date"
+        translatable="false">by_date</string>
+
+    <string name="pref_areas_sort_by_tasks"
+        translatable="false">by_undone_tasks</string>
 </resources>
