@@ -12,6 +12,7 @@ import android.widget.TextView;
 import com.abstractplanner.R;
 import com.abstractplanner.dto.Day;
 import com.abstractplanner.table.DaysRecyclerView;
+import com.abstractplanner.utils.DateTimeUtils;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -44,11 +45,7 @@ public class DaysAdapter extends RecyclerView.Adapter<DaysAdapter.DaysViewHolder
     }
 
     public int getCurrentDayPosition(){
-        Calendar today = Calendar.getInstance();
-        today.set(Calendar.HOUR_OF_DAY, 0);
-        today.set(Calendar.MINUTE, 0);
-        today.set(Calendar.SECOND, 0);
-        today.set(Calendar.MILLISECOND, 0);
+        Calendar today = DateTimeUtils.getTodayDate();
 
         for(int i = 0; i < mDays.size(); i++){
             if(mDays.get(i).getDate().compareTo(today) == 0)
@@ -95,11 +92,7 @@ public class DaysAdapter extends RecyclerView.Adapter<DaysAdapter.DaysViewHolder
             Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
             Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
 
-            Calendar today = Calendar.getInstance();
-            today.set(Calendar.HOUR_OF_DAY, 0);
-            today.set(Calendar.MINUTE, 0);
-            today.set(Calendar.SECOND, 0);
-            today.set(Calendar.MILLISECOND, 0);
+            Calendar today = DateTimeUtils.getTodayDate();
 
             if(date.compareTo(today) == 0){
                 dayTitle.setBackgroundColor(mContext.getResources().getColor(R.color.calendar_background));

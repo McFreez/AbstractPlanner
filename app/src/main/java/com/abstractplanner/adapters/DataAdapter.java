@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.abstractplanner.MainActivity;
@@ -27,6 +28,7 @@ import com.abstractplanner.fragments.CalendarGridFragment;
 import com.abstractplanner.fragments.EditTaskDialogFragment;
 import com.abstractplanner.table.DataRecyclerView;
 import com.abstractplanner.table.EndlessRecyclerViewScrollListener;
+import com.abstractplanner.utils.DateTimeUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,6 +36,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 
 public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder> {
@@ -83,11 +86,7 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
     }
 
     public int getCurrentDayPosition(){
-        Calendar today = Calendar.getInstance();
-        today.set(Calendar.HOUR_OF_DAY, 0);
-        today.set(Calendar.MINUTE, 0);
-        today.set(Calendar.SECOND, 0);
-        today.set(Calendar.MILLISECOND, 0);
+        Calendar today = DateTimeUtils.getTodayDate();
 
         for(int i = 0; i < mDays.size(); i++){
             if(mDays.get(i).getDate().compareTo(today) == 0)
@@ -237,11 +236,7 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
     public void loadInitialDaysData(DaysAdapter daysAdapter){
         mDays.clear();
         for (int i = 0; i < CalendarGridFragment.STARTING_DAYS_COUNT; i++) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(Calendar.HOUR_OF_DAY, 0);
-            calendar.set(Calendar.MINUTE, 0);
-            calendar.set(Calendar.SECOND, 0);
-            calendar.set(Calendar.MILLISECOND, 0);
+            Calendar calendar = DateTimeUtils.getTodayDate();
 
             calendar.add(Calendar.DATE, i - CalendarGridFragment.TODAY_INITIAL_POSITION);
 
@@ -250,18 +245,10 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
             mDays.add(d);
         }
 
-        Calendar startDate = Calendar.getInstance();
-        startDate.set(Calendar.HOUR_OF_DAY, 0);
-        startDate.set(Calendar.MINUTE, 0);
-        startDate.set(Calendar.SECOND, 0);
-        startDate.set(Calendar.MILLISECOND, 0);
+        Calendar startDate = DateTimeUtils.getTodayDate();
         startDate.add(Calendar.DATE, - CalendarGridFragment.TODAY_INITIAL_POSITION);
 
-        Calendar endDate = Calendar.getInstance();
-        endDate.set(Calendar.HOUR_OF_DAY, 0);
-        endDate.set(Calendar.MINUTE, 0);
-        endDate.set(Calendar.SECOND, 0);
-        endDate.set(Calendar.MILLISECOND, 0);
+        Calendar endDate = DateTimeUtils.getTodayDate();
         endDate.add(Calendar.DATE, CalendarGridFragment.STARTING_DAYS_COUNT - CalendarGridFragment.TODAY_INITIAL_POSITION);
 
         getDaysTasks(startDate, endDate);
@@ -276,8 +263,8 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
         for(int i = 0; i < taskCursor.getCount(); i++){
             taskCursor.moveToPosition(i);
             long taskDateMillis = taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_DATE));
-            Calendar taskDate = Calendar.getInstance();
-            taskDate.setTimeInMillis(taskDateMillis);
+            Calendar taskDate = DateTimeUtils.getInstanceInCurrentTimeZone(taskDateMillis, TimeZone.getTimeZone("Europe/Warsaw"));
+
             for (Day d : mDays){
                 if(d.getDate().compareTo(taskDate) == 0){
 
@@ -399,11 +386,7 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
             for(View v : taskContainers){
                 DataTaskViewHolder viewHolder = (DataTaskViewHolder) v.getTag();
                 final Area area = viewHolder.area;
-                final Calendar today = Calendar.getInstance();
-                today.set(Calendar.HOUR_OF_DAY, 0);
-                today.set(Calendar.MINUTE, 0);
-                today.set(Calendar.SECOND, 0);
-                today.set(Calendar.MILLISECOND, 0);
+                final Calendar today = DateTimeUtils.getTodayDate();
                 if(today.compareTo(day.getDate()) == 0)
                 {
                     v.setBackgroundColor(mActivity.getResources().getColor(R.color.today_color));
@@ -411,16 +394,13 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
                     viewHolder.addTaskButton.setBackgroundColor(mActivity.getResources().getColor(R.color.today_color));
                     viewHolder.addTaskButton.setImageResource(R.drawable.ic_add_task_brown_24dp);
                 }else {
-                    /*v.setBackgroundColor(mActivity.getResources().getColor(R.color.colorPrimaryLight));
-                    viewHolder.taskShortDescriptionContainer.setBackgroundColor(Color.GRAY);
-                    viewHolder.addTaskButton.setBackgroundColor(Color.GRAY);*/
                     v.setBackgroundColor(mActivity.getResources().getColor(R.color.calendar_background));
                     viewHolder.taskShortDescriptionContainer.setBackgroundColor(mActivity.getResources().getColor(R.color.task_background));
                     viewHolder.addTaskButton.setBackgroundColor(mActivity.getResources().getColor(R.color.task_background));
                     viewHolder.addTaskButton.setImageResource(R.drawable.ic_add_task_white_24dp);
                 }
                 final Calendar calendarDate = new GregorianCalendar(
-                        day.getDate().get(Calendar.YEAR), day.getDate().get(Calendar.MONTH), day.getDate().get(Calendar.DAY_OF_MONTH));;
+                        day.getDate().get(Calendar.YEAR), day.getDate().get(Calendar.MONTH), day.getDate().get(Calendar.DAY_OF_MONTH));
                 viewHolder.addTaskButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -514,17 +494,10 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
                                                     if(status == -2){
                                                         long undoneTaskDateMillis = mDbHelper.isAllPreviousAreaTasksDone(task);
                                                         if(undoneTaskDateMillis > 0){
-                                                            Calendar undoneTaskDate = Calendar.getInstance();
-                                                            undoneTaskDate.setTimeInMillis(undoneTaskDateMillis);
+                                                            Calendar undoneTaskDate = DateTimeUtils.getCalendarInstance(undoneTaskDateMillis);
 
                                                             Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
                                                             Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
-
-                                                            Calendar today = Calendar.getInstance();
-                                                            today.set(Calendar.HOUR_OF_DAY, 0);
-                                                            today.set(Calendar.MINUTE, 0);
-                                                            today.set(Calendar.SECOND, 0);
-                                                            today.set(Calendar.MILLISECOND, 0);
 
                                                             String dateString;
 

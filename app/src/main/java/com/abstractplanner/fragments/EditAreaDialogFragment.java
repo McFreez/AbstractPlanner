@@ -132,11 +132,11 @@ public class EditAreaDialogFragment extends DialogFragment {
             error = true;
         }
 
-        if(mAreaDescriptionEditText.getText().length() <= 0){
+/*        if(mAreaDescriptionEditText.getText().length() <= 0){
             mAreaDescriptionLayout.setErrorEnabled(true);
             mAreaDescriptionLayout.setError("You need to enter a description");
             error = true;
-        }
+        }*/
 
         if(error)
             return;

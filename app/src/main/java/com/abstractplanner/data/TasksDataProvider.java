@@ -31,6 +31,7 @@ import com.abstractplanner.R;
 import com.abstractplanner.data.AbstractPlannerContract.*;
 
 import com.abstractplanner.dto.Task;
+import com.abstractplanner.utils.DateTimeUtils;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.RecyclerViewSwipeManager;
 
 import java.util.Calendar;
@@ -38,6 +39,7 @@ import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimeZone;
 
 public class TasksDataProvider extends AbstractDataProvider {
 
@@ -81,7 +83,8 @@ public class TasksDataProvider extends AbstractDataProvider {
                 tasksCursor.moveToPosition(i);
 
                 if(i == 0){
-                    insertHeader(tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry.COLUMN_DATE)), mContext, -1);
+                    insertHeader(tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry.COLUMN_DATE)),
+                            TimeZone.getTimeZone(tasksCursor.getString(tasksCursor.getColumnIndex(TaskEntry.COLUMN_TIME_ZONE))), mContext, -1);
                 } else {
                     long currentTaskTime = tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry.COLUMN_DATE));
                     tasksCursor.moveToPosition(i - 1);
@@ -90,7 +93,8 @@ public class TasksDataProvider extends AbstractDataProvider {
                     tasksCursor.moveToPosition(i);
 
                     if(currentTaskTime != previousTaskTime){
-                        insertHeader(tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry.COLUMN_DATE)), mContext, -1);
+                        insertHeader(tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry.COLUMN_DATE)),
+                                TimeZone.getTimeZone(tasksCursor.getString(tasksCursor.getColumnIndex(TaskEntry.COLUMN_TIME_ZONE))), mContext, -1);
                     }
                 }
 
@@ -100,8 +104,8 @@ public class TasksDataProvider extends AbstractDataProvider {
                 final int viewType = TaskData.ITEM_NORMAL;
                 final int swipeReaction = RecyclerViewSwipeManager.REACTION_CAN_SWIPE_UP | RecyclerViewSwipeManager.REACTION_CAN_SWIPE_DOWN;
 
-                Calendar taskDate = Calendar.getInstance();
-                taskDate.setTimeInMillis(tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry.COLUMN_DATE)));
+                Calendar taskDate = DateTimeUtils.getInstanceInCurrentTimeZone(tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry.COLUMN_DATE)),
+                        TimeZone.getTimeZone(tasksCursor.getString(tasksCursor.getColumnIndex(TaskEntry.COLUMN_TIME_ZONE))));
 
                 boolean isDone;
                 if(tasksCursor.getInt(tasksCursor.getColumnIndex(TaskEntry.COLUMN_STATUS)) == 1)
@@ -124,7 +128,7 @@ public class TasksDataProvider extends AbstractDataProvider {
         setColors();
     }
 
-    private void insertHeader(final long taskDateTimeInMillis, Context context, int insertIndex){
+    private void insertHeader(final long taskDateTimeInMillis, TimeZone timeZone, Context context, int insertIndex){
 
         final long id = mData.size();
         final int viewType = TaskData.ITEM_HEADER;
@@ -132,14 +136,9 @@ public class TasksDataProvider extends AbstractDataProvider {
 
         String day;
 
-        Calendar today = Calendar.getInstance();
-        today.set(Calendar.HOUR_OF_DAY, 0);
-        today.set(Calendar.MINUTE, 0);
-        today.set(Calendar.SECOND, 0);
-        today.set(Calendar.MILLISECOND, 0);
+        Calendar today = DateTimeUtils.getTodayDate();
 
-        Calendar taskDate = Calendar.getInstance();
-        taskDate.setTimeInMillis(taskDateTimeInMillis);
+        Calendar taskDate = DateTimeUtils.getInstanceInCurrentTimeZone(taskDateTimeInMillis, timeZone);
 
         if(today.compareTo(taskDate) == 0){
             day = "Today";
@@ -401,26 +400,19 @@ public class TasksDataProvider extends AbstractDataProvider {
 
                 builder.show();
             } else if (id == -2) {
-                long undoneTaskDateMillis = mDbHelper.isAllPreviousAreaTasksDone(task);
-                if (undoneTaskDateMillis > 0) {
-                    Calendar undoneTaskDate = Calendar.getInstance();
-                    undoneTaskDate.setTimeInMillis(undoneTaskDateMillis);
+                long taskId = mDbHelper.isAllPreviousAreaTasksDone(task);
+                if (taskId > 0) {
+                    Task undoneTask = mDbHelper.getTaskByID(taskId);
 
                     Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
                     Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
 
-                    Calendar today = Calendar.getInstance();
-                    today.set(Calendar.HOUR_OF_DAY, 0);
-                    today.set(Calendar.MINUTE, 0);
-                    today.set(Calendar.SECOND, 0);
-                    today.set(Calendar.MILLISECOND, 0);
-
                     String dateString;
 
-                    if (undoneTaskDate.after(previousYear) && undoneTaskDate.before(nextYear))
-                        dateString = DateUtils.formatDateTime(mContext, undoneTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE);
+                    if (undoneTask.getDate().after(previousYear) && undoneTask.getDate().before(nextYear))
+                        dateString = DateUtils.formatDateTime(mContext, undoneTask.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE);
                     else
-                        dateString = DateUtils.formatDateTime(mContext, undoneTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR);
+                        dateString = DateUtils.formatDateTime(mContext, undoneTask.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR);
 
                     AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
                     builder.setMessage("You have unfinished task for " + dateString + " in " + task.getArea().getName() + ". Finish it first, please.")
@@ -449,11 +441,7 @@ public class TasksDataProvider extends AbstractDataProvider {
 
         mLastRemovedData.setPinned(false);
 
-        Calendar today = Calendar.getInstance();
-        today.set(Calendar.HOUR_OF_DAY, 0);
-        today.set(Calendar.MINUTE, 0);
-        today.set(Calendar.SECOND, 0);
-        today.set(Calendar.MILLISECOND, 0);
+        Calendar today = DateTimeUtils.getTodayDate();
 
         if(today.compareTo(mLastRemovedData.getDate()) < 0)
             return;
@@ -470,7 +458,7 @@ public class TasksDataProvider extends AbstractDataProvider {
 
         if(mData.get(0).getDate().compareTo(mLastRemovedData.getDate()) > 0){
             mData.add(0, mLastRemovedData);
-            insertHeader(mLastRemovedData.getDate().getTimeInMillis(), mContext, 0);
+            insertHeader(mLastRemovedData.getDate().getTimeInMillis(), mLastRemovedData.getDate().getTimeZone(), mContext, 0);
             return;
         }
 
@@ -517,10 +505,10 @@ public class TasksDataProvider extends AbstractDataProvider {
             mData.add(insertPosition, mLastRemovedData);
 
             if (insertWithHeader)
-                insertHeader(mLastRemovedData.getDate().getTimeInMillis(), mContext, insertPosition);
+                insertHeader(mLastRemovedData.getDate().getTimeInMillis(), mLastRemovedData.getDate().getTimeZone(), mContext, insertPosition);
         } else {
             if (insertWithHeader)
-                insertHeader(mLastRemovedData.getDate().getTimeInMillis(), mContext, -1);
+                insertHeader(mLastRemovedData.getDate().getTimeInMillis(), mLastRemovedData.getDate().getTimeZone(), mContext, -1);
 
             mData.add(mLastRemovedData);
         }
@@ -563,26 +551,19 @@ public class TasksDataProvider extends AbstractDataProvider {
                 }
                 else
                 if(status == -2){
-                    long undoneTaskDateMillis = mDbHelper.isAllPreviousAreaTasksDone(doneTask);
-                    if(undoneTaskDateMillis > 0){
-                        Calendar undoneTaskDate = Calendar.getInstance();
-                        undoneTaskDate.setTimeInMillis(undoneTaskDateMillis);
+                    long taskId = mDbHelper.isAllPreviousAreaTasksDone(doneTask);
+                    if(taskId > 0){
+                        Task undoneTask = mDbHelper.getTaskByID(taskId);
 
                         Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
                         Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
 
-                        Calendar today = Calendar.getInstance();
-                        today.set(Calendar.HOUR_OF_DAY, 0);
-                        today.set(Calendar.MINUTE, 0);
-                        today.set(Calendar.SECOND, 0);
-                        today.set(Calendar.MILLISECOND, 0);
-
                         String dateString;
 
-                        if(undoneTaskDate.after(previousYear) && undoneTaskDate.before(nextYear))
-                            dateString = DateUtils.formatDateTime(mContext, undoneTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE);
+                        if(undoneTask.getDate().after(previousYear) && undoneTask.getDate().before(nextYear))
+                            dateString = DateUtils.formatDateTime(mContext, undoneTask.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE);
                         else
-                            dateString = DateUtils.formatDateTime(mContext, undoneTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR);
+                            dateString = DateUtils.formatDateTime(mContext, undoneTask.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR);
 
                         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
                         builder.setMessage("You have unfinished task for " + dateString + " in " + doneTask.getArea().getName() + ". Finish it first, please.")

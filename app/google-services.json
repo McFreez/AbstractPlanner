@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "566172218672",
+    "project_id": "firebase-bplanner"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:566172218672:android:68c013f78b17ddc1",
+        "android_client_info": {
+          "package_name": "com.abstractplanner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "566172218672-25qjk4bkd6rgeni2sgn66vn4oekau4u1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.abstractplanner",
+            "certificate_hash": "c9860cd9b3c26719838d69d4c1489129be26dd4c"
+          }
+        },
+        {
+          "client_id": "566172218672-m181ressst6au5k0efm5u3d7m7448jg5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArQARgiNgIsMrtYQXlKaQ8fkuOggF95a8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

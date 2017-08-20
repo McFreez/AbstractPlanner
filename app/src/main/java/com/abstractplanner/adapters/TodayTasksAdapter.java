@@ -37,12 +37,9 @@ import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
 import com.abstractplanner.data.AbstractDataProvider;
 import com.abstractplanner.data.TasksDataProvider;
-import com.abstractplanner.dto.Notification;
 import com.abstractplanner.dto.Task;
 import com.abstractplanner.fragments.AddTaskNotificationDialogFragment;
-import com.abstractplanner.fragments.EditNotificationDialogFragment;
 import com.abstractplanner.fragments.EditTaskDialogFragment;
-import com.abstractplanner.fragments.RescheduleNotificationDialogFragment;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemAdapter;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemConstants;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.action.SwipeResultAction;
@@ -52,7 +49,6 @@ import com.h6ah4i.android.widget.advrecyclerview.swipeable.action.SwipeResultAct
 import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractSwipeableItemViewHolder;
 import com.h6ah4i.android.widget.advrecyclerview.utils.RecyclerViewAdapterUtils;
 
-import java.util.Calendar;
 
 public class TodayTasksAdapter
         extends RecyclerView.Adapter<RecyclerView.ViewHolder>

@@ -1,58 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
     android:layout_width="@dimen/calendar_item_size"
     android:layout_height="@dimen/calendar_item_size">
 
-    <ImageView
-        android:id="@+id/add_task_button"
-        android:layout_width="@dimen/calendar_item_size"
-        android:layout_height="@dimen/calendar_item_content_height"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:layout_marginBottom="@dimen/calendar_item_content_top_bottom_padding"
-        android:layout_marginTop="@dimen/calendar_item_content_top_bottom_padding"
-        android:scaleType="center"
-        android:src="@drawable/ic_add_task_white_24dp"
-        android:visibility="visible"
-        style="@style/SelectableItemBackground"/>
-
-    <LinearLayout
-        android:id="@+id/task_short_description_container"
-        android:layout_width="@dimen/calendar_item_size"
-        android:layout_height="@dimen/calendar_item_content_height"
-        android:layout_marginBottom="@dimen/calendar_item_content_top_bottom_padding"
-        android:layout_marginTop="@dimen/calendar_item_content_top_bottom_padding"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
+    <RelativeLayout
         android:orientation="vertical"
-        android:visibility="gone"
-        android:gravity="center">
+        android:layout_width="@dimen/calendar_item_size"
+        android:layout_height="@dimen/calendar_item_size">
 
         <ImageView
-            android:id="@+id/task_status"
-            android:layout_marginTop="8dp"
-            android:layout_width="@dimen/task_status_size"
-            android:layout_height="@dimen/task_status_size"
-            android:src="@drawable/checkbox_blank_circle_outline" />
+            android:id="@+id/add_task_button"
+            android:layout_width="@dimen/calendar_item_size"
+            android:layout_height="@dimen/calendar_item_content_height"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:layout_marginBottom="@dimen/calendar_item_content_top_bottom_padding"
+            android:layout_marginTop="@dimen/calendar_item_content_top_bottom_padding"
+            android:scaleType="center"
+            android:src="@drawable/ic_add_task_white_24dp"
+            android:visibility="visible"
+            style="@style/SelectableItemBackground"/>
 
-        <TextView
-            android:id="@+id/task_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginStart="8dp"
-            android:gravity="start"
-            android:ellipsize="end"
-            android:lines="1"
-            android:textAlignment="center"
-            android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
-            android:textColor="@color/textColor"
-            android:textSize="@dimen/task_text_size"
-            tools:text="Name of the task" />
+        <LinearLayout
+            android:id="@+id/task_short_description_container"
+            android:layout_width="@dimen/calendar_item_size"
+            android:layout_height="@dimen/calendar_item_content_height"
+            android:layout_marginBottom="@dimen/calendar_item_content_top_bottom_padding"
+            android:layout_marginTop="@dimen/calendar_item_content_top_bottom_padding"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:gravity="center">
 
-    </LinearLayout>
-</RelativeLayout>
+            <ImageView
+                android:id="@+id/task_status"
+                android:layout_marginTop="8dp"
+                android:layout_width="@dimen/task_status_size"
+                android:layout_height="@dimen/task_status_size"
+                android:src="@drawable/checkbox_blank_circle_outline" />
+
+            <TextView
+                android:id="@+id/task_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center_horizontal"
+                android:ellipsize="end"
+                android:lines="1"
+                android:textAlignment="center"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                android:textColor="@color/textColor"
+                android:textSize="@dimen/task_text_size"
+                tools:text="Name of the task" />
+
+        </LinearLayout>
+    </RelativeLayout>
+</FrameLayout>

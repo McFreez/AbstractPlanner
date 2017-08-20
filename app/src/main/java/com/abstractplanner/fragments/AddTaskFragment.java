@@ -99,6 +99,7 @@ public class AddTaskFragment extends Fragment {
 
         if(predefinedAreaName != null){
             mSpinnerSelectArea.setSelection(spinnerAreas.indexOf(predefinedAreaName));
+            mTaskDateInputLayout.setVisibility(View.GONE);
         }
 
         setDateString();
@@ -150,13 +151,13 @@ public class AddTaskFragment extends Fragment {
                     mTaskNameLayout.setErrorEnabled(false);
                 }
 
-                if(mTaskDescriptionEditText.getText().length() <= 0){
+/*                if(mTaskDescriptionEditText.getText().length() <= 0){
                     mTaskDescriptionLayout.setErrorEnabled(true);
                     mTaskDescriptionLayout.setError("You need to enter a description");
                     error = true;
                 } else{
                     mTaskDescriptionLayout.setErrorEnabled(false);
-                }
+                }*/
 
                 if(error)
                     return;
@@ -189,26 +190,19 @@ public class AddTaskFragment extends Fragment {
                     }
                     else
                         if(id == -2){
-                            long undoneTaskDateMillis = mDbHelper.isAllPreviousAreaTasksDone(task);
-                            if (undoneTaskDateMillis > 0) {
-                                Calendar undoneTaskDate = Calendar.getInstance();
-                                undoneTaskDate.setTimeInMillis(undoneTaskDateMillis);
+                            long taskId = mDbHelper.isAllPreviousAreaTasksDone(task);
+                            if (taskId > 0) {
+                                Task undoneTask = mDbHelper.getTaskByID(taskId);
 
                                 Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
                                 Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
 
-                                Calendar today = Calendar.getInstance();
-                                today.set(Calendar.HOUR_OF_DAY, 0);
-                                today.set(Calendar.MINUTE, 0);
-                                today.set(Calendar.SECOND, 0);
-                                today.set(Calendar.MILLISECOND, 0);
-
                                 String dateString;
 
-                                if (undoneTaskDate.after(previousYear) && undoneTaskDate.before(nextYear))
-                                    dateString = DateUtils.formatDateTime(getContext(), undoneTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE);
+                                if (undoneTask.getDate().after(previousYear) && undoneTask.getDate().before(nextYear))
+                                    dateString = DateUtils.formatDateTime(getContext(), undoneTask.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE);
                                 else
-                                    dateString = DateUtils.formatDateTime(getContext(), undoneTaskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR);
+                                    dateString = DateUtils.formatDateTime(getContext(), undoneTask.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR);
 
                                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                                 builder.setMessage("You have unfinished task for " + dateString + " in " + task.getArea().getName() + ". Finish it first or create undone task."

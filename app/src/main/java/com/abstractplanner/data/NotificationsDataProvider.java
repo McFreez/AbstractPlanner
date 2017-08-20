@@ -12,12 +12,14 @@ import com.abstractplanner.R;
 import com.abstractplanner.dto.Notification;
 import com.abstractplanner.dto.Task;
 import com.abstractplanner.receivers.AlarmReceiver;
+import com.abstractplanner.utils.DateTimeUtils;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.RecyclerViewSwipeManager;
 
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimeZone;
 
 public class NotificationsDataProvider extends AbstractDataProvider {
 
@@ -73,8 +75,8 @@ public class NotificationsDataProvider extends AbstractDataProvider {
                     final int viewType = NotificationData.ITEM_STATIC;
                     final int swipeReaction = RecyclerViewSwipeManager.REACTION_CAN_SWIPE_UP | RecyclerViewSwipeManager.REACTION_CAN_SWIPE_DOWN;
 
-                    Calendar notificationDate = Calendar.getInstance();
-                    notificationDate.setTimeInMillis(notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_DATE)));
+                    Calendar notificationDate = DateTimeUtils.getInstanceInCurrentTimeZone(notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_DATE)),
+                            TimeZone.getTimeZone(notificationsCursor.getString(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TIME_ZONE))));
 
                     long taskID = notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TASK_ID));
                     Task task = mDbHelper.getTaskByID(taskID);
@@ -106,8 +108,8 @@ public class NotificationsDataProvider extends AbstractDataProvider {
                     final int viewType = NotificationData.ITEM_NORMAL;
                     final int swipeReaction = RecyclerViewSwipeManager.REACTION_CAN_SWIPE_UP | RecyclerViewSwipeManager.REACTION_CAN_SWIPE_DOWN;
 
-                    Calendar notificationDate = Calendar.getInstance();
-                    notificationDate.setTimeInMillis(notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_DATE)));
+                    Calendar notificationDate = DateTimeUtils.getInstanceInCurrentTimeZone(notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_DATE)),
+                            TimeZone.getTimeZone(notificationsCursor.getString(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TIME_ZONE))));
 
                     long taskID = notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TASK_ID));
                     Task task = mDbHelper.getTaskByID(taskID);
@@ -139,8 +141,8 @@ public class NotificationsDataProvider extends AbstractDataProvider {
                     final int viewType = NotificationData.ITEM_NORMAL;
                     final int swipeReaction = RecyclerViewSwipeManager.REACTION_CAN_SWIPE_UP | RecyclerViewSwipeManager.REACTION_CAN_SWIPE_DOWN;
 
-                    Calendar notificationDate = Calendar.getInstance();
-                    notificationDate.setTimeInMillis(notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_DATE)));
+                    Calendar notificationDate = DateTimeUtils.getInstanceInCurrentTimeZone(notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_DATE)),
+                            TimeZone.getTimeZone(notificationsCursor.getString(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TIME_ZONE))));
 
                     long taskID = notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TASK_ID));
                     Task task = mDbHelper.getTaskByID(taskID);

@@ -16,8 +16,10 @@ import com.abstractplanner.data.AbstractPlannerContract;
 import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.dto.Notification;
 import com.abstractplanner.dto.Task;
+import com.abstractplanner.utils.DateTimeUtils;
 
 import java.util.Calendar;
+import java.util.TimeZone;
 
 
 public class DeviceBootReceiver extends BroadcastReceiver {
@@ -47,18 +49,14 @@ public class DeviceBootReceiver extends BroadcastReceiver {
             }
 
             Calendar today = Calendar.getInstance();
-/*            today.set(Calendar.HOUR_OF_DAY, 0);
-            today.set(Calendar.MINUTE, 0);
-            today.set(Calendar.SECOND, 0);
-            today.set(Calendar.MILLISECOND, 0);*/
 
             for(int i = 0; i < notificationsCursor.getCount(); i++){
                 notificationsCursor.moveToPosition(i);
 
                 Log.e("ABSTRACT_PLANNER", " i " + i);
 
-                Calendar notificationDate = Calendar.getInstance();
-                notificationDate.setTimeInMillis(notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_DATE)));
+                Calendar notificationDate = DateTimeUtils.getInstanceInCurrentTimeZone(notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_DATE)),
+                        TimeZone.getTimeZone(notificationsCursor.getString(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TIME_ZONE))));
 
                 long notificationID = notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry._ID));
                 int notificationType = notificationsCursor.getInt(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TYPE));

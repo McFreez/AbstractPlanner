@@ -20,6 +20,7 @@ public class AbstractPlannerContract {
         public static final String COLUMN_DESCRIPTION = "description";
         public static final String COLUMN_AREA_ID = "area_id";
         public static final String COLUMN_DATE = "date";
+        public static final String COLUMN_TIME_ZONE = "time_zone";
         public static final String COLUMN_STATUS = "status";
     }
 
@@ -29,6 +30,7 @@ public class AbstractPlannerContract {
 
         public static final String COLUMN_MESSAGE = "message";
         public static final String COLUMN_DATE = "date";
+        public static final String COLUMN_TIME_ZONE = "time_zone";
         public static final String COLUMN_TASK_ID = "task_id";
         public static final String COLUMN_TYPE = "type";
     }

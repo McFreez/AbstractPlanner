@@ -8,7 +8,7 @@
 
     <!-- calendar dimens -->
     <dimen name="calendar_item_size">120dp</dimen>
-    <dimen name="calendar_item_content_height">100dp</dimen>
+    <dimen name="calendar_item_content_height">150dp</dimen>
     <dimen name="calendar_item_content_top_bottom_padding">10dp</dimen>
     <dimen name="areas_column_width">?attr/actionBarSize</dimen>
     <dimen name="task_status_size">64dp</dimen>

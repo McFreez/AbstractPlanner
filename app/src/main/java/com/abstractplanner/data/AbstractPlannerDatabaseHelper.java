@@ -2,30 +2,43 @@ package com.abstractplanner.data;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabaseLockedException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
+import android.view.ViewAnimationUtils;
 
-import com.abstractplanner.R;
 import com.abstractplanner.data.AbstractPlannerContract.*;
 import com.abstractplanner.dto.Area;
 import com.abstractplanner.dto.Notification;
 import com.abstractplanner.dto.Task;
+import com.abstractplanner.utils.DateTimeUtils;
 
 import java.util.Calendar;
+import java.util.TimeZone;
 
 public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
 
     private static final String LOG_tAG = AbstractPlannerDatabaseHelper.class.getName();
 
-    private static final int DATABASE_VERSION = 4;
-    private static final String DATABASE_NAME = "abstractPlanner.db";
+    private static final int DATABASE_VERSION = 5;
+    public static final String DATABASE_NAME = "abstractPlanner.db";
+
+    public static final String PREF_IS_DATABASE_INITIAL_STATUS = "initial_data_only";
+
+    private Context mContext;
+
+    private boolean mIsDbInitial;
 
     public AbstractPlannerDatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        mContext = context;
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+        mIsDbInitial = prefs.getBoolean(PREF_IS_DATABASE_INITIAL_STATUS, true);
     }
 
     @Override
@@ -42,13 +55,15 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
                 + TaskEntry.COLUMN_DESCRIPTION + " TEXT,"
                 + TaskEntry.COLUMN_AREA_ID + " INTEGER NOT NULL,"
                 + TaskEntry.COLUMN_DATE + " INTEGER NOT NULL,"
+                + TaskEntry.COLUMN_TIME_ZONE + " TEXT NOT NULL,"
                 + TaskEntry.COLUMN_STATUS + " INTEGER NOT NULL,"
-                + " UNIQUE (" + TaskEntry.COLUMN_AREA_ID + "," + TaskEntry.COLUMN_DATE + ") ON CONFLICT FAIL);";
+                + " UNIQUE (" + TaskEntry.COLUMN_AREA_ID + "," + TaskEntry.COLUMN_DATE + "," + TaskEntry.COLUMN_TIME_ZONE + ") ON CONFLICT FAIL);";
 
         final String CREATE_TABLE_NOTIFICATION = "CREATE TABLE " + NotificationEntry.TABLE_NAME + " ("
                 + NotificationEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + NotificationEntry.COLUMN_MESSAGE + " TEXT NOT NULL,"
                 + NotificationEntry.COLUMN_DATE + " INTEGER NOT NULL,"
+                + TaskEntry.COLUMN_TIME_ZONE + " TEXT NOT NULL,"
                 + NotificationEntry.COLUMN_TASK_ID + " INTEGER,"
                 + NotificationEntry.COLUMN_TYPE + " INTEGER NOT NULL" + ");";
 
@@ -62,15 +77,6 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + NotificationEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + TaskEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + AreaEntry.TABLE_NAME);
-
-/*        final String CREATE_TABLE_NOTIFICATION = "CREATE TABLE " + NotificationEntry.TABLE_NAME + " ("
-                + NotificationEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + NotificationEntry.COLUMN_MESSAGE + " TEXT NOT NULL,"
-                + NotificationEntry.COLUMN_DATE + " INTEGER NOT NULL,"
-                + NotificationEntry.COLUMN_TASK_ID + " INTEGER,"
-                + NotificationEntry.COLUMN_TYPE + " INTEGER NOT NULL" + ");";
-
-        db.execSQL(CREATE_TABLE_NOTIFICATION);*/
 
         onCreate(db);
     }
@@ -98,7 +104,16 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         values.put(AreaEntry.COLUMN_NAME, area.getName());
         values.put(AreaEntry.COLUMN_DESCRIPTION, area.getDescription());
 
-        return db.insert(AreaEntry.TABLE_NAME, null, values);
+        try {
+            long id = db.insert(AreaEntry.TABLE_NAME, null, values);
+
+            setDbNotInitialStatus();
+
+            return id;
+        }catch (SQLiteConstraintException e){
+            Log.e(LOG_tAG, e.getMessage());
+            return -1;
+        }
     }
 
     public Area getAreaByID(long area_id){
@@ -153,6 +168,9 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         try{
             long id = db.update(AreaEntry.TABLE_NAME, values, AreaEntry._ID + " = ?",
                     new String[]{ String.valueOf(area.getId()) });
+
+            setDbNotInitialStatus();
+
             return id;
         }
         catch (SQLiteConstraintException e){
@@ -166,6 +184,8 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(AreaEntry.TABLE_NAME, AreaEntry._ID + " = ?",
                 new String[]{ String.valueOf(area_id) });
+
+        setDbNotInitialStatus();
     }
 
     // Tasks
@@ -185,11 +205,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
     public Cursor getTodayTasks(){
         SQLiteDatabase db = this.getReadableDatabase();
 
-        Calendar today = Calendar.getInstance();
-        today.set(Calendar.HOUR_OF_DAY, 0);
-        today.set(Calendar.MINUTE, 0);
-        today.set(Calendar.SECOND, 0);
-        today.set(Calendar.MILLISECOND, 0);
+        Calendar today = DateTimeUtils.getTodayDate();
 
         return db.query(TaskEntry.TABLE_NAME,
                 null,
@@ -217,11 +233,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
     public int getUndoneTasksInAreaCount(long area_id){
         SQLiteDatabase db = this.getReadableDatabase();
 
-        Calendar today = Calendar.getInstance();
-        today.set(Calendar.HOUR_OF_DAY, 0);
-        today.set(Calendar.MINUTE, 0);
-        today.set(Calendar.SECOND, 0);
-        today.set(Calendar.MILLISECOND, 0);
+        Calendar today = DateTimeUtils.getTodayDate();
 
         return db.query(TaskEntry.TABLE_NAME,
                 null,
@@ -248,8 +260,8 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         else
             return null;
 
-        Calendar taskDate = Calendar.getInstance();
-        taskDate.setTimeInMillis(taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_DATE)));
+        Calendar taskDate = DateTimeUtils.getInstanceInCurrentTimeZone(taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_DATE)),
+                TimeZone.getTimeZone(taskCursor.getString(taskCursor.getColumnIndex(TaskEntry.COLUMN_TIME_ZONE))));
 
         boolean isDone;
         if(taskCursor.getInt(taskCursor.getColumnIndex(TaskEntry.COLUMN_STATUS)) == 1)
@@ -263,6 +275,39 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
                 taskCursor.getString(taskCursor.getColumnIndex(TaskEntry.COLUMN_DESCRIPTION)),
                 taskDate,
                 isDone);
+    }
+
+    public boolean isTasksForTomorrowSet(){
+        Cursor allAreasCursor = getAllAreas();
+
+        if(allAreasCursor == null || allAreasCursor.getCount() <= 0)
+            return true;
+
+        int areasCount = allAreasCursor.getCount();
+
+        Cursor tomorrowTasksCursor = getAllTasksForTomorrow();
+
+        if(tomorrowTasksCursor == null || tomorrowTasksCursor.getCount() <= 0){
+            return false;
+        }
+
+        return areasCount <= tomorrowTasksCursor.getCount();
+
+    }
+
+    private Cursor getAllTasksForTomorrow(){
+        Calendar tomorrow = DateTimeUtils.getTodayDate();
+        tomorrow.add(Calendar.DATE, 1);
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        return db.query(TaskEntry.TABLE_NAME,
+                null,
+                TaskEntry.COLUMN_DATE + " = ?",
+                new String[]{ String.valueOf(tomorrow.getTimeInMillis()) },
+                null,
+                null,
+                null);
     }
 
     public long createTask(Task task){
@@ -286,12 +331,15 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         values.put(TaskEntry.COLUMN_DESCRIPTION, task.getDescription());
         values.put(TaskEntry.COLUMN_AREA_ID, task.getArea().getId());
         values.put(TaskEntry.COLUMN_DATE, task.getDate().getTimeInMillis());
+        values.put(TaskEntry.COLUMN_TIME_ZONE, TimeZone.getDefault().getID());
         values.put(TaskEntry.COLUMN_STATUS, status);
 
         try {
             long id = db.insert(TaskEntry.TABLE_NAME,
                     null,
                     values);
+
+            setDbNotInitialStatus();
 
             return id;
         } catch (SQLiteConstraintException e){
@@ -324,11 +372,14 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         values.put(TaskEntry.COLUMN_DESCRIPTION, task.getDescription());
         values.put(TaskEntry.COLUMN_AREA_ID, task.getArea().getId());
         values.put(TaskEntry.COLUMN_DATE, task.getDate().getTimeInMillis());
+        values.put(TaskEntry.COLUMN_TIME_ZONE, TimeZone.getDefault().getID());
         values.put(TaskEntry.COLUMN_STATUS, status);
 
         try{
             long id = db.update(TaskEntry.TABLE_NAME, values, TaskEntry._ID + " = ?",
                     new String[]{ String.valueOf(task.getId()) });
+
+            setDbNotInitialStatus();
 
             return id;
         }
@@ -354,7 +405,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
 
         tasksCursor.moveToFirst();
 
-        return tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry.COLUMN_DATE));
+        return tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry._ID));
     }
 
     private void deleteAllAreaTasks(long area_id){
@@ -402,8 +453,8 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         if(notificationCursor != null && notificationCursor.getCount() > 0){
             notificationCursor.moveToFirst();
 
-            Calendar notificationDate = Calendar.getInstance();
-            notificationDate.setTimeInMillis(notificationCursor.getLong(notificationCursor.getColumnIndex(NotificationEntry.COLUMN_DATE)));
+            Calendar notificationDate = DateTimeUtils.getInstanceInCurrentTimeZone(notificationCursor.getLong(notificationCursor.getColumnIndex(NotificationEntry.COLUMN_DATE)),
+                    TimeZone.getTimeZone(notificationCursor.getString(notificationCursor.getColumnIndex(NotificationEntry.COLUMN_TIME_ZONE))));
 
             long taskID = notificationCursor.getLong(notificationCursor.getColumnIndex(NotificationEntry.COLUMN_TASK_ID));
             Task task = getTaskByID(taskID);
@@ -434,8 +485,8 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         if(notificationCursor != null && notificationCursor.getCount() > 0){
             notificationCursor.moveToFirst();
 
-            Calendar notificationDate = Calendar.getInstance();
-            notificationDate.setTimeInMillis(notificationCursor.getLong(notificationCursor.getColumnIndex(NotificationEntry.COLUMN_DATE)));
+            Calendar notificationDate = DateTimeUtils.getInstanceInCurrentTimeZone(notificationCursor.getLong(notificationCursor.getColumnIndex(NotificationEntry.COLUMN_DATE)),
+                    TimeZone.getTimeZone(notificationCursor.getString(notificationCursor.getColumnIndex(NotificationEntry.COLUMN_TIME_ZONE))));
 
             long taskID = notificationCursor.getLong(notificationCursor.getColumnIndex(NotificationEntry.COLUMN_TASK_ID));
             Task task = getTaskByID(taskID);
@@ -458,6 +509,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(NotificationEntry.COLUMN_MESSAGE, notification.getMessage());
         values.put(NotificationEntry.COLUMN_DATE, notification.getDate().getTimeInMillis());
+        values.put(NotificationEntry.COLUMN_TIME_ZONE, TimeZone.getDefault().getID());
         if(notification.getTask() != null)
             values.put(NotificationEntry.COLUMN_TASK_ID, notification.getTask().getId());
         else
@@ -489,6 +541,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(NotificationEntry.COLUMN_MESSAGE, notification.getMessage());
         values.put(NotificationEntry.COLUMN_DATE, notification.getDate().getTimeInMillis());
+        values.put(NotificationEntry.COLUMN_TIME_ZONE, TimeZone.getDefault().getID());
         if(notification.getTask() != null)
             values.put(NotificationEntry.COLUMN_TASK_ID, notification.getTask().getId());
         else
@@ -524,41 +577,18 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
                 new String[]{ String.valueOf(task_id) });
     }
 
-    public boolean isTasksForTomorrowSet(){
-        Cursor allAreasCursor = getAllAreas();
-
-        if(allAreasCursor == null || allAreasCursor.getCount() <= 0)
-            return true;
-
-        int areasCount = allAreasCursor.getCount();
-
-        Cursor tomorrowTasksCursor = getAllTasksForTomorrow();
-
-        if(tomorrowTasksCursor == null || tomorrowTasksCursor.getCount() <= 0){
-            return false;
+    // SET DATABASE STATUS TO NOT INITIAL
+    private void setDbNotInitialStatus(){
+        if(mIsDbInitial) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+            prefs.edit().putBoolean(PREF_IS_DATABASE_INITIAL_STATUS, false).apply();
+            mIsDbInitial = false;
         }
-
-        return areasCount <= tomorrowTasksCursor.getCount();
-
     }
 
-    private Cursor getAllTasksForTomorrow(){
-        Calendar tomorrow = Calendar.getInstance();
-        tomorrow.set(Calendar.HOUR_OF_DAY, 0);
-        tomorrow.set(Calendar.MINUTE, 0);
-        tomorrow.set(Calendar.SECOND, 0);
-        tomorrow.set(Calendar.MILLISECOND, 0);
-        tomorrow.add(Calendar.DATE, 1);
-
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        return db.query(TaskEntry.TABLE_NAME,
-                null,
-                TaskEntry.COLUMN_DATE + " = ?",
-                new String[]{ String.valueOf(tomorrow.getTimeInMillis()) },
-                null,
-                null,
-                null);
+    public void setDbInitialStatus(){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+        prefs.edit().putBoolean(PREF_IS_DATABASE_INITIAL_STATUS, true).apply();
+        mIsDbInitial = true;
     }
-
 }

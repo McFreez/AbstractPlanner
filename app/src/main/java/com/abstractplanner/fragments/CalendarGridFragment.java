@@ -50,15 +50,6 @@ public class CalendarGridFragment extends Fragment
     private DataAdapter dataAdapter;
 
     private Toolbar mShortToolbar;
-    private AreasScrollView areasScrollView;
-    private LinearLayout areasContainer;
-    private DataRecyclerView dataRecyclerView;
-    private EndlessRecyclerViewScrollListener dataRecyclerViewScrollListener;
-    private CenterLayoutManager layoutManager_data;
-    private DaysRecyclerView daysRecyclerView;
-    private DataVerticalScrollView dataVerticalScrollView;
-
-    private ImageView buttonAddArea;
 
     private AbstractPlannerDatabaseHelper dbHelper;
 
@@ -80,22 +71,22 @@ public class CalendarGridFragment extends Fragment
         progressBarContainer = (LinearLayout) view.findViewById(R.id.progress_bar_container);
         progressBarContainer.setVisibility(View.VISIBLE);*/
 
-        layoutManager_data = new CenterLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+        CenterLayoutManager layoutManager_data = new CenterLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         final CenterLayoutManager layoutManager_days = new CenterLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
 
-        areasContainer = (LinearLayout) view.findViewById(R.id.areas_container);
+        LinearLayout areasContainer = (LinearLayout) view.findViewById(R.id.areas_container);
 
-        dataRecyclerView = (DataRecyclerView) view.findViewById(R.id.rv_data);
+        DataRecyclerView dataRecyclerView = (DataRecyclerView) view.findViewById(R.id.rv_data);
         dataRecyclerView.setLayoutManager(layoutManager_data);
         dataRecyclerView.setHasFixedSize(true);
 
-        daysRecyclerView = (DaysRecyclerView) view.findViewById(R.id.rv_days);
+        DaysRecyclerView daysRecyclerView = (DaysRecyclerView) view.findViewById(R.id.rv_days);
         daysRecyclerView.setLayoutManager(layoutManager_days);
         daysRecyclerView.setHasFixedSize(true);
 
-        dataVerticalScrollView = (DataVerticalScrollView) view.findViewById(R.id.data_vertical_scroll);
+        DataVerticalScrollView dataVerticalScrollView = (DataVerticalScrollView) view.findViewById(R.id.data_vertical_scroll);
 
-        areasScrollView = (AreasScrollView) view.findViewById(R.id.areas_scroll);
+        AreasScrollView areasScrollView = (AreasScrollView) view.findViewById(R.id.areas_scroll);
 
         areasScrollView.synchronizeScrollWith(dataVerticalScrollView);
         dataVerticalScrollView.synchronizeScrollingWith(areasScrollView);
@@ -142,7 +133,7 @@ public class CalendarGridFragment extends Fragment
 
         /*AreasAdapter areasAdapter = */new AreasAdapter((MainActivity) getActivity(), areas, areasContainer);
 
-        dataRecyclerViewScrollListener = new EndlessRecyclerViewScrollListener(layoutManager_data) {
+        EndlessRecyclerViewScrollListener dataRecyclerViewScrollListener = new EndlessRecyclerViewScrollListener(layoutManager_data) {
             @Override
             public void onScrollForwardLoadMore(final EndlessRecyclerViewScrollListener scrollListener) {
 
@@ -161,7 +152,7 @@ public class CalendarGridFragment extends Fragment
         //daysRecyclerView.scrollToToday();
         dataRecyclerView.scrollToToday();
 
-        buttonAddArea = (ImageView) view.findViewById(R.id.button_add_area);
+        ImageView buttonAddArea = (ImageView) view.findViewById(R.id.button_add_area);
         buttonAddArea.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

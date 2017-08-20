@@ -149,9 +149,6 @@ public class NotificationsFragment extends Fragment
                 FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
                 EditNotificationDialogFragment newFragment = new EditNotificationDialogFragment();
                 newFragment.setAdapter(myItemAdapter);
-/*                newFragment.setTask(task);
-                newFragment.setTaskDate(calendarDate);
-                newFragment.setAdapter(DataAdapter.this);*/
                 // The device is smaller, so show the fragment fullscreen
                 FragmentTransaction transaction = fragmentManager.beginTransaction();
                 // For a little polish, specify a transition animation
@@ -163,12 +160,6 @@ public class NotificationsFragment extends Fragment
             }
         });
 
-        // for debugging
-//        animator.setDebug(true);
-//        animator.setMoveDuration(2000);
-//        animator.setRemoveDuration(2000);
-//        mRecyclerViewSwipeManager.setMoveToOutsideWindowAnimationDuration(2000);
-//        mRecyclerViewSwipeManager.setReturnToDefaultPositionAnimationDuration(2000);
     }
 
 

@@ -33,12 +33,6 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
 
     private EventListener mEventListener;
 
-    private LinearLayout mNotifyIn30Min;
-    private LinearLayout mNotifyIn1Hour;
-    private LinearLayout mNotifyIn3Hours;
-    private LinearLayout mNotifyIn6Hours;
-    private LinearLayout mSelectExactTime;
-
     private AbstractPlannerDatabaseHelper mDbHelper;
 
     private Task mTaskToNotify;
@@ -56,7 +50,6 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
         mDbHelper = ((MainActivity)getActivity()).getDbHelper();
 
         Calendar notificationTime = Calendar.getInstance();
-        //notificationTime.set(mTaskToNotify.getDate().get(Calendar.YEAR), mTaskToNotify.getDate().get(Calendar.MONTH), mTaskToNotify.getDate().get(Calendar.DAY_OF_MONTH));
 
         notificationTime.add(Calendar.MINUTE, 30);
         TextView m30MinTime = (TextView) view.findViewById(R.id.task_notify_in_30_min_time);
@@ -74,7 +67,7 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
         TextView m6HoursTime = (TextView) view.findViewById(R.id.task_notify_in_6_hours_time);
         m6HoursTime.setText(DateUtils.formatDateTime(getContext(), notificationTime.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_24HOUR));
 
-        mNotifyIn30Min = (LinearLayout) view.findViewById(R.id.task_notify_in_30_min);
+        LinearLayout mNotifyIn30Min = (LinearLayout) view.findViewById(R.id.task_notify_in_30_min);
         mNotifyIn30Min.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -84,7 +77,6 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                 }
 
                 Calendar notificationTime = Calendar.getInstance();
-                //notificationTime.set(mTaskToNotify.getDate().get(Calendar.YEAR), mTaskToNotify.getDate().get(Calendar.MONTH), mTaskToNotify.getDate().get(Calendar.DAY_OF_MONTH));
                 notificationTime.add(Calendar.MINUTE, 30);
 
                 Notification notification = new Notification("You have unfinished task: " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
@@ -99,7 +91,7 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                 dismiss();
             }
         });
-        mNotifyIn1Hour = (LinearLayout) view.findViewById(R.id.task_notify_in_1_hour);
+        LinearLayout mNotifyIn1Hour = (LinearLayout) view.findViewById(R.id.task_notify_in_1_hour);
         mNotifyIn1Hour.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -109,7 +101,6 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                 }
 
                 Calendar notificationTime = Calendar.getInstance();
-                //notificationTime.set(mTaskToNotify.getDate().get(Calendar.YEAR), mTaskToNotify.getDate().get(Calendar.MONTH), mTaskToNotify.getDate().get(Calendar.DAY_OF_MONTH));
                 notificationTime.add(Calendar.HOUR, 1);
 
                 Notification notification = new Notification("You have unfinished task: " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
@@ -124,7 +115,7 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                 dismiss();
             }
         });
-        mNotifyIn3Hours = (LinearLayout) view.findViewById(R.id.task_notify_in_3_hours);
+        LinearLayout mNotifyIn3Hours = (LinearLayout) view.findViewById(R.id.task_notify_in_3_hours);
         mNotifyIn3Hours.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -134,7 +125,6 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                 }
 
                 Calendar notificationTime = Calendar.getInstance();
-                //notificationTime.set(mTaskToNotify.getDate().get(Calendar.YEAR), mTaskToNotify.getDate().get(Calendar.MONTH), mTaskToNotify.getDate().get(Calendar.DAY_OF_MONTH));
                 notificationTime.add(Calendar.HOUR, 3);
 
                 Notification notification = new Notification("You have unfinished task: " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
@@ -149,7 +139,7 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                 dismiss();
             }
         });
-        mNotifyIn6Hours = (LinearLayout) view.findViewById(R.id.task_notify_in_6_hours);
+        LinearLayout mNotifyIn6Hours = (LinearLayout) view.findViewById(R.id.task_notify_in_6_hours);
         mNotifyIn6Hours.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -159,7 +149,6 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                 }
 
                 Calendar notificationTime = Calendar.getInstance();
-                //notificationTime.set(mTaskToNotify.getDate().get(Calendar.YEAR), mTaskToNotify.getDate().get(Calendar.MONTH), mTaskToNotify.getDate().get(Calendar.DAY_OF_MONTH));
                 notificationTime.add(Calendar.HOUR, 6);
 
                 Notification notification = new Notification("You have unfinished task: " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
@@ -174,7 +163,7 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                 dismiss();
             }
         });
-        mSelectExactTime = (LinearLayout) view.findViewById(R.id.task_select_exact_time);
+        LinearLayout mSelectExactTime = (LinearLayout) view.findViewById(R.id.task_select_exact_time);
         mSelectExactTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -227,7 +216,6 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
         public void onTimeSet(TimePicker timePicker, int hourOfDay, int minute) {
 
             Calendar notificationTime = Calendar.getInstance();
-            //notificationTime.set(mTaskToNotify.getDate().get(Calendar.YEAR), mTaskToNotify.getDate().get(Calendar.MONTH), mTaskToNotify.getDate().get(Calendar.DAY_OF_MONTH));
 
             notificationTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
             notificationTime.set(Calendar.MINUTE, minute);

@@ -17,6 +17,7 @@ import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.dto.Area;
 import com.abstractplanner.fragments.EditAreaDialogFragment;
 import com.abstractplanner.fragments.EditTaskDialogFragment;
+import com.abstractplanner.table.VerticalTextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,13 +29,11 @@ public class AreasAdapter {
     private List<View> mAreasViews;
     private LinearLayout mAreasContainer;
     private AbstractPlannerDatabaseHelper mDbHelper;
-    //private DataAdapter mDataAdapter;
 
     public AreasAdapter(MainActivity activity, List<Area> areas, LinearLayout attributesContainer){
         mActivity = activity;
         mAreas = areas;
         mAreasContainer = attributesContainer;
-        //mDataAdapter = dataAdapter;
 
         mDbHelper = mActivity.getDbHelper();
 
@@ -48,17 +47,10 @@ public class AreasAdapter {
         for(int i = 0; i < mAreas.size(); i++){
 
             View view = inflater.inflate(R.layout.areas_item, null, false);
-            //int width = (int) mActivity.getResources().getDimension(R.dimen.areas_column_width);
-            int height = (int) mActivity.getResources().getDimension(R.dimen.calendar_item_size);
-            //view.setLayoutParams(new LinearLayout.LayoutParams(, heightViewGroup.LayoutParams.MATCH_PARENT));
 
             AreasViewHolder viewHolder = new AreasViewHolder();
             viewHolder.areaTitle = (TextView) view.findViewById(R.id.tv_area);
             viewHolder.areaTitle.setText(mAreas.get(i).getName());
-
-
-            //viewHolder.areaTitle.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            //viewHolder.areaTitle.setBackgroundColor(mActivity.getResources().getColor(R.color.colorPrimary));
 
             final Area area = mAreas.get(i);
 
