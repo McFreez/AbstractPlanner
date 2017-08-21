@@ -156,17 +156,11 @@ public class MainActivity extends AppCompatActivity
 
     private void checkFirstRun() {
 
-        //final String PREFS_NAME = "MyPrefsFile";
-        final String PREF_VERSION_CODE_KEY = "version_code";
-        final String PREF_IS_DATABASE_INITIAL_STATUS = AbstractPlannerDatabaseHelper.PREF_IS_DATABASE_INITIAL_STATUS;
-        final int DOESNT_EXIST = -1;
-
         // Get current version code
         int currentVersionCode = BuildConfig.VERSION_CODE;
 
         // Get saved version code
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        int savedVersionCode = prefs.getInt(PREF_VERSION_CODE_KEY, DOESNT_EXIST);
+        int savedVersionCode = AbstractPlannerPreferences.getAppVersionCode(this);
 
         // Check for first run or upgrade
         if (currentVersionCode == savedVersionCode) {
@@ -174,11 +168,10 @@ public class MainActivity extends AppCompatActivity
             // This is just a normal run
             return;
 
-        } else if (savedVersionCode == DOESNT_EXIST) {
+        } else if (savedVersionCode == AbstractPlannerPreferences.VERSION_CODE_DOESNT_EXIST) {
 
-            boolean isNotificationEnabled = prefs.getBoolean(getString(R.string.tomorrow_tasks_notification_key), true);
-            if(!isNotificationEnabled)
-                prefs.edit().putBoolean(getString(R.string.tomorrow_tasks_notification_key), true).apply();
+            if(!AbstractPlannerPreferences.isNotificationEnabled(this))
+                AbstractPlannerPreferences.setNotificationEnabled(this, true);
 
             createSystemNotification();
 
@@ -215,15 +208,14 @@ public class MainActivity extends AppCompatActivity
             dbHelper.setDbInitialStatus();
 
         } else if (currentVersionCode > savedVersionCode) {
-            boolean isNotificationEnabled = prefs.getBoolean(getString(R.string.tomorrow_tasks_notification_key), true);
-            if(!isNotificationEnabled)
-                prefs.edit().putBoolean(getString(R.string.tomorrow_tasks_notification_key), true).apply();
+            if(!AbstractPlannerPreferences.isNotificationEnabled(this))
+                AbstractPlannerPreferences.setNotificationEnabled(this, true);
 
             createSystemNotification();
         }
 
         // Update the shared preferences with the current version code
-        prefs.edit().putInt(PREF_VERSION_CODE_KEY, currentVersionCode).apply();
+        AbstractPlannerPreferences.setAppVersionCode(this, currentVersionCode);
     }
 
     private void createSystemNotification(){
@@ -579,14 +571,16 @@ public class MainActivity extends AppCompatActivity
     public void onConnected(@Nullable Bundle bundle) {
         Log.i(LOG_TAG, "GoogleApiClient connected");
 
-/*        try {
+        try {
             getDbHelper().close();
-            DriveDbHandler.tryReadDbFromDrive(mGoogleApiClient, this);
+            /*DriveDbHandler.TryReadDBTask tryReadDBTask = new DriveDbHandler.TryReadDBTask(mGoogleApiClient, this);
+            tryReadDBTask.execute();*/
+            //DriveDbHandler.tryReadDbFromDrive(mGoogleApiClient, this);
             //displaySelectedScreen(R.id.today_tasks, null);
         } catch (IllegalStateException e){
             Log.e(LOG_TAG, "Cannot connect to Google Drive " + e.getMessage());
             signOut();
-        }*/
+        }
 
     }
 

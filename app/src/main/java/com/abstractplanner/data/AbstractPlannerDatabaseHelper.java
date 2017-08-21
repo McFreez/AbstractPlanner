@@ -27,8 +27,6 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 5;
     public static final String DATABASE_NAME = "abstractPlanner.db";
 
-    public static final String PREF_IS_DATABASE_INITIAL_STATUS = "initial_data_only";
-
     private Context mContext;
 
     private boolean mIsDbInitial;
@@ -37,8 +35,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
         mContext = context;
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-        mIsDbInitial = prefs.getBoolean(PREF_IS_DATABASE_INITIAL_STATUS, true);
+        mIsDbInitial = AbstractPlannerPreferences.isDatabaseInInitialStatus(mContext);
     }
 
     @Override
@@ -580,15 +577,13 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
     // SET DATABASE STATUS TO NOT INITIAL
     private void setDbNotInitialStatus(){
         if(mIsDbInitial) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-            prefs.edit().putBoolean(PREF_IS_DATABASE_INITIAL_STATUS, false).apply();
+            AbstractPlannerPreferences.setDatabaseInitialStatus(mContext, false);
             mIsDbInitial = false;
         }
     }
 
     public void setDbInitialStatus(){
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-        prefs.edit().putBoolean(PREF_IS_DATABASE_INITIAL_STATUS, true).apply();
+        AbstractPlannerPreferences.setDatabaseInitialStatus(mContext, true);
         mIsDbInitial = true;
     }
 }

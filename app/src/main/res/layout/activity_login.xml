@@ -14,13 +14,13 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        android:layout_marginTop="48dp"
         app:layout_constraintHorizontal_bias="0.501"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/google_sign_in_label"
         android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp" />
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="24dp"
+        app:layout_constraintBottom_toTopOf="@+id/splitter_container" />
 
     <ImageView
         android:id="@+id/app_icon_image_view"
@@ -36,7 +36,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp" />
 
-    <TextView
+<!--    <TextView
         android:id="@+id/google_sign_in_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -52,7 +52,7 @@
         app:layout_constraintTop_toBottomOf="@+id/app_icon_image_view"
         app:layout_constraintHorizontal_bias="0.505"
         android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp" />
+        android:layout_marginEnd="8dp" />-->
 
     <TextView
         android:id="@+id/status_signed_out"
@@ -62,29 +62,28 @@
         android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
         android:textColor="@color/colorPrimaryDark"
         android:visibility="gone"
-        app:layout_constraintLeft_toLeftOf="@+id/google_sign_in_label"
-        app:layout_constraintRight_toRightOf="@+id/google_sign_in_label"
-        app:layout_constraintTop_toBottomOf="@+id/google_sign_in_label" />
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/sign_in_button"
+        android:layout_marginLeft="8dp"
+        app:layout_constraintLeft_toLeftOf="@+id/sign_in_button"
+        android:layout_marginRight="8dp"
+        app:layout_constraintRight_toRightOf="@+id/sign_in_button" />
 
     <RelativeLayout
         android:id="@+id/splitter_container"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
         android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@+id/sign_in_button"
-        android:layout_marginLeft="24dp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        android:layout_marginRight="24dp"
-        app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp">
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/sign_in_without_auth"
+        app:layout_constraintRight_toRightOf="@+id/sign_in_without_auth"
+        app:layout_constraintLeft_toLeftOf="@+id/sign_in_without_auth">
 
         <TextView
             android:id="@+id/tv_or"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="OR WITHOUT AUTHORIZATION"
+            android:text="OR"
             android:textColor="@color/colorPrimaryLight"
             android:layout_centerInParent="true"/>
 
@@ -93,7 +92,6 @@
             android:layout_height="1dp"
             android:layout_toLeftOf="@id/tv_or"
             android:layout_centerVertical="true"
-            android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
             android:background="@color/colorPrimaryLight"/>
 
@@ -103,7 +101,6 @@
             android:layout_toRightOf="@id/tv_or"
             android:layout_centerVertical="true"
             android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
             android:background="@color/colorPrimaryLight"/>
 
     </RelativeLayout>
@@ -115,13 +112,15 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        android:layout_marginTop="8dp"
-        android:text="Sign in"
+        android:text="Continue without sign in"
         android:textColor="@color/colorPrimaryLight"
         android:textColorLink="@color/colorPrimary"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/splitter_container" />
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="112dp" />
 <!--
     <Button
         android:id="@+id/sign_out_button"

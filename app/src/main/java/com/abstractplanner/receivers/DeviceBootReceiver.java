@@ -29,22 +29,22 @@ public class DeviceBootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         mContext = context;
-        Log.e("ABSTRACT_PLANNER", " received ");
+        //Log.e("ABSTRACT_PLANNER", " received ");
         if (intent.getAction().equals("android.intent.action.BOOT_COMPLETED")) {
-            Log.e("ABSTRACT_PLANNER", " started ");
+            //Log.e("ABSTRACT_PLANNER", " started ");
             AbstractPlannerDatabaseHelper dbHelper = new AbstractPlannerDatabaseHelper(mContext);
 
-            Log.e("ABSTRACT_PLANNER", "db null");
+            //Log.e("ABSTRACT_PLANNER", "db null");
 
             Cursor notificationsCursor = dbHelper.getAllNotifications();
 
             if(notificationsCursor == null) {
-                Log.e("ABSTRACT_PLANNER", " cursor null ");
+                //Log.e("ABSTRACT_PLANNER", " cursor null ");
                 return;
             }
 
             if(notificationsCursor.getCount() <= 0){
-                Log.e("ABSTRACT_PLANNER", " size 0 ");
+                //Log.e("ABSTRACT_PLANNER", " size 0 ");
                 return;
             }
 
@@ -53,7 +53,7 @@ public class DeviceBootReceiver extends BroadcastReceiver {
             for(int i = 0; i < notificationsCursor.getCount(); i++){
                 notificationsCursor.moveToPosition(i);
 
-                Log.e("ABSTRACT_PLANNER", " i " + i);
+                //Log.e("ABSTRACT_PLANNER", " i " + i);
 
                 Calendar notificationDate = DateTimeUtils.getInstanceInCurrentTimeZone(notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_DATE)),
                         TimeZone.getTimeZone(notificationsCursor.getString(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TIME_ZONE))));
@@ -83,7 +83,7 @@ public class DeviceBootReceiver extends BroadcastReceiver {
                         continue;
                 }
 
-                Log.e("ABSTRACT_PLANNER", "Type: " + Notification.getNotificationTypeName(notificationType) + " and message: " + message);
+                //Log.e("ABSTRACT_PLANNER", "Type: " + Notification.getNotificationTypeName(notificationType) + " and message: " + message);
 
                 long taskID = notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TASK_ID));
                 Task task = dbHelper.getTaskByID(taskID);
@@ -97,13 +97,13 @@ public class DeviceBootReceiver extends BroadcastReceiver {
                 if(notificationType == Notification.TYPE_ONE_TIME_ID && today.after(notificationDate)){
                     clearNotification(notification);
                     dbHelper.deleteNotification(notificationID);
-                    Log.e("ABSTRACT_PLANNER", " notification deleted ");
+                    //Log.e("ABSTRACT_PLANNER", " notification deleted ");
                     continue;
                 }
 
                 createNotification(notification);
 
-                Log.e("ABSTRACT_PLANNER", " notification created ");
+                //Log.e("ABSTRACT_PLANNER", " notification created ");
 
             }
         }
