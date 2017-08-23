@@ -6,8 +6,9 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
-    <string name="tomorrow_tasks_notification_key">tomorrow_tasks_notification_preference</string>
-    <string name="tomorrow_tasks_notification_message">Create tasks for tomorrow</string>
+
+    <string name="pref_tomorrow_tasks_notification_key">tomorrow_tasks_notification_preference</string>
+    <string name="pref_tomorrow_tasks_notification_message">Create tasks for tomorrow</string>
 
     <string name="pref_areas_sort_label"
         translatable="false">Areas sorting</string>
@@ -26,4 +27,16 @@
 
     <string name="pref_areas_sort_by_tasks"
         translatable="false">by_undone_tasks</string>
+
+    <string name="pref_google_authorization_key">is_authorization_enabled</string>
+    <!--<string name="google_authorization_title">Auto Sign In with Google</string>-->
+
+    <string name="pref_sign_in_key">sign_in</string>
+
+    <string name="pref_category_google_services">google_services_category</string>
+
+    <string name="pref_category_notifications">notifications_category</string>
+
+    <string name="pref_category_calendar">calendar_category</string>
+
 </resources>

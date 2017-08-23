@@ -7,6 +7,7 @@ import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -223,8 +224,14 @@ public class RescheduleNotificationDialogFragment extends DialogFragment {
     TimePickerDialog.OnTimeSetListener s = new TimePickerDialog.OnTimeSetListener() {
         @Override
         public void onTimeSet(TimePicker timePicker, int hourOfDay, int minute) {
+
+            Calendar now = Calendar.getInstance();
+
             mNotificationToDefer.getDate().set(Calendar.HOUR_OF_DAY, hourOfDay);
             mNotificationToDefer.getDate().set(Calendar.MINUTE, minute);
+
+            if(now.after(mNotificationToDefer.getDate()))
+                mNotificationToDefer.getDate().add(Calendar.DATE, 1);
 
             long status = mDbHelper.updateNotification(mNotificationToDefer);
 
@@ -292,8 +299,12 @@ public class RescheduleNotificationDialogFragment extends DialogFragment {
 
         switch (mNotificationToDefer.getType()){
             case Notification.TYPE_ONE_TIME_ID:
-                if(today.before(mNotificationToDefer.getDate()))
-                    manager.setExact(AlarmManager.RTC_WAKEUP, mNotificationToDefer.getDate().getTimeInMillis(), pendingIntent);
+                if(today.before(mNotificationToDefer.getDate())) {
+                    if (Build.VERSION.SDK_INT >= 19)
+                        manager.setExact(AlarmManager.RTC_WAKEUP, mNotificationToDefer.getDate().getTimeInMillis(), pendingIntent);
+                    else
+                        manager.set(AlarmManager.RTC_WAKEUP, mNotificationToDefer.getDate().getTimeInMillis(), pendingIntent);
+                }
                 break;
             case Notification.TYPE_EVERY_DAY_ID:
 

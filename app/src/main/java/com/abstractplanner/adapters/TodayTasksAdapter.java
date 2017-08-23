@@ -199,7 +199,7 @@ public class TodayTasksAdapter
         if(position >= 0){
             if(task.isDone()){
                 mProvider.removeItem(position, task.isDone());
-                notifyItemRemoved(position);
+                notifyDataSetChanged();
             }else
                 if(((Task)mProvider.getItem(position).getDataObject()).getDate().compareTo(task.getDate()) == 0){
                     mProvider.getItem(position).updateDataObject(task);

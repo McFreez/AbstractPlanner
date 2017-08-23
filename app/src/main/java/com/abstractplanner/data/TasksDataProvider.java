@@ -104,7 +104,7 @@ public class TasksDataProvider extends AbstractDataProvider {
                 final int viewType = TaskData.ITEM_NORMAL;
                 final int swipeReaction = RecyclerViewSwipeManager.REACTION_CAN_SWIPE_UP | RecyclerViewSwipeManager.REACTION_CAN_SWIPE_DOWN;
 
-                Calendar taskDate = DateTimeUtils.getInstanceInCurrentTimeZone(tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry.COLUMN_DATE)),
+                Calendar taskDate = DateTimeUtils.getInstanceDayInCurrentTimeZone(tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry.COLUMN_DATE)),
                         TimeZone.getTimeZone(tasksCursor.getString(tasksCursor.getColumnIndex(TaskEntry.COLUMN_TIME_ZONE))));
 
                 boolean isDone;
@@ -138,7 +138,7 @@ public class TasksDataProvider extends AbstractDataProvider {
 
         Calendar today = DateTimeUtils.getTodayDate();
 
-        Calendar taskDate = DateTimeUtils.getInstanceInCurrentTimeZone(taskDateTimeInMillis, timeZone);
+        Calendar taskDate = DateTimeUtils.getInstanceDayInCurrentTimeZone(taskDateTimeInMillis, timeZone);
 
         if(today.compareTo(taskDate) == 0){
             day = "Today";

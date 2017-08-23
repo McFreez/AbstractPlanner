@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 
 import com.abstractplanner.MainActivity;
@@ -63,8 +64,11 @@ public class AlarmReceiver extends BroadcastReceiver{
                 .setContentText(messageBody)
                 .setAutoCancel(true)
                 .setSound(defaultSoundUri)
-                .setContentIntent(pendingIntent)
-                .setPriority(Notification.PRIORITY_HIGH);
+                .setContentIntent(pendingIntent);
+
+        if(Build.VERSION.SDK_INT > 15) {
+                notificationBuilder.setPriority(Notification.PRIORITY_HIGH);
+        }
 
         if(notification != null)
             if (notification.getType() == com.abstractplanner.dto.Notification.TYPE_SYSTEM_ID)

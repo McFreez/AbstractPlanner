@@ -9,12 +9,15 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.preference.ListPreference;
 import android.support.v7.preference.Preference;
+import android.support.v7.preference.PreferenceCategory;
 import android.support.v7.preference.PreferenceFragmentCompat;
 import android.support.v7.preference.PreferenceScreen;
 import android.support.v7.preference.SwitchPreferenceCompat;
 
 import com.abstractplanner.R;
+import com.abstractplanner.SettingsActivity;
 import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
+import com.abstractplanner.data.AbstractPlannerPreferences;
 import com.abstractplanner.dto.Notification;
 import com.abstractplanner.receivers.AlarmReceiver;
 
@@ -31,6 +34,8 @@ import java.util.Calendar;
  */
 public class SettingsFragment extends PreferenceFragmentCompat implements
         SharedPreferences.OnSharedPreferenceChangeListener {
+
+    private Preference mSignInButton;
 
     private void setPreferenceSummary(Preference preference, Object value) {
         String stringValue = value.toString();
@@ -58,36 +63,39 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
         /* Add 'general' preferences, defined in the XML file */
         addPreferencesFromResource(R.xml.pref_general);
 
+        mSignInButton = findPreference(getString(R.string.pref_sign_in_key));
+        updateSignInButtonPreference(false);
+
         AbstractPlannerDatabaseHelper dbHelper = new AbstractPlannerDatabaseHelper(getContext());
 
         SharedPreferences sharedPreferences = getPreferenceScreen().getSharedPreferences();
         PreferenceScreen prefScreen = getPreferenceScreen();
         int count = prefScreen.getPreferenceCount();
         for (int i = 0; i < count; i++) {
-            Preference p = prefScreen.getPreference(i);
-            if (p instanceof SwitchPreferenceCompat) {
-                //String value = sharedPreferences.getString(p.getKey(), "");
-                //setPreferenceSummary(p, value);
-                if(p.getKey().equals(getString(R.string.tomorrow_tasks_notification_key))){
-                    boolean isNotificationEnabled = sharedPreferences.getBoolean(p.getKey(), true);
+            PreferenceCategory category = (PreferenceCategory) prefScreen.getPreference(i);
 
-                    Notification notification = dbHelper.getNotificationByMessageAndType(getString(R.string.tomorrow_tasks_notification_message), Notification.TYPE_SYSTEM_ID);
+            for(int j = 0; j < category.getPreferenceCount(); j++) {
+                Preference p = category.getPreference(j);
+                if (p instanceof SwitchPreferenceCompat) {
+                    //String value = sharedPreferences.getString(p.getKey(), "");
+                    //setPreferenceSummary(p, value);
+                    if (p.getKey().equals(getString(R.string.pref_tomorrow_tasks_notification_key))) {
+                        boolean isNotificationEnabled = sharedPreferences.getBoolean(p.getKey(), true);
 
-                    if(notification == null && isNotificationEnabled){
-                        notification = dbHelper.createSystemNotification(getString(R.string.tomorrow_tasks_notification_message));
-                        if(notification == null)
-                            return;
+                        Notification notification = dbHelper.getNotificationByMessageAndType(getString(R.string.pref_tomorrow_tasks_notification_message), Notification.TYPE_SYSTEM_ID);
+
+                        if (notification == null && isNotificationEnabled) {
+                            notification = dbHelper.createSystemNotification(getString(R.string.pref_tomorrow_tasks_notification_message));
+                            if (notification == null)
+                                return;
+                        }
+
+                        if (isNotificationEnabled) {
+                            createNotification(notification);
+                        } else
+                            clearNotification(notification);
                     }
-
-                    if(isNotificationEnabled){
-                        createNotification(notification);
-                    }
-                    else
-                        clearNotification(notification);
-                }
-            }
-            else
-                if(p instanceof ListPreference){
+                } else if (p instanceof ListPreference) {
                     String value = sharedPreferences.getString(p.getKey(), "");
                     setPreferenceSummary(p, value);
 /*                    ListPreference listPreference = (ListPreference) p;
@@ -96,7 +104,31 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
                         p.setSummary(listPreference.getEntries()[prefIndex]);
                     }*/
                 }
+            }
         }
+    }
+
+    private void updateSignInButtonPreference(boolean enableSignIn){
+        if(AbstractPlannerPreferences.isAuthorizationEnabled(getContext())){
+            mSignInButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+
+                    ((SettingsActivity) getActivity()).signIn();
+
+                    return true;
+                }
+            });
+            mSignInButton.setEnabled(true);
+
+            if(enableSignIn)
+                ((SettingsActivity) getActivity()).signIn();
+
+        } else {
+            mSignInButton.setOnPreferenceClickListener(null);
+            mSignInButton.setEnabled(false);
+        }
+
     }
 
     private void createNotification(Notification notification){
@@ -170,10 +202,10 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
 
                     boolean isNotificationEnabled = sharedPreferences.getBoolean(key, true);
 
-                    Notification notification = dbHelper.getNotificationByMessageAndType(getString(R.string.tomorrow_tasks_notification_message), Notification.TYPE_SYSTEM_ID);
+                    Notification notification = dbHelper.getNotificationByMessageAndType(getString(R.string.pref_tomorrow_tasks_notification_message), Notification.TYPE_SYSTEM_ID);
 
                     if(notification == null && isNotificationEnabled){
-                        notification = dbHelper.createSystemNotification(getString(R.string.tomorrow_tasks_notification_message));
+                        notification = dbHelper.createSystemNotification(getString(R.string.pref_tomorrow_tasks_notification_message));
                         if(notification == null)
                             return;
                     }
@@ -183,8 +215,10 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
                     else
                         clearNotification(notification);
             }
+
+            if(key.equals(getString(R.string.pref_google_authorization_key))){
+                updateSignInButtonPreference(true);
+            }
         }
-
-
     }
 }

@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -60,7 +61,7 @@ public class EditNotificationDialogFragment extends DialogFragment {
 
     private Calendar mNotificationDateTime;
     private Notification mNotificationToEdit;
-    private Task mNotificationTask;
+    //private Task mNotificationTask;
 
     private AbstractPlannerDatabaseHelper mDbHelper;
     private NotificationsAdapter mAdapter;
@@ -103,9 +104,11 @@ public class EditNotificationDialogFragment extends DialogFragment {
         if(mNotificationDateTime == null)
             mNotificationDateTime = Calendar.getInstance();
 
+/*
         if(mNotificationTask != null)
             if(mNotificationDateTime.before(mNotificationTask.getDate()))
                 mNotificationDateTime.set(mNotificationTask.getDate().get(Calendar.YEAR), mNotificationTask.getDate().get(Calendar.MONTH), mNotificationTask.getDate().get(Calendar.DAY_OF_MONTH));
+*/
 
         setDateString();
         setTimeString();
@@ -133,13 +136,13 @@ public class EditNotificationDialogFragment extends DialogFragment {
                 setTimeString();*/
             }
         }
-        else
+/*        else
             if(mNotificationTask != null){
                 mNotificationTaskLayout.setVisibility(View.VISIBLE);
                 mNotificationTaskEditText.setText(mNotificationTask.getName() + " - " + mNotificationTask.getArea().getName());
                 mNotificationTypeSpinner.setSelection(spinnerNotificationTypes.indexOf(Notification.TYPE_ONE_TIME_NAME));
                 mNotificationTypeSpinner.setEnabled(false);
-            }
+            }*/
 
 
         View.OnClickListener setDateClickListener = new View.OnClickListener() {
@@ -295,9 +298,13 @@ public class EditNotificationDialogFragment extends DialogFragment {
         if(error)
             return;
 
+        Task task = null;
+        if(mNotificationToEdit != null)
+            task = mNotificationToEdit.getTask();
+
         Notification notification = new Notification(mMessageEditText.getText().toString(),
                 mNotificationDateTime,
-                mNotificationTask,
+                task,
                 Notification.getNotificationTypeID(selectedNotificationType));
 
         if(mNotificationToEdit != null)
@@ -371,8 +378,12 @@ public class EditNotificationDialogFragment extends DialogFragment {
 
         switch (notification.getType()){
             case Notification.TYPE_ONE_TIME_ID:
-                if(today.before(notification.getDate()))
-                    manager.setExact(AlarmManager.RTC_WAKEUP, notification.getDate().getTimeInMillis(), pendingIntent);
+                if(today.before(notification.getDate())) {
+                    if (Build.VERSION.SDK_INT >= 19)
+                        manager.setExact(AlarmManager.RTC_WAKEUP, notification.getDate().getTimeInMillis(), pendingIntent);
+                    else
+                        manager.set(AlarmManager.RTC_WAKEUP, notification.getDate().getTimeInMillis(), pendingIntent);
+                }
                 break;
             case Notification.TYPE_EVERY_DAY_ID:
 
@@ -478,7 +489,7 @@ public class EditNotificationDialogFragment extends DialogFragment {
             }
     }
 
-    public void setNotificationTask(Task task){
+/*    public void setNotificationTask(Task task){
         mNotificationTask = task;
-    }
+    }*/
 }

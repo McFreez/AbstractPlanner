@@ -225,10 +225,17 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
             if(((Notification)mProvider.getItem(position).getDataObject()).getType() == notification.getType()){
                 mProvider.getItem(position).updateDataObject(notification);
                 notifyItemChanged(position);
+                if(notification.getType() == Notification.TYPE_ONE_TIME_ID){
+                    ((NotificationsDataProvider)mProvider).updateOneTimeNotifications();
+                    notifyDataSetChanged();
+                }
             }
             else {
                 mProvider.getItem(position).updateDataObject(notification);
                 mProvider.updateItem(position);
+                if(notification.getType() == Notification.TYPE_ONE_TIME_ID){
+                    ((NotificationsDataProvider)mProvider).updateOneTimeNotifications();
+                }
                 notifyDataSetChanged();
             }
         } else {
@@ -470,6 +477,8 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
                 @Override
                 public void onNotificationDefered() {
                     mAdapter.notifyItemChanged(mPosition);
+                    ((NotificationsDataProvider) mAdapter.mProvider).updateOneTimeNotifications();
+                    mAdapter.notifyDataSetChanged();
                 }
 
                 @Override
@@ -477,6 +486,8 @@ public class NotificationsAdapter extends RecyclerView.Adapter<RecyclerView.View
                     mSetPinned = false;
                     item.setPinned(false);
                     mAdapter.notifyItemChanged(mPosition);
+                    ((NotificationsDataProvider) mAdapter.mProvider).updateOneTimeNotifications();
+                    mAdapter.notifyDataSetChanged();
                 }
             });
             dialogFragment.show(mAdapter.getContext().getSupportFragmentManager(), "RescheduleNotification");

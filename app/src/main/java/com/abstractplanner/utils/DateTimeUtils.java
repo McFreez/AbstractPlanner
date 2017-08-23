@@ -20,11 +20,26 @@ public final class DateTimeUtils {
             return -1;
     }
 
+    public static Calendar getInstanceDayInCurrentTimeZone(long dateTimeInMilliseconds, TimeZone fromTimeZone){
+        Calendar calendar = new GregorianCalendar(fromTimeZone);
+        calendar.setTimeInMillis(dateTimeInMilliseconds);
+
+        return new GregorianCalendar(
+                    calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH));
+    }
+
     public static Calendar getInstanceInCurrentTimeZone(long dateTimeInMilliseconds, TimeZone fromTimeZone){
         Calendar calendar = new GregorianCalendar(fromTimeZone);
         calendar.setTimeInMillis(dateTimeInMilliseconds);
 
-        return new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+        return new GregorianCalendar(
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH),
+                calendar.get(Calendar.HOUR_OF_DAY),
+                calendar.get(Calendar.MINUTE));
     }
 
     public static Calendar getCalendarInstance(long dateTimeInMilliseconds){

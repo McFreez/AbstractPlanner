@@ -15,8 +15,10 @@ import com.abstractplanner.receivers.AlarmReceiver;
 import com.abstractplanner.utils.DateTimeUtils;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.RecyclerViewSwipeManager;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TimeZone;
@@ -59,8 +61,8 @@ public class NotificationsDataProvider extends AbstractDataProvider {
                     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
                     boolean isNotificationEnabled = false;
 
-                    if(message.equals(mContext.getString(R.string.tomorrow_tasks_notification_message))){
-                        isNotificationEnabled = sharedPreferences.getBoolean(mContext.getString(R.string.tomorrow_tasks_notification_key), true);
+                    if(message.equals(mContext.getString(R.string.pref_tomorrow_tasks_notification_message))){
+                        isNotificationEnabled = sharedPreferences.getBoolean(mContext.getString(R.string.pref_tomorrow_tasks_notification_key), true);
                     }
 
                     if(!isNotificationEnabled)
@@ -128,6 +130,8 @@ public class NotificationsDataProvider extends AbstractDataProvider {
 
             boolean isOneTimeHeaderInserted = false;
 
+            List<NotificationData> oneTimeNotifications = new ArrayList<>();
+
             for(int i = 0; i < notificationsCursor.getCount(); i++){
                 notificationsCursor.moveToPosition(i);
                 if(notificationsCursor.getInt(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TYPE)) ==
@@ -137,7 +141,7 @@ public class NotificationsDataProvider extends AbstractDataProvider {
                         isOneTimeHeaderInserted = true;
                     }
 
-                    final long id = mData.size();
+                    final long id = mData.size() + oneTimeNotifications.size();
                     final int viewType = NotificationData.ITEM_NORMAL;
                     final int swipeReaction = RecyclerViewSwipeManager.REACTION_CAN_SWIPE_UP | RecyclerViewSwipeManager.REACTION_CAN_SWIPE_DOWN;
 
@@ -147,7 +151,7 @@ public class NotificationsDataProvider extends AbstractDataProvider {
                     long taskID = notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TASK_ID));
                     Task task = mDbHelper.getTaskByID(taskID);
 
-                    mData.add(new NotificationData(id,
+                    oneTimeNotifications.add(new NotificationData(id,
                             viewType,
                             swipeReaction,
                             new Notification(notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry._ID)),
@@ -157,6 +161,15 @@ public class NotificationsDataProvider extends AbstractDataProvider {
                                     notificationsCursor.getInt(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TYPE)))));
                 }
             }
+
+            Collections.sort(oneTimeNotifications, new Comparator<NotificationData>() {
+                @Override
+                public int compare(NotificationData a, NotificationData b) {
+                    return a.getDataObject().getDate().compareTo(b.getDataObject().getDate());
+                }
+            });
+
+            mData.addAll(oneTimeNotifications);
         }
     }
 
@@ -276,6 +289,30 @@ public class NotificationsDataProvider extends AbstractDataProvider {
             insertHeader(Notification.TYPE_ONE_TIME_NAME, false);
             mData.add(mLastRemovedData);
         }
+    }
+
+    public void updateOneTimeNotifications(){
+        if(mData.size() == 0){
+            insertHeader(Notification.TYPE_ONE_TIME_NAME, false);
+            mData.add(mLastRemovedData);
+            return;
+        }
+
+        int headerItemIndex = -1;
+
+        for (int i = 0; i < mData.size(); i++){
+            if(mData.get(i).getText().equals(Notification.TYPE_ONE_TIME_NAME)){
+                headerItemIndex = i;
+                break;
+            }
+        }
+
+        Collections.sort(mData.subList(headerItemIndex + 1, mData.size()), new Comparator<NotificationData>() {
+            @Override
+            public int compare(NotificationData a, NotificationData b) {
+                return a.getDataObject().getDate().compareTo(b.getDataObject().getDate());
+            }
+        });
     }
 
     @Override

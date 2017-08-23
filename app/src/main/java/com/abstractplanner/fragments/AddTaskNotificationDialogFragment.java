@@ -7,6 +7,7 @@ import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -215,10 +216,14 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
         @Override
         public void onTimeSet(TimePicker timePicker, int hourOfDay, int minute) {
 
+            Calendar now = Calendar.getInstance();
             Calendar notificationTime = Calendar.getInstance();
 
             notificationTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
             notificationTime.set(Calendar.MINUTE, minute);
+
+            if(now.after(notificationTime))
+                notificationTime.add(Calendar.DATE, 1);
 
             Notification notification = new Notification("You have unfinished task: " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
 
@@ -277,8 +282,12 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
 
         switch (notification.getType()){
             case Notification.TYPE_ONE_TIME_ID:
-                if(today.before(notification.getDate()))
-                    manager.setExact(AlarmManager.RTC_WAKEUP, notification.getDate().getTimeInMillis(), pendingIntent);
+                if(today.before(notification.getDate())) {
+                    if (Build.VERSION.SDK_INT >= 19)
+                        manager.setExact(AlarmManager.RTC_WAKEUP, notification.getDate().getTimeInMillis(), pendingIntent);
+                    else
+                        manager.set(AlarmManager.RTC_WAKEUP, notification.getDate().getTimeInMillis(), pendingIntent);
+                }
                 break;
             case Notification.TYPE_EVERY_DAY_ID:
 

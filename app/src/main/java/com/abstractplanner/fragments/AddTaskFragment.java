@@ -97,33 +97,36 @@ public class AddTaskFragment extends Fragment {
             mTaskDate = Calendar.getInstance();
         }
 
+        setDateString();
+
         if(predefinedAreaName != null){
             mSpinnerSelectArea.setSelection(spinnerAreas.indexOf(predefinedAreaName));
             mTaskDateInputLayout.setVisibility(View.GONE);
-        }
+            mTaskDateInputLayout.setEnabled(false);
+            mTaskDateEditText.setEnabled(false);
+        } else {
+            View.OnClickListener setDateClickListener = new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    setDate(view);
+                }
+            };
 
-        setDateString();
+            mTaskDateInputLayout.setOnClickListener(setDateClickListener);
+            mTaskDateEditText.setOnClickListener(setDateClickListener);
+            mTaskDateEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View view, boolean b) {
+                    if(b)
+                        setDate(view);
+                }
+            });
+        }
 
         if(spinnerAreas.size() == 0) {
             mSpinnerError.setVisibility(View.VISIBLE);
         }
 
-        View.OnClickListener setDateClickListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                setDate(view);
-            }
-        };
-
-        mTaskDateInputLayout.setOnClickListener(setDateClickListener);
-        mTaskDateEditText.setOnClickListener(setDateClickListener);
-        mTaskDateEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View view, boolean b) {
-                if(b)
-                    setDate(view);
-            }
-        });
 
         mAddTaskButton.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -41,10 +41,9 @@ public class CalendarGridFragment extends Fragment
 
     private static final String LOG_TAG = "CalendarGridFragment";
 
-    public static final int STARTING_DAYS_COUNT = 60;
-    public static final int UPLOAD_DAYS_ON_SCROLL_COUNT = 30;
-    public static final int TODAY_INITIAL_POSITION = 29;
-    public List<Day> mDays = new ArrayList<>();
+    public static final int STARTING_DAYS_COUNT = 30/*60*/;
+    public static final int UPLOAD_DAYS_ON_SCROLL_COUNT = 15/*30*/;
+    public static final int TODAY_INITIAL_POSITION = 14/*29*/;
 
     private DaysAdapter daysAdapter;
     private DataAdapter dataAdapter;
@@ -63,6 +62,8 @@ public class CalendarGridFragment extends Fragment
         final View view = inflater.inflate(R.layout.fragment_calendar_grid, container, false);
 
         mShortToolbar = (Toolbar) view.findViewById(R.id.toolbar_short);
+
+        dbHelper = ((MainActivity) getActivity()).getDbHelper();
 
 /*        gridUpLayout = (LinearLayout) view.findViewById(R.id.grid_up_layout) ;
         gridUpLayout.setVisibility(View.GONE);
@@ -94,7 +95,7 @@ public class CalendarGridFragment extends Fragment
         dataRecyclerView.synchronizeScrollingWith(daysRecyclerView);
         daysRecyclerView.synchronizeScrollingWith(dataRecyclerView);
 
-        dbHelper = ((MainActivity) getActivity()).getDbHelper();
+        //new LoadUITask(daysRecyclerView, dataRecyclerView, areasContainer, layoutManager_data).execute();
 
         List<Area> areas = new ArrayList<>();
 
@@ -121,17 +122,19 @@ public class CalendarGridFragment extends Fragment
             });
         }
 
-        daysAdapter = new DaysAdapter(mDays);
+        List<Day> days = new ArrayList<>();
+
+        daysAdapter = new DaysAdapter(days);
         daysRecyclerView.setAdapter(daysAdapter);
 
-        dataAdapter = new DataAdapter(mDays, areas, (MainActivity) getActivity());
+        dataAdapter = new DataAdapter(days, areas, (MainActivity) getActivity());
         dataRecyclerView.setAdapter(dataAdapter);
 
-        if(mDays.size() == 0) {
+        if(days.size() == 0) {
             dataAdapter.loadInitialDaysData(daysAdapter);
         }
 
-        /*AreasAdapter areasAdapter = */new AreasAdapter((MainActivity) getActivity(), areas, areasContainer);
+        new AreasAdapter((MainActivity) getActivity(), areas, areasContainer);
 
         EndlessRecyclerViewScrollListener dataRecyclerViewScrollListener = new EndlessRecyclerViewScrollListener(layoutManager_data) {
             @Override
@@ -156,9 +159,10 @@ public class CalendarGridFragment extends Fragment
         buttonAddArea.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ((MainActivity)getActivity()).displaySelectedScreen(R.id.add_area, null);
+                ((MainActivity)getActivity()).setAddAreaFragment();
             }
         });
+
 
         return view;
     }
@@ -209,4 +213,122 @@ public class CalendarGridFragment extends Fragment
             isAreasSortingChanged = true;
         }
     }
+
+/*    private class LoadUITask extends AsyncTask<Void, Void, Void>{
+
+        private DaysRecyclerView mDaysRecyclerView;
+        private DataRecyclerView mDataRecyclerView;
+        private LinearLayout mAreasContainer;
+        private CenterLayoutManager mLayoutManager_data;
+        private List<Area> mAreas = new ArrayList<>();
+
+        private LoadUITask(DaysRecyclerView daysRecyclerView, DataRecyclerView dataRecyclerView, LinearLayout areasContainer, CenterLayoutManager layoutManager_data){
+            mDaysRecyclerView = daysRecyclerView;
+            mDataRecyclerView = dataRecyclerView;
+            mAreasContainer = areasContainer;
+            mLayoutManager_data = layoutManager_data;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+
+            Cursor areasCursor = dbHelper.getAllAreas();
+            for(int i = 0; i < areasCursor.getCount(); i++){
+                areasCursor.moveToPosition(i);
+                mAreas.add(new Area(areasCursor.getLong(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry._ID)),
+                        areasCursor.getString(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_NAME)),
+                        areasCursor.getString(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_DESCRIPTION))));
+            }
+
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+            String value = sharedPreferences.getString(getString(R.string.pref_areas_sort_key), "");
+            if(value.equals(getString(R.string.pref_areas_sort_by_tasks))) {
+                Collections.sort(mAreas, new Comparator<Area>() {
+                    @Override
+                    public int compare(Area a, Area b) {
+
+                        int aCount = dbHelper.getUndoneTasksInAreaCount(a.getId());
+                        int bCount = dbHelper.getUndoneTasksInAreaCount(b.getId());
+
+                        return aCount > bCount ? -1 : (aCount < bCount) ? 1 : 0;
+                    }
+                });
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+
+            List<Day> days = new ArrayList<>();
+
+            daysAdapter = new DaysAdapter(days);
+            mDaysRecyclerView.setAdapter(daysAdapter);
+
+            dataAdapter = new DataAdapter(days, mAreas, (MainActivity) getActivity());
+            mDataRecyclerView.setAdapter(dataAdapter);
+
+            new LoadInitialData(days, mAreas, mAreasContainer, mLayoutManager_data, mDataRecyclerView).execute();
+        }
+    }
+
+    private class LoadInitialData extends AsyncTask<Void, Void, Void>{
+
+        private List<Day> mDays;
+        private List<Area> mAreas;
+        private LinearLayout mAreasContainer;
+        private CenterLayoutManager mLayoutManager_data;
+        private DataRecyclerView mDataRecyclerView;
+
+        private LoadInitialData(List<Day> days, List<Area> areas, LinearLayout areasContainer, CenterLayoutManager layoutManager_data, DataRecyclerView dataRecyclerView){
+            mDays = days;
+            mAreas = areas;
+            mAreasContainer = areasContainer;
+            mLayoutManager_data = layoutManager_data;
+            mDataRecyclerView = dataRecyclerView;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+
+            if(mDays.size() == 0) {
+                dataAdapter.loadInitialDaysData(daysAdapter);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+                    *//*AreasAdapter areasAdapter = *//*new AreasAdapter((MainActivity) getActivity(), mAreas, mAreasContainer);
+
+            EndlessRecyclerViewScrollListener dataRecyclerViewScrollListener = new EndlessRecyclerViewScrollListener(mLayoutManager_data) {
+                @Override
+                public void onScrollForwardLoadMore(final EndlessRecyclerViewScrollListener scrollListener) {
+
+                    dataAdapter.loadNextDaysData(daysAdapter, scrollListener, UPLOAD_DAYS_ON_SCROLL_COUNT);
+
+                }
+
+                @Override
+                public void onScrollBackwardLoadMore(final EndlessRecyclerViewScrollListener scrollListener) {
+
+                    dataAdapter.loadPreviousDaysData(daysAdapter, scrollListener, UPLOAD_DAYS_ON_SCROLL_COUNT);
+
+                }
+            };
+
+            mDataRecyclerView.addOnScrollListener(dataRecyclerViewScrollListener);
+            //daysRecyclerView.scrollToToday();
+            mDataRecyclerView.scrollToToday();
+
+            ImageView buttonAddArea = (ImageView) getView().findViewById(R.id.button_add_area);
+            buttonAddArea.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    ((MainActivity)getActivity()).displaySelectedScreen(R.id.add_area, null);
+                }
+            });
+        }
+    }*/
 }

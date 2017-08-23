@@ -18,17 +18,45 @@
                   android:layout_width="match_parent"
                   android:layout_height="match_parent">
 
-    <SwitchPreferenceCompat
-        android:key="@string/tomorrow_tasks_notification_key"
-        android:title="Tomorrow tasks"
-        android:summary="Remind me to set tasks for tomorrow"
-        android:defaultValue="true" />
+    <PreferenceCategory
+        android:title="Notifications"
+        android:key="@string/pref_category_notifications">
 
-    <ListPreference
-        android:defaultValue="@string/pref_areas_sort_by_tasks"
-        android:entries="@array/pref_areas_sort_options"
-        android:entryValues="@array/pref_areas_sort_values"
-        android:key="@string/pref_areas_sort_key"
-        android:title="@string/pref_areas_sort_label" />
+        <SwitchPreferenceCompat
+            android:key="@string/pref_tomorrow_tasks_notification_key"
+            android:title="Tomorrow tasks"
+            android:summary="Remind me to set tasks for tomorrow"
+            android:defaultValue="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Calendar"
+        android:key="@string/pref_category_calendar">
+
+        <ListPreference
+            android:defaultValue="@string/pref_areas_sort_by_tasks"
+            android:entries="@array/pref_areas_sort_options"
+            android:entryValues="@array/pref_areas_sort_values"
+            android:key="@string/pref_areas_sort_key"
+            android:title="@string/pref_areas_sort_label" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Google services"
+        android:key="@string/pref_category_google_services">
+
+        <SwitchPreferenceCompat
+            android:key="@string/pref_google_authorization_key"
+            android:title="Auto Sign In with Google"
+            android:defaultValue="true" />
+
+        <Preference
+            android:title="Sign In"
+            android:key="@string/pref_sign_in_key"
+            android:summary="Click to sign in"/>
+
+    </PreferenceCategory>
 
 </PreferenceScreen>

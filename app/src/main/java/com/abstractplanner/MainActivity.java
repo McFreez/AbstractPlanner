@@ -1,7 +1,5 @@
 package com.abstractplanner;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -26,6 +24,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -36,21 +35,15 @@ import android.widget.TextView;
 import com.abstractplanner.data.AbstractDataProvider;
 import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.data.AbstractPlannerPreferences;
-import com.abstractplanner.data.DriveDbHandler;
 import com.abstractplanner.data.NotificationsDataProvider;
 import com.abstractplanner.data.NotificationsDataProviderFragment;
 import com.abstractplanner.data.TasksDataProvider;
 import com.abstractplanner.data.TasksDataProviderFragment;
-import com.abstractplanner.dto.Area;
-import com.abstractplanner.dto.Notification;
-import com.abstractplanner.dto.Task;
 import com.abstractplanner.fragments.AddAreaFragment;
 import com.abstractplanner.fragments.AddTaskFragment;
 import com.abstractplanner.fragments.CalendarGridFragment;
 import com.abstractplanner.fragments.NotificationsFragment;
 import com.abstractplanner.fragments.TodayTasksFragment;
-import com.abstractplanner.receivers.AlarmReceiver;
-import com.abstractplanner.utils.DateTimeUtils;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -62,9 +55,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.drive.Drive;
-import com.google.android.gms.drive.DriveFolder;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -109,154 +100,55 @@ public class MainActivity extends AppCompatActivity
         mNavigationView = (NavigationView) findViewById(R.id.nav_view);
         mNavigationView.setNavigationItemSelectedListener(this);
 
-        View header = mNavigationView.getHeaderView(0);
-
-        mUserName = (TextView) header.findViewById(R.id.user_google_name);
-        mUserEmail = (TextView) header.findViewById(R.id.user_google_email);
-        mUserImage = (ImageView) header.findViewById(R.id.user_google_image);
+        setNoAuthNavigationHeader();
 
         dbHelper = new AbstractPlannerDatabaseHelper(this);
 
         if(savedInstanceState == null) {
-            checkFirstRun();
-            Intent intentThatRunsThisActivity = getIntent();
-            if(intentThatRunsThisActivity != null && intentThatRunsThisActivity.getExtras() != null && intentThatRunsThisActivity.getExtras().containsKey("showCalendar"))
+            if(AbstractPlannerPreferences.checkFirstRun(this, dbHelper)){
                 displaySelectedScreen(R.id.calendar_grid, null);
-            else
-                displaySelectedScreen(R.id.today_tasks, null);
+            } else {
+                Intent intentThatRunsThisActivity = getIntent();
+                if (intentThatRunsThisActivity != null && intentThatRunsThisActivity.getExtras() != null && intentThatRunsThisActivity.getExtras().containsKey("showCalendar"))
+                    displaySelectedScreen(R.id.calendar_grid, null);
+                else
+                    displaySelectedScreen(R.id.today_tasks, null);
+            }
         }
 
         PreferenceManager.getDefaultSharedPreferences(this)
                 .registerOnSharedPreferenceChangeListener(this);
 
-        if(AbstractPlannerPreferences.isUserAuthorized(this)) {
-            if (mGoogleApiClient == null) {
-                // Configure sign-in to request the user's ID, email address, and basic
-                // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
-                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                        .requestEmail()
-                        .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
-                        .build();
 
-                // Build a GoogleApiClient with access to the Google Sign-In API and the
-                // options specified by gso.
-                mGoogleApiClient = new GoogleApiClient.Builder(this)
-                        .enableAutoManage(this, this)
-                        .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                        .addApi(Drive.API)
+        if (mGoogleApiClient == null) {
+            // Configure sign-in to request the user's ID, email address, and basic
+            // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestEmail()
+                    .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
+                    .build();
+
+            // Build a GoogleApiClient with access to the Google Sign-In API and the
+            // options specified by gso.
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .enableAutoManage(this, this)
+                    .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                    .addApi(Drive.API)
 /*                    .addScope(Drive.SCOPE_FILE)
-                    .addScope(Drive.SCOPE_APPFOLDER)*/
-                        .addConnectionCallbacks(this)
-                        .addOnConnectionFailedListener(this)
-                        .build();
-            }
-            //mGoogleApiClient.connect();
+                .addScope(Drive.SCOPE_APPFOLDER)*/
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .build();
         }
-    }
+        //mGoogleApiClient.connect();
 
-    private void checkFirstRun() {
-
-        // Get current version code
-        int currentVersionCode = BuildConfig.VERSION_CODE;
-
-        // Get saved version code
-        int savedVersionCode = AbstractPlannerPreferences.getAppVersionCode(this);
-
-        // Check for first run or upgrade
-        if (currentVersionCode == savedVersionCode) {
-
-            // This is just a normal run
-            return;
-
-        } else if (savedVersionCode == AbstractPlannerPreferences.VERSION_CODE_DOESNT_EXIST) {
-
-            if(!AbstractPlannerPreferences.isNotificationEnabled(this))
-                AbstractPlannerPreferences.setNotificationEnabled(this, true);
-
-            createSystemNotification();
-
-            Area sport = new Area("Sport", "My sport tasks");
-            Area english = new Area("English", "English learning");
-
-            long sportAreaID = dbHelper.createArea(sport);
-            long englishAreaID = dbHelper.createArea(english);
-
-            if(sportAreaID >= 0)
-                sport.setId(sportAreaID);
-
-            if(englishAreaID >= 0)
-                english.setId(englishAreaID);
-
-            Calendar taskDate = DateTimeUtils.getTodayDate();
-
-            taskDate.add(Calendar.DATE, -1);
-
-            Task gym = new Task(sport, "Gym", "Go to gym at 18:00", taskDate, true);
-            Task learnText = new Task(english, "Learn text", "Learn big text", taskDate, false);
-
-            long gymId = dbHelper.createTask(gym);
-            long learnTextId = dbHelper.createTask(learnText);
-
-            taskDate.add(Calendar.DATE, 1);
-
-            Task newEx = new Task(sport, "New exercises", "Find new exercises", taskDate, false);
-            Task newWords = new Task(english, "New words", "Learn 10 new words", taskDate, false);
-
-            long newExID = dbHelper.createTask(newEx);
-            long newWordsID = dbHelper.createTask(newWords);
-
-            dbHelper.setDbInitialStatus();
-
-        } else if (currentVersionCode > savedVersionCode) {
-            if(!AbstractPlannerPreferences.isNotificationEnabled(this))
-                AbstractPlannerPreferences.setNotificationEnabled(this, true);
-
-            createSystemNotification();
-        }
-
-        // Update the shared preferences with the current version code
-        AbstractPlannerPreferences.setAppVersionCode(this, currentVersionCode);
-    }
-
-    private void createSystemNotification(){
-
-        Notification notification = dbHelper.getNotificationByMessageAndType(getString(R.string.tomorrow_tasks_notification_message), Notification.TYPE_SYSTEM_ID);
-
-        if(notification == null){
-            notification = dbHelper.createSystemNotification(getString(R.string.tomorrow_tasks_notification_message));
-            if(notification == null)
-                return;
-        }
-
-        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-
-        Intent alarmIntent = new Intent(this, AlarmReceiver.class);
-
-        alarmIntent.putExtra("message", notification.getMessage());
-        alarmIntent.putExtra("title", "Remind");
-        alarmIntent.putExtra("id", notification.getId());
-
-        Long idLong = notification.getId();
-        int id = idLong.intValue();
-
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, id, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        Calendar today = Calendar.getInstance();
-
-        Calendar notificationDate = notification.getDate();
-        notificationDate.set(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH));
-
-        if (today.after(notificationDate))
-            notificationDate.add(Calendar.DATE, 1);
-
-        manager.setRepeating(AlarmManager.RTC_WAKEUP, notificationDate.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
 
-        if(AbstractPlannerPreferences.isUserAuthorized(this)) {
+        if(AbstractPlannerPreferences.isAuthorizationEnabled(this)) {
             OptionalPendingResult<GoogleSignInResult> opr = Auth.GoogleSignInApi.silentSignIn(mGoogleApiClient);
             if (opr.isDone()) {
                 // If the user's cached credentials are valid, the OptionalPendingResult will be "done"
@@ -281,7 +173,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        if(AbstractPlannerPreferences.isUserAuthorized(this)) {
+        /*if(AbstractPlannerPreferences.isUserAuthorized(this)) {*/
             if (mGoogleApiClient == null) {
                 GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                         .requestEmail()
@@ -299,16 +191,16 @@ public class MainActivity extends AppCompatActivity
                         .build();
             }
             //mGoogleApiClient.connect();
-        }
+        /*}*/
     }
 
     @Override
     protected void onPause() {
-        if(AbstractPlannerPreferences.isUserAuthorized(this)) {
+        /*if(AbstractPlannerPreferences.isUserAuthorized(this)) {*/
             if (mGoogleApiClient != null) {
                 mGoogleApiClient.disconnect();
             }
-        }
+        /*}*/
         super.onPause();
     }
 
@@ -316,32 +208,64 @@ public class MainActivity extends AppCompatActivity
         if (result.isSuccess()) {
             // Google Sign In was successful
             mAccount = result.getSignInAccount();
+            setAuthNavigationHeader();
             updateUserData();
         } else {
             // Google Sign In failed, update UI appropriately
             // [START_EXCLUDE]
             mAccount = null;
-            signOut();
+            setNoAuthNavigationHeader();
+            // signOut();
             // [END_EXCLUDE]
         }
     }
 
+    private void setNoAuthNavigationHeader(){
+        if(mNavigationView.getHeaderCount() > 0)
+            mNavigationView.removeHeaderView(mNavigationView.getHeaderView(0));
+
+        View header = LayoutInflater.from(this).inflate(R.layout.nav_header_no_auth, null);
+
+        mNavigationView.addHeaderView(header);
+    }
+
+    private void setAuthNavigationHeader(){
+
+        if(mNavigationView.getHeaderCount() > 0)
+            mNavigationView.removeHeaderView(mNavigationView.getHeaderView(0));
+
+        View header = LayoutInflater.from(this).inflate(R.layout.nav_header_auth, null);
+
+        mUserName = (TextView) header.findViewById(R.id.user_google_name);
+        mUserEmail = (TextView) header.findViewById(R.id.user_google_email);
+        mUserImage = (ImageView) header.findViewById(R.id.user_google_image);
+
+        mNavigationView.addHeaderView(header);
+    }
+
     private void updateUserData(){
         if(mAccount != null){
-            mUserName.setText(mAccount.getDisplayName());
-            mUserEmail.setText(mAccount.getEmail());
-            Uri photoUri = mAccount.getPhotoUrl();
-            if(photoUri != null)
-                new GetUserImageTask().execute(photoUri);
-            else {
-                Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_user_no_image);
-                RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
-                roundedBitmapDrawable.setCircular(true);
 
-                if(android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-                    mUserImage.setBackground(roundedBitmapDrawable);
-                else
-                    mUserImage.setBackgroundDrawable(roundedBitmapDrawable);
+            if(mUserName != null)
+                mUserName.setText(mAccount.getDisplayName());
+
+            if(mUserEmail != null)
+                mUserEmail.setText(mAccount.getEmail());
+
+            if(mUserImage != null) {
+                Uri photoUri = mAccount.getPhotoUrl();
+                if (photoUri != null)
+                    new GetUserImageTask().execute(photoUri);
+                else {
+                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_user_no_image);
+                    RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
+                    roundedBitmapDrawable.setCircular(true);
+
+                    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+                        mUserImage.setBackground(roundedBitmapDrawable);
+                    else
+                        mUserImage.setBackgroundDrawable(roundedBitmapDrawable);
+                }
             }
         }
     }
@@ -448,7 +372,7 @@ public class MainActivity extends AppCompatActivity
             case R.id.calendar_grid:
                 fragment = new CalendarGridFragment();
                 break;
-            case R.id.add_area:
+            /*case R.id.add_area:
                 fragment = new AddAreaFragment();
                 break;
             case R.id.add_task:
@@ -461,7 +385,7 @@ public class MainActivity extends AppCompatActivity
                         ((AddTaskFragment)fragment).setPredefinedParameters(areaName, date);
                     }
                 }
-                break;
+                break;*/
             case R.id.notifications_list:
                 fragment = new NotificationsFragment();
                 getSupportFragmentManager().beginTransaction()
@@ -469,10 +393,11 @@ public class MainActivity extends AppCompatActivity
                         .commit();
                 break;
             case R.id.action_settings:
+                dbHelper.close();
                 Intent startSettingsActivity = new Intent(this, SettingsActivity.class);
                 startActivity(startSettingsActivity);
                 break;
-            case R.id.action_exit:
+            case R.id.action_sign_out:
                 signOut();
                 break;
         }
@@ -486,6 +411,30 @@ public class MainActivity extends AppCompatActivity
             ft.replace(R.id.content_main, fragment);
             ft.commit();
         }
+    }
+
+    public void setAddAreaFragment(){
+        Fragment fragment = new AddAreaFragment();
+
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.replace(R.id.content_main, fragment);
+        ft.commit();
+    }
+
+    public void setAddTaskFragment(Map<String, Object> additionalData){
+        Fragment fragment = new AddTaskFragment();
+        if(additionalData != null){
+            if(additionalData.containsKey("taskDay") && additionalData.containsKey("taskAreaName")) {
+                Calendar date = (Calendar) additionalData.get("taskDay");
+                String areaName = (String) additionalData.get("taskAreaName");
+
+                ((AddTaskFragment)fragment).setPredefinedParameters(areaName, date);
+            }
+        }
+
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.replace(R.id.content_main, fragment);
+        ft.commit();
     }
 
     public void setShortAppBar(Toolbar shortToolbar){
@@ -537,19 +486,23 @@ public class MainActivity extends AppCompatActivity
     private void signOut() {
         Log.i(LOG_TAG, "Disconnection from google account");
 
-        if(AbstractPlannerPreferences.isUserAuthorized(this)) {
+        /*if(AbstractPlannerPreferences.isUserAuthorized(this)) {*/
+        if(mAccount != null){
             // Google sign out
-            Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
+            Auth.GoogleSignInApi.signOut(mGoogleApiClient);/*.setResultCallback(
                     new ResultCallback<Status>() {
                         @Override
                         public void onResult(@NonNull Status status) {
-                            AbstractPlannerPreferences.setUserAuthorized(MainActivity.this, false);
-                            MainActivity.this.finish();
+                            //AbstractPlannerPreferences.setUserAuthorized(MainActivity.this, false);
+                            //MainActivity.this.finish();
                         }
-                    });
+                    });*/
+
+            setNoAuthNavigationHeader();
         }
-        else
-            finish();
+
+        /*else
+            finish();*/
     }
 
     @Override
@@ -579,7 +532,7 @@ public class MainActivity extends AppCompatActivity
             //displaySelectedScreen(R.id.today_tasks, null);
         } catch (IllegalStateException e){
             Log.e(LOG_TAG, "Cannot connect to Google Drive " + e.getMessage());
-            signOut();
+            //signOut();
         }
 
     }

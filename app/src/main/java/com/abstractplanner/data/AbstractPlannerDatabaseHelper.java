@@ -257,7 +257,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         else
             return null;
 
-        Calendar taskDate = DateTimeUtils.getInstanceInCurrentTimeZone(taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_DATE)),
+        Calendar taskDate = DateTimeUtils.getInstanceDayInCurrentTimeZone(taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_DATE)),
                 TimeZone.getTimeZone(taskCursor.getString(taskCursor.getColumnIndex(TaskEntry.COLUMN_TIME_ZONE))));
 
         boolean isDone;

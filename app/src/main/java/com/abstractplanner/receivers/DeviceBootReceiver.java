@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.os.Build;
 import android.support.v7.preference.PreferenceManager;
 import android.text.format.DateUtils;
 import android.util.Log;
@@ -75,8 +76,8 @@ public class DeviceBootReceiver extends BroadcastReceiver {
                     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
                     boolean isNotificationEnabled = false;
 
-                    if (message.equals(mContext.getString(R.string.tomorrow_tasks_notification_message))) {
-                        isNotificationEnabled = sharedPreferences.getBoolean(mContext.getString(R.string.tomorrow_tasks_notification_key), true);
+                    if (message.equals(mContext.getString(R.string.pref_tomorrow_tasks_notification_message))) {
+                        isNotificationEnabled = sharedPreferences.getBoolean(mContext.getString(R.string.pref_tomorrow_tasks_notification_key), true);
                     }
 
                     if (!isNotificationEnabled)
@@ -134,8 +135,12 @@ public class DeviceBootReceiver extends BroadcastReceiver {
 
         switch (notification.getType()){
             case Notification.TYPE_ONE_TIME_ID:
-                if(today.before(notification.getDate()))
-                    manager.setExact(AlarmManager.RTC_WAKEUP, notification.getDate().getTimeInMillis(), pendingIntent);
+                if(today.before(notification.getDate())) {
+                    if(Build.VERSION.SDK_INT >= 19)
+                        manager.setExact(AlarmManager.RTC_WAKEUP, notification.getDate().getTimeInMillis(), pendingIntent);
+                    else
+                        manager.set(AlarmManager.RTC_WAKEUP, notification.getDate().getTimeInMillis(), pendingIntent);
+                }
                 break;
             case Notification.TYPE_EVERY_DAY_ID:
 
