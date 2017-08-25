@@ -76,16 +76,16 @@ public final class AbstractPlannerPreferences {
 
             taskDate.add(Calendar.DATE, -1);
 
-            Task gym = new Task(sport, "Gym", "Go to gym at 18:00", taskDate, true);
-            Task learnText = new Task(english, "Learn text", "Learn big text", taskDate, false);
+            Task gym = new Task(sport, "Gym", "Go to gym at 18:00", taskDate, true, Task.TYPE_NORMAL);
+            Task learnText = new Task(english, "Learn text", "Learn big text", taskDate, false, Task.TYPE_NORMAL);
 
             long gymId = dbHelper.createTask(gym);
             long learnTextId = dbHelper.createTask(learnText);
 
             taskDate.add(Calendar.DATE, 1);
 
-            Task newEx = new Task(sport, "New exercises", "Find new exercises", taskDate, false);
-            Task newWords = new Task(english, "New words", "Learn 10 new words", taskDate, false);
+            Task newEx = new Task(sport, "New exercises", "Find new exercises", taskDate, false, Task.TYPE_NORMAL);
+            Task newWords = new Task(english, "New words", "Learn 10 new words", taskDate, false, Task.TYPE_NORMAL);
 
             long newExID = dbHelper.createTask(newEx);
             long newWordsID = dbHelper.createTask(newWords);

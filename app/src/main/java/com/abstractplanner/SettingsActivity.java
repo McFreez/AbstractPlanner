@@ -25,7 +25,8 @@ public class SettingsActivity extends AppCompatActivity
         GoogleApiClient.ConnectionCallbacks {
 
     private static final String LOG_TAG = "SettingsActivity";
-    private static final int RC_SIGN_IN = 9001;
+    //private static final int RC_SIGN_IN = 9001;
+    private static final int RC_SIGN_IN = 633;
 
     private GoogleApiClient mGoogleApiClient;
 

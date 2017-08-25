@@ -344,8 +344,12 @@ public class EditNotificationDialogFragment extends DialogFragment {
         if(mNotificationToEdit != null) {
             //Intent previousAlarmIntent = new Intent(getActivity(), AlarmReceiver.class);
             alarmIntent.putExtra("message", mNotificationToEdit.getMessage());
-            if(mNotificationToEdit.getTask() != null)
-                alarmIntent.putExtra("title", mNotificationToEdit.getTask().getArea().getName());
+            if(mNotificationToEdit.getTask() != null) {
+                if(mNotificationToEdit.getTask().getType() == Task.TYPE_QUICK){
+                    alarmIntent.putExtra("title", getString(R.string.quick_task_title));
+                } else
+                    alarmIntent.putExtra("title", mNotificationToEdit.getTask().getArea().getName());
+            }
             else
                 alarmIntent.putExtra("title", Notification.getNotificationTypeName(mNotificationToEdit.getType()) + " notification");
 
@@ -362,8 +366,12 @@ public class EditNotificationDialogFragment extends DialogFragment {
         }
 
         alarmIntent.putExtra("message", notification.getMessage());
-        if(notification.getTask() != null)
-            alarmIntent.putExtra("title", notification.getTask().getArea().getName());
+        if(notification.getTask() != null) {
+            if(notification.getTask().getType() == Task.TYPE_QUICK){
+                alarmIntent.putExtra("title", getString(R.string.quick_task_title));
+            } else
+                alarmIntent.putExtra("title", notification.getTask().getArea().getName());
+        }
         else
             alarmIntent.putExtra("title", Notification.getNotificationTypeName(notification.getType()) + " notification");
 

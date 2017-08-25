@@ -2,14 +2,11 @@ package com.abstractplanner.data;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
-import android.view.ViewAnimationUtils;
 
 import com.abstractplanner.data.AbstractPlannerContract.*;
 import com.abstractplanner.dto.Area;
@@ -17,19 +14,33 @@ import com.abstractplanner.dto.Notification;
 import com.abstractplanner.dto.Task;
 import com.abstractplanner.utils.DateTimeUtils;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.TimeZone;
 
 public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
 
-    private static final String LOG_tAG = AbstractPlannerDatabaseHelper.class.getName();
+    private static final String LOG_TAG = AbstractPlannerDatabaseHelper.class.getName();
 
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 6;
     public static final String DATABASE_NAME = "abstractPlanner.db";
+
+    private static final String CREATE_TABLE_TASK = "CREATE TABLE " + TaskEntry.TABLE_NAME + " ("
+            + TaskEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+            + TaskEntry.COLUMN_NAME + " TEXT NOT NULL,"
+            + TaskEntry.COLUMN_DESCRIPTION + " TEXT,"
+            + TaskEntry.COLUMN_AREA_ID + " INTEGER,"
+            + TaskEntry.COLUMN_DATE + " INTEGER,"
+            + TaskEntry.COLUMN_TIME_ZONE + " TEXT,"
+            + TaskEntry.COLUMN_STATUS + " INTEGER NOT NULL,"
+            + TaskEntry.COLUMN_TYPE + " INTEGER NOT NULL,"
+            + " UNIQUE (" + TaskEntry.COLUMN_AREA_ID + "," + TaskEntry.COLUMN_DATE + "," + TaskEntry.COLUMN_TIME_ZONE + ") ON CONFLICT FAIL);";
 
     private Context mContext;
 
     private boolean mIsDbInitial;
+    //private final Object mLock = new Object();
 
     public AbstractPlannerDatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -46,21 +57,11 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
                 + AreaEntry.COLUMN_DESCRIPTION + " TEXT,"
                 + " UNIQUE (" + AreaEntry.COLUMN_NAME + ") ON CONFLICT FAIL);";
 
-        final String CREATE_TABLE_TASK = "CREATE TABLE " + TaskEntry.TABLE_NAME + " ("
-                + TaskEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + TaskEntry.COLUMN_NAME + " TEXT NOT NULL,"
-                + TaskEntry.COLUMN_DESCRIPTION + " TEXT,"
-                + TaskEntry.COLUMN_AREA_ID + " INTEGER NOT NULL,"
-                + TaskEntry.COLUMN_DATE + " INTEGER NOT NULL,"
-                + TaskEntry.COLUMN_TIME_ZONE + " TEXT NOT NULL,"
-                + TaskEntry.COLUMN_STATUS + " INTEGER NOT NULL,"
-                + " UNIQUE (" + TaskEntry.COLUMN_AREA_ID + "," + TaskEntry.COLUMN_DATE + "," + TaskEntry.COLUMN_TIME_ZONE + ") ON CONFLICT FAIL);";
-
         final String CREATE_TABLE_NOTIFICATION = "CREATE TABLE " + NotificationEntry.TABLE_NAME + " ("
                 + NotificationEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + NotificationEntry.COLUMN_MESSAGE + " TEXT NOT NULL,"
                 + NotificationEntry.COLUMN_DATE + " INTEGER NOT NULL,"
-                + TaskEntry.COLUMN_TIME_ZONE + " TEXT NOT NULL,"
+                + NotificationEntry.COLUMN_TIME_ZONE + " TEXT NOT NULL,"
                 + NotificationEntry.COLUMN_TASK_ID + " INTEGER,"
                 + NotificationEntry.COLUMN_TYPE + " INTEGER NOT NULL" + ");";
 
@@ -70,12 +71,34 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db, int i, int i1) {
-        db.execSQL("DROP TABLE IF EXISTS " + NotificationEntry.TABLE_NAME);
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        /*db.execSQL("DROP TABLE IF EXISTS " + NotificationEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + TaskEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + AreaEntry.TABLE_NAME);
 
-        onCreate(db);
+        onCreate(db);*/
+
+        db.beginTransaction();
+        Log.i(LOG_TAG, "Transaction began");
+        try {
+            db.execSQL("ALTER TABLE " + TaskEntry.TABLE_NAME + " ADD COLUMN " + TaskEntry.COLUMN_TYPE + " INTEGER DEFAULT " + Task.TYPE_NORMAL);
+            Log.i(LOG_TAG, "Column added");
+
+            db.execSQL("ALTER TABLE " + TaskEntry.TABLE_NAME + " RENAME TO " + TaskEntry.TABLE_NAME + "_old");
+            db.execSQL(CREATE_TABLE_TASK);
+            db.execSQL("INSERT INTO " + TaskEntry.TABLE_NAME + " SELECT * FROM " + TaskEntry.TABLE_NAME + "_old");
+            Log.i(LOG_TAG, "Old table replaced with new");
+
+            db.execSQL("DROP TABLE IF EXISTS " + TaskEntry.TABLE_NAME + "_old");
+            Log.i(LOG_TAG, "Old table removed");
+
+            db.setTransactionSuccessful();
+            Log.i(LOG_TAG, "Transaction succeed");
+        }
+        finally {
+            db.endTransaction();
+            Log.i(LOG_TAG, "Transaction ended");
+        }
     }
 
     // Areas
@@ -108,7 +131,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
 
             return id;
         }catch (SQLiteConstraintException e){
-            Log.e(LOG_tAG, e.getMessage());
+            Log.e(LOG_TAG, e.getMessage());
             return -1;
         }
     }
@@ -171,7 +194,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
             return id;
         }
         catch (SQLiteConstraintException e){
-            Log.e(LOG_tAG, e.getMessage());
+            Log.e(LOG_TAG, e.getMessage());
             return -1;
         }
     }
@@ -200,17 +223,31 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
     }
 
     public Cursor getTodayTasks(){
-        SQLiteDatabase db = this.getReadableDatabase();
+        //synchronized (mLock) {
+            SQLiteDatabase db = this.getReadableDatabase();
 
-        Calendar today = DateTimeUtils.getTodayDate();
+            Calendar today = DateTimeUtils.getTodayDate();
+
+            return db.query(TaskEntry.TABLE_NAME,
+                    null,
+                    TaskEntry.COLUMN_STATUS + " = ? AND " + TaskEntry.COLUMN_DATE + " <= ?",
+                    new String[]{String.valueOf(0), String.valueOf(today.getTimeInMillis())},
+                    null,
+                    null,
+                    TaskEntry.COLUMN_DATE + " ASC");
+        //}
+    }
+
+    public Cursor getQuickTasks(){
+        SQLiteDatabase db = this.getReadableDatabase();
 
         return db.query(TaskEntry.TABLE_NAME,
                 null,
-                TaskEntry.COLUMN_STATUS + " = ? AND " + TaskEntry.COLUMN_DATE + " <= ?",
-                new String[]{String.valueOf(0), String.valueOf(today.getTimeInMillis())},
+                TaskEntry.COLUMN_TYPE + " = ?",
+                new String[]{String.valueOf(Task.TYPE_QUICK)},
                 null,
                 null,
-                TaskEntry.COLUMN_DATE + " ASC");
+                null);
     }
 
     public Cursor getAllAreaTasks(long area_id){
@@ -257,8 +294,18 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         else
             return null;
 
-        Calendar taskDate = DateTimeUtils.getInstanceDayInCurrentTimeZone(taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_DATE)),
-                TimeZone.getTimeZone(taskCursor.getString(taskCursor.getColumnIndex(TaskEntry.COLUMN_TIME_ZONE))));
+        Calendar taskDate = null;
+
+        if(taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_DATE)) != 0) {
+            taskDate = DateTimeUtils.getInstanceDayInCurrentTimeZone(taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_DATE)),
+                    TimeZone.getTimeZone(taskCursor.getString(taskCursor.getColumnIndex(TaskEntry.COLUMN_TIME_ZONE))));
+        }
+
+        Area area = null;
+
+        if(taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_AREA_ID)) != 0){
+            area = getAreaByID(taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_AREA_ID)));
+        }
 
         boolean isDone;
         if(taskCursor.getInt(taskCursor.getColumnIndex(TaskEntry.COLUMN_STATUS)) == 1)
@@ -267,11 +314,12 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
             isDone = false;
 
         return new Task(taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry._ID)),
-                getAreaByID(taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_AREA_ID))),
+                area,
                 taskCursor.getString(taskCursor.getColumnIndex(TaskEntry.COLUMN_NAME)),
                 taskCursor.getString(taskCursor.getColumnIndex(TaskEntry.COLUMN_DESCRIPTION)),
                 taskDate,
-                isDone);
+                isDone,
+                taskCursor.getInt(taskCursor.getColumnIndex(TaskEntry.COLUMN_TYPE)));
     }
 
     public boolean isTasksForTomorrowSet(){
@@ -326,10 +374,22 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(TaskEntry.COLUMN_NAME, task.getName());
         values.put(TaskEntry.COLUMN_DESCRIPTION, task.getDescription());
-        values.put(TaskEntry.COLUMN_AREA_ID, task.getArea().getId());
-        values.put(TaskEntry.COLUMN_DATE, task.getDate().getTimeInMillis());
-        values.put(TaskEntry.COLUMN_TIME_ZONE, TimeZone.getDefault().getID());
+        if(task.getArea() != null)
+            values.put(TaskEntry.COLUMN_AREA_ID, task.getArea().getId());
+        else
+            values.putNull(TaskEntry.COLUMN_AREA_ID);
+
+        if(task.getDate() != null) {
+            values.put(TaskEntry.COLUMN_DATE, task.getDate().getTimeInMillis());
+            values.put(TaskEntry.COLUMN_TIME_ZONE, TimeZone.getDefault().getID());
+        }
+        else {
+            values.putNull(TaskEntry.COLUMN_DATE);
+            values.putNull(TaskEntry.COLUMN_TIME_ZONE);
+        }
+
         values.put(TaskEntry.COLUMN_STATUS, status);
+        values.put(TaskEntry.COLUMN_TYPE, task.getType());
 
         try {
             long id = db.insert(TaskEntry.TABLE_NAME,
@@ -340,19 +400,21 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
 
             return id;
         } catch (SQLiteConstraintException e){
-            Log.e(LOG_tAG, e.getMessage());
+            Log.e(LOG_TAG, e.getMessage());
             return -1;
         }
     }
 
     public long updateTask(Task task){
 
-        Task taskBeforeUpdate = getTaskByID(task.getId());
+        if(task.getType() == Task.TYPE_NORMAL) {
+            Task taskBeforeUpdate = getTaskByID(task.getId());
 
-        if(!taskBeforeUpdate.isDone() && task.isDone()){
-            long dateInMilliseconds = isAllPreviousAreaTasksDone(taskBeforeUpdate);
-            if(dateInMilliseconds > 0)
-                return -2;
+            if (!taskBeforeUpdate.isDone() && task.isDone()) {
+                long dateInMilliseconds = isAllPreviousAreaTasksDone(taskBeforeUpdate);
+                if (dateInMilliseconds > 0)
+                    return -2;
+            }
         }
 
         SQLiteDatabase db = this.getWritableDatabase();
@@ -367,10 +429,21 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(TaskEntry.COLUMN_NAME, task.getName());
         values.put(TaskEntry.COLUMN_DESCRIPTION, task.getDescription());
-        values.put(TaskEntry.COLUMN_AREA_ID, task.getArea().getId());
-        values.put(TaskEntry.COLUMN_DATE, task.getDate().getTimeInMillis());
-        values.put(TaskEntry.COLUMN_TIME_ZONE, TimeZone.getDefault().getID());
+        if(task.getArea() != null)
+            values.put(TaskEntry.COLUMN_AREA_ID, task.getArea().getId());
+        else
+            values.putNull(TaskEntry.COLUMN_AREA_ID);
+
+        if(task.getDate() != null) {
+            values.put(TaskEntry.COLUMN_DATE, task.getDate().getTimeInMillis());
+            values.put(TaskEntry.COLUMN_TIME_ZONE, TimeZone.getDefault().getID());
+        }
+        else {
+            values.putNull(TaskEntry.COLUMN_DATE);
+            values.putNull(TaskEntry.COLUMN_TIME_ZONE);
+        }
         values.put(TaskEntry.COLUMN_STATUS, status);
+        values.put(TaskEntry.COLUMN_TYPE, task.getType());
 
         try{
             long id = db.update(TaskEntry.TABLE_NAME, values, TaskEntry._ID + " = ?",
@@ -381,9 +454,19 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
             return id;
         }
         catch (SQLiteConstraintException e){
-            Log.e(LOG_tAG, e.getMessage());
+            Log.e(LOG_TAG, e.getMessage());
             return -1;
         }
+    }
+
+    public void deleteTask(long task_id){
+        deleteAllTaskNotifications(task_id);
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        db.delete(TaskEntry.TABLE_NAME,
+                TaskEntry._ID + " = ?",
+                new String[]{ String.valueOf(task_id) });
     }
 
     public long isAllPreviousAreaTasksDone(Task task){
@@ -553,7 +636,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
             return id;
         }
         catch (SQLiteConstraintException e){
-            Log.e(LOG_tAG, e.getMessage());
+            Log.e(LOG_TAG, e.getMessage());
             return -1;
         }
     }

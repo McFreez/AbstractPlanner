@@ -2,6 +2,9 @@
     <string name="app_name">bPlanner</string>
     <string name="settings_title">Settings</string>
 
+    <string name="quick_task_title"
+        translatable="false">Quick task</string>
+
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 

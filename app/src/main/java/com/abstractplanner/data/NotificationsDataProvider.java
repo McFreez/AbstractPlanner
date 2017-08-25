@@ -344,8 +344,12 @@ public class NotificationsDataProvider extends AbstractDataProvider {
 
             Intent alarmIntent = new Intent(mContext, AlarmReceiver.class);
             alarmIntent.putExtra("message", removedNotification.getMessage());
-            if(removedNotification.getTask() != null)
-                alarmIntent.putExtra("title", removedNotification.getTask().getArea().getName());
+            if(removedNotification.getTask() != null) {
+                if(removedNotification.getTask().getType() == Task.TYPE_QUICK)
+                    alarmIntent.putExtra("title", mContext.getString(R.string.quick_task_title));
+                else
+                    alarmIntent.putExtra("title", removedNotification.getTask().getArea().getName());
+            }
             else
                 alarmIntent.putExtra("title", Notification.getNotificationTypeName(removedNotification.getType()) + " notification");
             alarmIntent.putExtra("id", removedNotification.getId());

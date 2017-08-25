@@ -248,7 +248,7 @@ public class EditTaskDialogFragment extends DialogFragment {
         mTaskDate.set(Calendar.MILLISECOND, 0);
 
         Task task = new Task(mTask.getId(), selectedArea, mTaskNameEditText.getText().toString(),
-                mTaskDescriptionEditText.getText().toString(), mTaskDate, mTaskDoneCheckBox.isChecked());
+                mTaskDescriptionEditText.getText().toString(), mTaskDate, mTaskDoneCheckBox.isChecked(), Task.TYPE_NORMAL);
 
         long id = mDbHelper.updateTask(task);
 

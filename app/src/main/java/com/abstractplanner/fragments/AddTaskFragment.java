@@ -171,7 +171,7 @@ public class AddTaskFragment extends Fragment {
                 mTaskDate.set(Calendar.MILLISECOND, 0);
 
                 Task task = new Task(selectedArea, mTaskNameEditText.getText().toString(),
-                        mTaskDescriptionEditText.getText().toString(), mTaskDate, mTaskDoneCheckBox.isChecked());
+                        mTaskDescriptionEditText.getText().toString(), mTaskDate, mTaskDoneCheckBox.isChecked(), Task.TYPE_NORMAL);
 
                 long id = mDbHelper.createTask(task);
 

@@ -26,6 +26,7 @@ import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
 import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.dto.Notification;
+import com.abstractplanner.dto.Task;
 import com.abstractplanner.receivers.AlarmReceiver;
 
 import java.util.Calendar;
@@ -90,18 +91,9 @@ public class RescheduleNotificationDialogFragment extends DialogFragment {
                     return;
                 }
 
-                mNotificationToDefer.getDate().add(Calendar.MINUTE, 30);
+                int minutes = 30;
 
-                long status = mDbHelper.updateNotification(mNotificationToDefer);
-
-                if(status > 0){
-                    updateNotification();
-                }
-
-                if(mEventListener != null)
-                    mEventListener.onNotificationDefered();
-
-                dismiss();
+                updateNotificationData(minutes);
             }
         });
         mDeferFor1Hour = (LinearLayout) view.findViewById(R.id.notification_defer_for_1_hour);
@@ -113,18 +105,9 @@ public class RescheduleNotificationDialogFragment extends DialogFragment {
                     return;
                 }
 
-                mNotificationToDefer.getDate().add(Calendar.HOUR, 1);
+                int minutes = 60;
 
-                long status = mDbHelper.updateNotification(mNotificationToDefer);
-
-                if(status > 0){
-                    updateNotification();
-                }
-
-                if(mEventListener != null)
-                    mEventListener.onNotificationDefered();
-
-                dismiss();
+                updateNotificationData(minutes);
             }
         });
         mDeferFor3Hours = (LinearLayout) view.findViewById(R.id.notification_defer_for_3_hours);
@@ -136,18 +119,9 @@ public class RescheduleNotificationDialogFragment extends DialogFragment {
                     return;
                 }
 
-                mNotificationToDefer.getDate().add(Calendar.HOUR, 3);
+                int minutes = 3 * 60;
 
-                long status = mDbHelper.updateNotification(mNotificationToDefer);
-
-                if(status > 0){
-                    updateNotification();
-                }
-
-                if(mEventListener != null)
-                    mEventListener.onNotificationDefered();
-
-                dismiss();
+                updateNotificationData(minutes);
             }
         });
         mDeferFor6Hours = (LinearLayout) view.findViewById(R.id.notification_defer_for_6_hours);
@@ -159,18 +133,10 @@ public class RescheduleNotificationDialogFragment extends DialogFragment {
                     return;
                 }
 
-                mNotificationToDefer.getDate().add(Calendar.HOUR, 6);
+                int minutes = 6 * 60;
 
-                long status = mDbHelper.updateNotification(mNotificationToDefer);
+                updateNotificationData(minutes);
 
-                if(status > 0){
-                    updateNotification();
-                }
-
-                if(mEventListener != null)
-                    mEventListener.onNotificationDefered();
-
-                dismiss();
             }
         });
         mSelectExactTime = (LinearLayout) view.findViewById(R.id.notification_select_exact_time);
@@ -203,6 +169,42 @@ public class RescheduleNotificationDialogFragment extends DialogFragment {
         return dialog;
     }
 
+    private void updateNotificationData(int minute){
+        mNotificationToDefer.getDate().add(Calendar.MINUTE, minute);
+
+        long status = mDbHelper.updateNotification(mNotificationToDefer);
+
+        if(status > 0){
+            updateNotification();
+        }
+
+        if(mEventListener != null)
+            mEventListener.onNotificationDefered();
+
+        dismiss();
+    }
+
+    private void updateNotificationData(int hourOfDay, int minute){
+        Calendar now = Calendar.getInstance();
+
+        mNotificationToDefer.getDate().set(Calendar.HOUR_OF_DAY, hourOfDay);
+        mNotificationToDefer.getDate().set(Calendar.MINUTE, minute);
+
+        if(now.after(mNotificationToDefer.getDate()))
+            mNotificationToDefer.getDate().add(Calendar.DATE, 1);
+
+        long status = mDbHelper.updateNotification(mNotificationToDefer);
+
+        if(status > 0){
+            updateNotification();
+        }
+
+        if(mEventListener != null)
+            mEventListener.onNotificationDefered();
+
+        dismiss();
+    }
+
     @Override
     public void onPause() {
         super.onPause();
@@ -224,25 +226,7 @@ public class RescheduleNotificationDialogFragment extends DialogFragment {
     TimePickerDialog.OnTimeSetListener s = new TimePickerDialog.OnTimeSetListener() {
         @Override
         public void onTimeSet(TimePicker timePicker, int hourOfDay, int minute) {
-
-            Calendar now = Calendar.getInstance();
-
-            mNotificationToDefer.getDate().set(Calendar.HOUR_OF_DAY, hourOfDay);
-            mNotificationToDefer.getDate().set(Calendar.MINUTE, minute);
-
-            if(now.after(mNotificationToDefer.getDate()))
-                mNotificationToDefer.getDate().add(Calendar.DATE, 1);
-
-            long status = mDbHelper.updateNotification(mNotificationToDefer);
-
-            if(status > 0){
-                updateNotification();
-            }
-
-            if(mEventListener != null)
-                mEventListener.onNotificationDefered();
-
-            dismiss();
+            updateNotificationData(hourOfDay, minute);
         }
     };
 
@@ -261,8 +245,12 @@ public class RescheduleNotificationDialogFragment extends DialogFragment {
 
         if(mNotificationToDefer != null) {
             alarmIntent.putExtra("message", mNotificationToDefer.getMessage());
-            if(mNotificationToDefer.getTask() != null)
-                alarmIntent.putExtra("title", mNotificationToDefer.getTask().getArea().getName());
+            if(mNotificationToDefer.getTask() != null) {
+                if(mNotificationToDefer.getTask().getType() == Task.TYPE_QUICK)
+                    alarmIntent.putExtra("title", getString(R.string.quick_task_title));
+                else
+                    alarmIntent.putExtra("title", mNotificationToDefer.getTask().getArea().getName());
+            }
             else
                 if(mNotificationToDefer.getType() == Notification.TYPE_SYSTEM_ID)
                     alarmIntent.putExtra("title", "Remind");
@@ -281,8 +269,12 @@ public class RescheduleNotificationDialogFragment extends DialogFragment {
         }
 
         alarmIntent.putExtra("message", mNotificationToDefer.getMessage());
-        if(mNotificationToDefer.getTask() != null)
-            alarmIntent.putExtra("title", mNotificationToDefer.getTask().getArea().getName());
+        if(mNotificationToDefer.getTask() != null) {
+            if(mNotificationToDefer.getTask().getType() == Task.TYPE_QUICK){
+                alarmIntent.putExtra("title", getString(R.string.quick_task_title));
+            } else
+                alarmIntent.putExtra("title", mNotificationToDefer.getTask().getArea().getName());
+        }
         else
             if(mNotificationToDefer.getType() == Notification.TYPE_SYSTEM_ID)
                 alarmIntent.putExtra("title", "Remind");

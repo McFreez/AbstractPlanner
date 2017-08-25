@@ -77,19 +77,9 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                     return;
                 }
 
-                Calendar notificationTime = Calendar.getInstance();
-                notificationTime.add(Calendar.MINUTE, 30);
+                int minutes = 30;
 
-                Notification notification = new Notification("You have unfinished task: " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
-
-                long id = mDbHelper.createNotification(notification);
-
-                if(id > 0){
-                    notification.setId(id);
-                    createNotification(notification);
-                }
-
-                dismiss();
+                createNotification(minutes);
             }
         });
         LinearLayout mNotifyIn1Hour = (LinearLayout) view.findViewById(R.id.task_notify_in_1_hour);
@@ -101,19 +91,9 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                     return;
                 }
 
-                Calendar notificationTime = Calendar.getInstance();
-                notificationTime.add(Calendar.HOUR, 1);
+                int minutes = 60;
 
-                Notification notification = new Notification("You have unfinished task: " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
-
-                long id = mDbHelper.createNotification(notification);
-
-                if(id > 0){
-                    notification.setId(id);
-                    createNotification(notification);
-                }
-
-                dismiss();
+                createNotification(minutes);
             }
         });
         LinearLayout mNotifyIn3Hours = (LinearLayout) view.findViewById(R.id.task_notify_in_3_hours);
@@ -125,19 +105,9 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                     return;
                 }
 
-                Calendar notificationTime = Calendar.getInstance();
-                notificationTime.add(Calendar.HOUR, 3);
+                int minutes = 3 * 60;
 
-                Notification notification = new Notification("You have unfinished task: " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
-
-                long id = mDbHelper.createNotification(notification);
-
-                if(id > 0){
-                    notification.setId(id);
-                    createNotification(notification);
-                }
-
-                dismiss();
+                createNotification(minutes);
             }
         });
         LinearLayout mNotifyIn6Hours = (LinearLayout) view.findViewById(R.id.task_notify_in_6_hours);
@@ -149,19 +119,9 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
                     return;
                 }
 
-                Calendar notificationTime = Calendar.getInstance();
-                notificationTime.add(Calendar.HOUR, 6);
+                int minutes = 6 * 60;
 
-                Notification notification = new Notification("You have unfinished task: " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
-
-                long id = mDbHelper.createNotification(notification);
-
-                if(id > 0){
-                    notification.setId(id);
-                    createNotification(notification);
-                }
-
-                dismiss();
+                createNotification(minutes);
             }
         });
         LinearLayout mSelectExactTime = (LinearLayout) view.findViewById(R.id.task_select_exact_time);
@@ -194,6 +154,44 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
         return dialog;
     }
 
+    private void createNotification(int minute){
+        Calendar notificationTime = Calendar.getInstance();
+        notificationTime.add(Calendar.MINUTE, minute);
+
+        Notification notification = new Notification("You have unfinished task: " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
+
+        long id = mDbHelper.createNotification(notification);
+
+        if(id > 0){
+            notification.setId(id);
+            createNotification(notification);
+        }
+
+        dismiss();
+    }
+
+    private void createNotification(int hourOfDay, int minute){
+        Calendar now = Calendar.getInstance();
+        Calendar notificationTime = Calendar.getInstance();
+
+        notificationTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        notificationTime.set(Calendar.MINUTE, minute);
+
+        if(now.after(notificationTime))
+            notificationTime.add(Calendar.DATE, 1);
+
+        Notification notification = new Notification("You have unfinished task: " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
+
+        long id = mDbHelper.createNotification(notification);
+
+        if(id > 0){
+            notification.setId(id);
+            createNotification(notification);
+        }
+
+        dismiss();
+    }
+
     @Override
     public void onPause() {
         super.onPause();
@@ -215,32 +213,13 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
     TimePickerDialog.OnTimeSetListener s = new TimePickerDialog.OnTimeSetListener() {
         @Override
         public void onTimeSet(TimePicker timePicker, int hourOfDay, int minute) {
-
-            Calendar now = Calendar.getInstance();
-            Calendar notificationTime = Calendar.getInstance();
-
-            notificationTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
-            notificationTime.set(Calendar.MINUTE, minute);
-
-            if(now.after(notificationTime))
-                notificationTime.add(Calendar.DATE, 1);
-
-            Notification notification = new Notification("You have unfinished task: " + mTaskToNotify.getName(), notificationTime, mTaskToNotify, Notification.TYPE_ONE_TIME_ID);
-
-            long id = mDbHelper.createNotification(notification);
-
-            if(id > 0){
-                notification.setId(id);
-                createNotification(notification);
-            }
-
-            dismiss();
+            createNotification(hourOfDay, minute);
         }
     };
 
     private void setTime() {
         Calendar notificationTime = Calendar.getInstance();
-        notificationTime.set(mTaskToNotify.getDate().get(Calendar.YEAR), mTaskToNotify.getDate().get(Calendar.MONTH), mTaskToNotify.getDate().get(Calendar.DAY_OF_MONTH));
+        //notificationTime.set(mTaskToNotify.getDate().get(Calendar.YEAR), mTaskToNotify.getDate().get(Calendar.MONTH), mTaskToNotify.getDate().get(Calendar.DAY_OF_MONTH));
 
         new TimePickerDialog(getContext(), s,
                 notificationTime.get(Calendar.HOUR_OF_DAY),
@@ -253,24 +232,13 @@ public class AddTaskNotificationDialogFragment extends DialogFragment {
         AlarmManager manager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
 
         Intent alarmIntent = new Intent(getActivity(), AlarmReceiver.class);
-/*
-        if(mNotificationToDefer != null) {
-            alarmIntent.putExtra("message", mNotificationToDefer.getMessage());
-            alarmIntent.putExtra("title", notification.getTask().getArea().getName());
-
-            Long previousIdLong = mNotificationToDefer.getId();
-            int previousId = previousIdLong.intValue();
-            alarmIntent.putExtra("id", mNotificationToDefer.getId());
-
-            PendingIntent previousPendingIntent = PendingIntent.getBroadcast(getContext(), previousId, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-            manager.cancel(previousPendingIntent);
-
-            alarmIntent.getExtras().clear();
-        }*/
 
         alarmIntent.putExtra("message", notification.getMessage());
-        alarmIntent.putExtra("title", notification.getTask().getArea().getName());
+
+        if(notification.getTask().getType() == Task.TYPE_QUICK){
+            alarmIntent.putExtra("title", getString(R.string.quick_task_title));
+        } else
+            alarmIntent.putExtra("title", notification.getTask().getArea().getName());
         alarmIntent.putExtra("id", notification.getId());
 
         Long idLong = notification.getId();

@@ -279,7 +279,8 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
                             taskCursor.getString(taskCursor.getColumnIndex(TaskEntry.COLUMN_NAME)),
                             taskCursor.getString(taskCursor.getColumnIndex(TaskEntry.COLUMN_DESCRIPTION)),
                             taskDate,
-                            isDone);
+                            isDone,
+                            taskCursor.getInt(taskCursor.getColumnIndex(TaskEntry.COLUMN_TYPE)));
 
                     d.getTasks().add(task);
 

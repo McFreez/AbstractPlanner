@@ -116,8 +116,12 @@ public class DeviceBootReceiver extends BroadcastReceiver {
         Intent alarmIntent = new Intent(mContext, AlarmReceiver.class);
 
         alarmIntent.putExtra("message", notification.getMessage());
-        if(notification.getTask() != null)
-            alarmIntent.putExtra("title", notification.getTask().getArea().getName());
+        if(notification.getTask() != null) {
+            if(notification.getTask().getType() == Task.TYPE_QUICK){
+                alarmIntent.putExtra("title", mContext.getString(R.string.quick_task_title));
+            } else
+                alarmIntent.putExtra("title", notification.getTask().getArea().getName());
+        }
         else
             if(notification.getType() == Notification.TYPE_SYSTEM_ID)
                 alarmIntent.putExtra("title", "Remind");
@@ -171,8 +175,12 @@ public class DeviceBootReceiver extends BroadcastReceiver {
         Intent alarmIntent = new Intent(mContext, AlarmReceiver.class);
 
         alarmIntent.putExtra("message", notification.getMessage());
-        if(notification.getTask() != null)
-            alarmIntent.putExtra("title", notification.getTask().getArea().getName());
+        if(notification.getTask() != null) {
+            if(notification.getTask().getType() == Task.TYPE_QUICK){
+                alarmIntent.putExtra("title", mContext.getString(R.string.quick_task_title));
+            } else
+                alarmIntent.putExtra("title", notification.getTask().getArea().getName());
+        }
         else
             if(notification.getType() == Notification.TYPE_SYSTEM_ID)
                 alarmIntent.putExtra("title", "Remind");

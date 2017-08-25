@@ -30,6 +30,7 @@ import android.util.Log;
 import com.abstractplanner.R;
 import com.abstractplanner.data.AbstractPlannerContract.*;
 
+import com.abstractplanner.dto.Area;
 import com.abstractplanner.dto.Task;
 import com.abstractplanner.utils.DateTimeUtils;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.RecyclerViewSwipeManager;
@@ -43,7 +44,11 @@ import java.util.TimeZone;
 
 public class TasksDataProvider extends AbstractDataProvider {
 
+    private static final String LOG_TAG = "TasksDataProvider";
+
     public static final String PROVIDER_ID = "today tasks data provider";
+
+    private static final String QUICK_TASKS_HEDAER = "Quick tasks";
 
     private List<TaskData> mData;
     private Context mContext;
@@ -75,16 +80,56 @@ public class TasksDataProvider extends AbstractDataProvider {
     private void loadData(){
         mData.clear();
 
+        Cursor quickTasksCursor = mDbHelper.getQuickTasks();
+
+        if(quickTasksCursor.getCount() > 0){
+            for(int i = 0; i < quickTasksCursor.getCount(); i++) {
+                quickTasksCursor.moveToPosition(i);
+
+                int type = quickTasksCursor.getInt(quickTasksCursor.getColumnIndex(TaskEntry.COLUMN_TYPE));
+
+                if (mData.size() == 0) {
+                    insertHeader(0, null, mContext, -1, type);
+                }
+
+                final long id = mData.size();
+                final int viewType = TaskData.ITEM_NORMAL;
+                final int swipeReaction = RecyclerViewSwipeManager.REACTION_CAN_SWIPE_UP | RecyclerViewSwipeManager.REACTION_CAN_SWIPE_DOWN;
+
+                Calendar taskDate = null;
+
+                boolean isDone = false;
+
+                Area area = null;
+
+                mData.add(new TaskData(id,
+                        viewType,
+                        swipeReaction,
+                        new Task(quickTasksCursor.getLong(quickTasksCursor.getColumnIndex(TaskEntry._ID)),
+                                area,
+                                quickTasksCursor.getString(quickTasksCursor.getColumnIndex(TaskEntry.COLUMN_NAME)),
+                                quickTasksCursor.getString(quickTasksCursor.getColumnIndex(TaskEntry.COLUMN_DESCRIPTION)),
+                                taskDate,
+                                isDone,
+                                type)));
+            }
+        }
+
         Cursor tasksCursor = mDbHelper.getTodayTasks();
 
         if(tasksCursor.getCount() > 0){
 
-            for(int i = 0; i < tasksCursor.getCount(); i++){
+            boolean isFirstHeaderCreated = false;
+
+            for(int i = 0; i < tasksCursor.getCount(); i++) {
                 tasksCursor.moveToPosition(i);
 
-                if(i == 0){
+                int type = tasksCursor.getInt(tasksCursor.getColumnIndex(TaskEntry.COLUMN_TYPE));
+
+                if (!isFirstHeaderCreated) {
                     insertHeader(tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry.COLUMN_DATE)),
-                            TimeZone.getTimeZone(tasksCursor.getString(tasksCursor.getColumnIndex(TaskEntry.COLUMN_TIME_ZONE))), mContext, -1);
+                            TimeZone.getTimeZone(tasksCursor.getString(tasksCursor.getColumnIndex(TaskEntry.COLUMN_TIME_ZONE))), mContext, -1, type);
+                    isFirstHeaderCreated = true;
                 } else {
                     long currentTaskTime = tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry.COLUMN_DATE));
                     tasksCursor.moveToPosition(i - 1);
@@ -92,9 +137,9 @@ public class TasksDataProvider extends AbstractDataProvider {
 
                     tasksCursor.moveToPosition(i);
 
-                    if(currentTaskTime != previousTaskTime){
+                    if (currentTaskTime != previousTaskTime) {
                         insertHeader(tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry.COLUMN_DATE)),
-                                TimeZone.getTimeZone(tasksCursor.getString(tasksCursor.getColumnIndex(TaskEntry.COLUMN_TIME_ZONE))), mContext, -1);
+                                TimeZone.getTimeZone(tasksCursor.getString(tasksCursor.getColumnIndex(TaskEntry.COLUMN_TIME_ZONE))), mContext, -1, type);
                     }
                 }
 
@@ -108,7 +153,7 @@ public class TasksDataProvider extends AbstractDataProvider {
                         TimeZone.getTimeZone(tasksCursor.getString(tasksCursor.getColumnIndex(TaskEntry.COLUMN_TIME_ZONE))));
 
                 boolean isDone;
-                if(tasksCursor.getInt(tasksCursor.getColumnIndex(TaskEntry.COLUMN_STATUS)) == 1)
+                if (tasksCursor.getInt(tasksCursor.getColumnIndex(TaskEntry.COLUMN_STATUS)) == 1)
                     isDone = true;
                 else
                     isDone = false;
@@ -121,45 +166,58 @@ public class TasksDataProvider extends AbstractDataProvider {
                                 tasksCursor.getString(tasksCursor.getColumnIndex(TaskEntry.COLUMN_NAME)),
                                 tasksCursor.getString(tasksCursor.getColumnIndex(TaskEntry.COLUMN_DESCRIPTION)),
                                 taskDate,
-                                isDone)));
+                                isDone,
+                                type)));
             }
         }
 
         setColors();
     }
 
-    private void insertHeader(final long taskDateTimeInMillis, TimeZone timeZone, Context context, int insertIndex){
+    private void insertHeader(final long taskDateTimeInMillis, TimeZone timeZone, Context context, int insertIndex, int taskType){
 
-        final long id = mData.size();
+        long id = mData.size();
         final int viewType = TaskData.ITEM_HEADER;
         final int swipeReaction = RecyclerViewSwipeManager.REACTION_CAN_SWIPE_UP | RecyclerViewSwipeManager.REACTION_CAN_SWIPE_DOWN;
 
         String day;
+        Calendar taskDate = null;
 
-        Calendar today = DateTimeUtils.getTodayDate();
-
-        Calendar taskDate = DateTimeUtils.getInstanceDayInCurrentTimeZone(taskDateTimeInMillis, timeZone);
-
-        if(today.compareTo(taskDate) == 0){
-            day = "Today";
+        if(taskType == Task.TYPE_QUICK){
+            day = QUICK_TASKS_HEDAER;
         } else {
-            today.add(Calendar.DATE, - 1);
-            if(today.compareTo(taskDate) == 0){
-                day = "Yesterday";
-            } else {
-                Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
-                Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
+            Calendar today = DateTimeUtils.getTodayDate();
 
-                if(taskDate.after(previousYear) && taskDate.before(nextYear))
-                    day = DateUtils.formatDateTime(context, taskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE);
-                else
-                    day = DateUtils.formatDateTime(context, taskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR);
+            taskDate = DateTimeUtils.getInstanceDayInCurrentTimeZone(taskDateTimeInMillis, timeZone);
+
+            if (today.compareTo(taskDate) == 0) {
+                day = "Today";
+            } else {
+                today.add(Calendar.DATE, -1);
+                if (today.compareTo(taskDate) == 0) {
+                    day = "Yesterday";
+                } else {
+                    Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
+                    Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
+
+                    if (taskDate.after(previousYear) && taskDate.before(nextYear))
+                        day = DateUtils.formatDateTime(context, taskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE);
+                    else
+                        day = DateUtils.formatDateTime(context, taskDate.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR);
+                }
             }
         }
         if(insertIndex < 0)
             mData.add(new TaskData(id, viewType, swipeReaction, day, taskDate));
-        else
+        else {
+            id = insertIndex;
             mData.add(insertIndex, new TaskData(id, viewType, swipeReaction, day, taskDate));
+            if(insertIndex + 1 < mData.size()) {
+                for (int i = insertIndex + 1; i < mData.size(); i++) {
+                    mData.get(i).setId(mData.get(i).getId() + 1);
+                }
+            }
+        }
     }
 
     private void setColors(){
@@ -170,7 +228,7 @@ public class TasksDataProvider extends AbstractDataProvider {
         int headersCount = 0;
 
         for(int i = 0; i < mData.size(); i++)
-            if(mData.get(i).getViewType() == TaskData.ITEM_HEADER)
+            if(mData.get(i).getViewType() == TaskData.ITEM_HEADER && !mData.get(i).getText().equals(QUICK_TASKS_HEDAER))
                 headersCount++;
 
         if(headersCount <= 6){
@@ -196,23 +254,39 @@ public class TasksDataProvider extends AbstractDataProvider {
 
         for(int i = mData.size() - 1; i >= 0; i--){
             if(mData.get(i).getViewType() == TaskData.ITEM_HEADER){
-                colorIndex ++;
+                if(!mData.get(i).getText().equals(QUICK_TASKS_HEDAER)) {
+                    colorIndex++;
 
-                if(colorIndex >= taskColors.length)
-                    break;
+                    if (colorIndex >= taskColors.length)
+                        break;
+                }
 
                 continue;
             }
 
-            mData.get(i).setStatusColor(taskColors[colorIndex]);
+            if(mData.get(i).getDataObject().getType() != Task.TYPE_QUICK)
+/*                mData.get(i).setStatusColor(ResourcesCompat.getColor(mContext.getResources(), android.R.color.transparent, null));
+            else*/
+                mData.get(i).setStatusColor(taskColors[colorIndex]);
         }
     }
 
     private void setColorsMoreThan6Headers(final int headersCount){
 
         int headersLeft = headersCount;
+        int firstItemIndex = -1;
 
-        long latestDateMillis = mData.get(1).getDataObject().getDate().getTimeInMillis();
+        for(int i = 0; i < mData.size(); i++){
+            if(mData.get(i).getViewType() == TaskData.ITEM_NORMAL && mData.get(i).getDataObject().getType() == Task.TYPE_NORMAL) {
+                firstItemIndex = i;
+                break;
+            }
+        }
+
+        if(firstItemIndex < 0)
+            return;
+
+        long latestDateMillis = mData.get(firstItemIndex).getDataObject().getDate().getTimeInMillis();
 
         long earliestDateMillis = mData.get(mData.size() - 1).getDataObject().getDate().getTimeInMillis();
 
@@ -262,7 +336,7 @@ public class TasksDataProvider extends AbstractDataProvider {
 
         boolean everyHeaderChange = false;
 
-        for(int i = mData.size() - 1; i >= 0; i--){
+        for(int i = mData.size() - 1; i >= firstItemIndex; i--){
             if(mData.get(i).getViewType() == TaskData.ITEM_HEADER){
                 if(i == 0)
                     break;
@@ -329,6 +403,14 @@ public class TasksDataProvider extends AbstractDataProvider {
             mData.get(i).setStatusColor(taskColors[colorIndex]);
             //Log.e("TaskDataProvider", " SET COLOR " + colorIndex);
         }
+
+/*        if(firstItemIndex > 1){
+            for(int i = firstItemIndex; i >= 0; i--){
+                if(mData.get(i).getViewType() == TaskData.ITEM_NORMAL){
+                    mData.get(i).setStatusColor(ResourcesCompat.getColor(mContext.getResources(), android.R.color.transparent, null));
+                }
+            }
+        }*/
     }
 
     @Override
@@ -366,6 +448,63 @@ public class TasksDataProvider extends AbstractDataProvider {
         }
     }
 
+    public int addQuickTaskItem(Task task){
+        if(task.getType() != Task.TYPE_QUICK)
+            return -1;
+
+        if(mData.size() == 0){
+            insertHeader(0, null, mContext, -1, task.getType());
+
+            final long id = mData.size();
+            final int viewType = TaskData.ITEM_NORMAL;
+            final int swipeReaction = RecyclerViewSwipeManager.REACTION_CAN_SWIPE_UP | RecyclerViewSwipeManager.REACTION_CAN_SWIPE_DOWN;
+
+            Calendar taskDate = null;
+
+            boolean isDone = false;
+
+            Area area = null;
+
+            mData.add(new TaskData(id,
+                    viewType,
+                    swipeReaction,
+                    task));
+
+            //mData.get(mData.size() - 1).setStatusColor(ResourcesCompat.getColor(mContext.getResources(), android.R.color.transparent, null));
+
+            return mData.size() - 1;
+        } else {
+            if (!mData.get(0).mText.equals(QUICK_TASKS_HEDAER))
+                insertHeader(0, null, mContext, 0, task.getType());
+
+            int insertIndex = 1;
+
+            final long id = insertIndex;
+            final int viewType = TaskData.ITEM_NORMAL;
+            final int swipeReaction = RecyclerViewSwipeManager.REACTION_CAN_SWIPE_UP | RecyclerViewSwipeManager.REACTION_CAN_SWIPE_DOWN;
+
+            Calendar taskDate = null;
+
+            boolean isDone = false;
+
+            Area area = null;
+
+            mData.add(insertIndex, new TaskData(id,
+                    viewType,
+                    swipeReaction,
+                    task));
+
+            if(insertIndex + 1 < mData.size()) {
+                for (int i = insertIndex + 1; i < mData.size(); i++) {
+                    mData.get(i).setId(mData.get(i).getId() + 1);
+                }
+            }
+            //mData.get(insertIndex).setStatusColor(ResourcesCompat.getColor(mContext.getResources(), android.R.color.transparent, null));
+
+            return insertIndex;
+        }
+    }
+
     @Override
     public void moveItem(int fromPosition, int toPosition) {
         if (fromPosition == toPosition) {
@@ -380,10 +519,11 @@ public class TasksDataProvider extends AbstractDataProvider {
 
     @Override
     public void updateItem(int position){
-        long id = mDbHelper.updateTask(mData.get(position).getDataObject());
+/*        long id = mDbHelper.updateTask(mData.get(position).getDataObject());
 
         Task task = mData.get(position).getDataObject();
 
+        if()
         if(id < 0) {
             if (id == -1) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
@@ -430,6 +570,15 @@ public class TasksDataProvider extends AbstractDataProvider {
 
             mData.get(position).setPinned(false);
         } else
+            updateItemPosition(position);*/
+
+        Task task = mDbHelper.getTaskByID(mData.get(position).getDataObject().getId());//mData.get(position).getDataObject();
+        if(task == null)
+            return;
+
+        if(task.getType() == Task.TYPE_QUICK){
+            mData.get(position).updateDataObject(task);
+        } else
             updateItemPosition(position);
 
     }
@@ -458,7 +607,7 @@ public class TasksDataProvider extends AbstractDataProvider {
 
         if(mData.get(0).getDate().compareTo(mLastRemovedData.getDate()) > 0){
             mData.add(0, mLastRemovedData);
-            insertHeader(mLastRemovedData.getDate().getTimeInMillis(), mLastRemovedData.getDate().getTimeZone(), mContext, 0);
+            insertHeader(mLastRemovedData.getDate().getTimeInMillis(), mLastRemovedData.getDate().getTimeZone(), mContext, 0, mLastRemovedData.getDataObject().getType());
             return;
         }
 
@@ -505,10 +654,10 @@ public class TasksDataProvider extends AbstractDataProvider {
             mData.add(insertPosition, mLastRemovedData);
 
             if (insertWithHeader)
-                insertHeader(mLastRemovedData.getDate().getTimeInMillis(), mLastRemovedData.getDate().getTimeZone(), mContext, insertPosition);
+                insertHeader(mLastRemovedData.getDate().getTimeInMillis(), mLastRemovedData.getDate().getTimeZone(), mContext, insertPosition, mLastRemovedData.getDataObject().getType());
         } else {
             if (insertWithHeader)
-                insertHeader(mLastRemovedData.getDate().getTimeInMillis(), mLastRemovedData.getDate().getTimeZone(), mContext, -1);
+                insertHeader(mLastRemovedData.getDate().getTimeInMillis(), mLastRemovedData.getDate().getTimeZone(), mContext, -1, mLastRemovedData.getDataObject().getType());
 
             mData.add(mLastRemovedData);
         }
@@ -531,43 +680,17 @@ public class TasksDataProvider extends AbstractDataProvider {
             Task doneTask = mData.get(position).getDataObject();
             doneTask.setDone(true);
 
-            long status = mDbHelper.updateTask(doneTask);
-            if(status < 0){
-                if(status == -1){
-                    AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-                    builder.setMessage("You already have task for "
-                            + DateUtils.formatDateTime(mContext, doneTask.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
-                            + " on " + doneTask.getArea().getName() + ".")
-                            .setTitle("Try another day or area")
-                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    dialogInterface.dismiss();
-                                }
-                            });
-
-                    builder.show();
-                    return;
-                }
-                else
-                if(status == -2){
-                    long taskId = mDbHelper.isAllPreviousAreaTasksDone(doneTask);
-                    if(taskId > 0){
-                        Task undoneTask = mDbHelper.getTaskByID(taskId);
-
-                        Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
-                        Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
-
-                        String dateString;
-
-                        if(undoneTask.getDate().after(previousYear) && undoneTask.getDate().before(nextYear))
-                            dateString = DateUtils.formatDateTime(mContext, undoneTask.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE);
-                        else
-                            dateString = DateUtils.formatDateTime(mContext, undoneTask.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR);
-
+            if(doneTask.getType() == Task.TYPE_QUICK){
+                mDbHelper.deleteTask(doneTask.getId());
+            } else {
+                long status = mDbHelper.updateTask(doneTask);
+                if (status < 0) {
+                    if (status == -1) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-                        builder.setMessage("You have unfinished task for " + dateString + " in " + doneTask.getArea().getName() + ". Finish it first, please.")
-                                .setTitle("Finish earlier task first")
+                        builder.setMessage("You already have task for "
+                                + DateUtils.formatDateTime(mContext, doneTask.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR)
+                                + " on " + doneTask.getArea().getName() + ".")
+                                .setTitle("Try another day or area")
                                 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialogInterface, int i) {
@@ -577,6 +700,34 @@ public class TasksDataProvider extends AbstractDataProvider {
 
                         builder.show();
                         return;
+                    } else if (status == -2) {
+                        long taskId = mDbHelper.isAllPreviousAreaTasksDone(doneTask);
+                        if (taskId > 0) {
+                            Task undoneTask = mDbHelper.getTaskByID(taskId);
+
+                            Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
+                            Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
+
+                            String dateString;
+
+                            if (undoneTask.getDate().after(previousYear) && undoneTask.getDate().before(nextYear))
+                                dateString = DateUtils.formatDateTime(mContext, undoneTask.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE);
+                            else
+                                dateString = DateUtils.formatDateTime(mContext, undoneTask.getDate().getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR);
+
+                            AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+                            builder.setMessage("You have unfinished task for " + dateString + " in " + doneTask.getArea().getName() + ". Finish it first, please.")
+                                    .setTitle("Finish earlier task first")
+                                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            dialogInterface.dismiss();
+                                        }
+                                    });
+
+                            builder.show();
+                            return;
+                        }
                     }
                 }
             }
@@ -611,7 +762,7 @@ public class TasksDataProvider extends AbstractDataProvider {
         public static final int ITEM_NORMAL = 0;
         public static final int ITEM_HEADER = 1;
 
-        private final long mId;
+        private long mId;
         private Task mTask;
         private final String mText;
         private Calendar mDate;
@@ -668,6 +819,10 @@ public class TasksDataProvider extends AbstractDataProvider {
         @Override
         public long getId() {
             return mId;
+        }
+
+        public void setId(long id){
+            mId = id;
         }
 
         @Override

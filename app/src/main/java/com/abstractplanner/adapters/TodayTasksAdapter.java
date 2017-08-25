@@ -21,6 +21,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -38,6 +39,7 @@ import com.abstractplanner.R;
 import com.abstractplanner.data.AbstractDataProvider;
 import com.abstractplanner.data.TasksDataProvider;
 import com.abstractplanner.dto.Task;
+import com.abstractplanner.fragments.AddQuickTaskDialogFragment;
 import com.abstractplanner.fragments.AddTaskNotificationDialogFragment;
 import com.abstractplanner.fragments.EditTaskDialogFragment;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemAdapter;
@@ -146,51 +148,96 @@ public class TodayTasksAdapter
     }
 
     private void onSwipeableViewContainerClick(View v) {
-        if(v.getTag() != null){
+        if(v.getTag() != null) {
             final int position = (int) v.getTag();
 
             final Task task = (Task) mProvider.getItem(position).getDataObject();
 
-            String status;
-            if(task.isDone())
-                status = "Status: Done";
-            else
-                status = "Status: Undone";
-            AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-            builder.setMessage(task.getDescription() + "\n\n" + status)
-                    .setTitle(task.getName())
-                    .setNegativeButton("Edit", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            FragmentManager fragmentManager = mActivity.getSupportFragmentManager();
-                            EditTaskDialogFragment newFragment = new EditTaskDialogFragment();
-                            newFragment.setTask(task);
-                            newFragment.setTaskDate(task.getDate());
-                            newFragment.setAdapter(TodayTasksAdapter.this);
-                            // The device is smaller, so show the fragment fullscreen
-                            FragmentTransaction transaction = fragmentManager.beginTransaction();
-                            // For a little polish, specify a transition animation
-                            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-                            // To make it fullscreen, use the 'content' root view as the container
-                            // for the fragment, which is always the root view for the activity
-                            transaction.add(R.id.drawer_layout, newFragment)
-                                    .addToBackStack(null).commit();
-                        }
-                    })
-                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            dialogInterface.dismiss();
-                        }
-                    });
+            if (task.getType() == Task.TYPE_QUICK) {
 
-            builder.show();
+                AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+                builder.setMessage(task.getDescription())
+                        .setTitle(task.getName())
+                        .setNegativeButton("Edit", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                FragmentManager fragmentManager = mActivity.getSupportFragmentManager();
+                                AddQuickTaskDialogFragment newFragment = new AddQuickTaskDialogFragment();
+                                newFragment.setTaskToEdit(task);
+                                newFragment.setAdapter(TodayTasksAdapter.this);
+                                // The device is smaller, so show the fragment fullscreen
+                                FragmentTransaction transaction = fragmentManager.beginTransaction();
+                                // For a little polish, specify a transition animation
+                                transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                                // To make it fullscreen, use the 'content' root view as the container
+                                // for the fragment, which is always the root view for the activity
+                                transaction.add(/*android.R.id.content*/R.id.drawer_layout, newFragment)
+                                        .addToBackStack(null).commit();
+                            }
+                        })
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                            }
+                        });
 
+                builder.show();
+            } else {
+                String status;
+                if (task.isDone())
+                    status = "Status: Done";
+                else
+                    status = "Status: Undone";
+                AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+                builder.setMessage(task.getDescription() + "\n\n" + status)
+                        .setTitle(task.getName())
+                        .setNegativeButton("Edit", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                FragmentManager fragmentManager = mActivity.getSupportFragmentManager();
+                                EditTaskDialogFragment newFragment = new EditTaskDialogFragment();
+                                newFragment.setTask(task);
+                                newFragment.setTaskDate(task.getDate());
+                                newFragment.setAdapter(TodayTasksAdapter.this);
+                                // The device is smaller, so show the fragment fullscreen
+                                FragmentTransaction transaction = fragmentManager.beginTransaction();
+                                // For a little polish, specify a transition animation
+                                transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                                // To make it fullscreen, use the 'content' root view as the container
+                                // for the fragment, which is always the root view for the activity
+                                transaction.add(R.id.drawer_layout, newFragment)
+                                        .addToBackStack(null).commit();
+                            }
+                        })
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                            }
+                        });
+
+                builder.show();
+
+            }
         }
 
         if (mEventListener != null) {
             mEventListener.onItemViewClicked(RecyclerViewAdapterUtils.getParentViewHolderItemView(v), false);  // false --- not pinned
         }
+    }
+
+    public void addQuickTask(Task task){
+        int position = ((TasksDataProvider)mProvider).addQuickTaskItem(task);
+        if(position > 0) {
+            notifyDataSetChanged();
+        }
+    }
+
+    public void saveQuickTask(Task task){
+        int position = getItemPositionById(task.getId());
+        mProvider.updateItem(position);
+        notifyItemChanged(position);
     }
 
     public void saveEditedTask(Task task){
@@ -276,15 +323,25 @@ public class TodayTasksAdapter
         // set text
         holder.mTaskName.setText(task.getName());
 
-        holder.mTaskAreaName.setText(task.getArea().getName());
+        if(task.getArea() != null) {
+            holder.mTaskAreaName.setVisibility(View.VISIBLE);
+            holder.mTaskAreaName.setText(task.getArea().getName());
+        } else
+            holder.mTaskAreaName.setVisibility(View.GONE);
 
-        holder.mTaskDescription.setText(task.getDescription());
+        if(task.getDescription() != null && !task.getDescription().equals("")) {
+            holder.mTaskDescription.setVisibility(View.VISIBLE);
+            holder.mTaskDescription.setText(task.getDescription());
+        }
+        else
+            holder.mTaskDescription.setVisibility(View.GONE);
 
         int colorResID = ((TasksDataProvider.TaskData) item).getStatusColor();
 
         if(colorResID != 0) {
             holder.mStatusContainer.setBackgroundColor(colorResID);
-        }
+        } else
+            holder.mStatusContainer.setBackgroundColor(ResourcesCompat.getColor(getContext().getResources(), android.R.color.transparent, null));
 
         // set background resource (target view ID: container)
         final int swipeState = holder.getSwipeStateFlags();
@@ -453,6 +510,7 @@ public class TodayTasksAdapter
         @Override
         protected void onPerformAction() {
             super.onPerformAction();
+
 
             mAdapter.mProvider.removeItem(mPosition, true);
             mAdapter.notifyItemRemoved(mPosition);
