@@ -94,7 +94,23 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
                             createNotification(notification);
                         } else
                             clearNotification(notification);
-                    }
+                    } else
+                        if(p.getKey().equals(getString(R.string.pref_unfinished_quick_tasks_key))){
+                            boolean isNotificationEnabled = sharedPreferences.getBoolean(p.getKey(), true);
+
+                            Notification notification = dbHelper.getNotificationByMessageAndType(getString(R.string.pref_unfinished_quick_tasks_message), Notification.TYPE_SYSTEM_ID);
+
+                            if (notification == null && isNotificationEnabled) {
+                                notification = dbHelper.createSystemNotification(getString(R.string.pref_unfinished_quick_tasks_message));
+                                if (notification == null)
+                                    return;
+                            }
+
+                            if (isNotificationEnabled) {
+                                createNotification(notification);
+                            } else
+                                clearNotification(notification);
+                        }
                 } else if (p instanceof ListPreference) {
                     String value = sharedPreferences.getString(p.getKey(), "");
                     setPreferenceSummary(p, value);
@@ -198,22 +214,46 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
                 setPreferenceSummary(preference, sharedPreferences.getString(key, ""));
             } else
                 if(preference instanceof SwitchPreferenceCompat){
-                    AbstractPlannerDatabaseHelper dbHelper = new AbstractPlannerDatabaseHelper(getContext());
+                    if (preference.getKey().equals(getString(R.string.pref_tomorrow_tasks_notification_key))) {
+                        AbstractPlannerDatabaseHelper dbHelper = new AbstractPlannerDatabaseHelper(getContext());
 
-                    boolean isNotificationEnabled = sharedPreferences.getBoolean(key, true);
+                        boolean isNotificationEnabled = sharedPreferences.getBoolean(key, true);
 
-                    Notification notification = dbHelper.getNotificationByMessageAndType(getString(R.string.pref_tomorrow_tasks_notification_message), Notification.TYPE_SYSTEM_ID);
+                        Notification notification = dbHelper.getNotificationByMessageAndType(getString(R.string.pref_tomorrow_tasks_notification_message), Notification.TYPE_SYSTEM_ID);
 
-                    if(notification == null && isNotificationEnabled){
-                        notification = dbHelper.createSystemNotification(getString(R.string.pref_tomorrow_tasks_notification_message));
-                        if(notification == null)
-                            return;
-                    }
+                        if (notification == null && isNotificationEnabled) {
+                            notification = dbHelper.createSystemNotification(getString(R.string.pref_tomorrow_tasks_notification_message));
+                            if (notification == null)
+                                return;
+                        }
 
-                    if(isNotificationEnabled)
-                        createNotification(notification);
-                    else
-                        clearNotification(notification);
+                        if (isNotificationEnabled)
+                            createNotification(notification);
+                        else
+                            clearNotification(notification);
+
+                        dbHelper.close();
+                    } else
+                        if (preference.getKey().equals(getString(R.string.pref_unfinished_quick_tasks_key))) {
+                            AbstractPlannerDatabaseHelper dbHelper = new AbstractPlannerDatabaseHelper(getContext());
+
+                            boolean isNotificationEnabled = sharedPreferences.getBoolean(key, true);
+
+                            Notification notification = dbHelper.getNotificationByMessageAndType(getString(R.string.pref_unfinished_quick_tasks_message), Notification.TYPE_SYSTEM_ID);
+
+                            if (notification == null && isNotificationEnabled) {
+                                notification = dbHelper.createSystemNotification(getString(R.string.pref_unfinished_quick_tasks_message));
+                                if (notification == null)
+                                    return;
+                            }
+
+                            if (isNotificationEnabled)
+                                createNotification(notification);
+                            else
+                                clearNotification(notification);
+
+                            dbHelper.close();
+                        }
             }
 
             if(key.equals(getString(R.string.pref_google_authorization_key))){

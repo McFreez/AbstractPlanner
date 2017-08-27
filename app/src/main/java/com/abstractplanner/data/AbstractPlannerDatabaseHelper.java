@@ -8,11 +8,13 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.abstractplanner.R;
 import com.abstractplanner.data.AbstractPlannerContract.*;
 import com.abstractplanner.dto.Area;
 import com.abstractplanner.dto.Notification;
 import com.abstractplanner.dto.Task;
 import com.abstractplanner.utils.DateTimeUtils;
+import com.abstractplanner.utils.NotificationUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -337,7 +339,20 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         }
 
         return areasCount <= tomorrowTasksCursor.getCount();
+    }
 
+    public boolean isQuickTasksLeft() {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor quickTasksCursor = db.query(TaskEntry.TABLE_NAME,
+                null,
+                TaskEntry.COLUMN_TYPE + " = ?",
+                new String[]{ String.valueOf(Task.TYPE_QUICK) },
+                null,
+                null,
+                null);
+
+        return quickTasksCursor != null && quickTasksCursor.getCount() > 0;
     }
 
     private Cursor getAllTasksForTomorrow(){
@@ -603,7 +618,11 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
 
     public Notification createSystemNotification(String message){
         Calendar time = Calendar.getInstance();
-        time.set(Calendar.HOUR_OF_DAY, 20);
+        if(message.equals(mContext.getString(R.string.pref_tomorrow_tasks_notification_message)))
+            time.set(Calendar.HOUR_OF_DAY, 20);
+        else
+            if(message.equals(mContext.getString(R.string.pref_unfinished_quick_tasks_message)))
+                time.set(Calendar.HOUR_OF_DAY, 18);
         time.set(Calendar.MINUTE, 0);
         time.set(Calendar.SECOND, 0);
         Notification notification = new Notification(message, time, Notification.TYPE_SYSTEM_ID);
@@ -652,9 +671,32 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
     private void deleteAllTaskNotifications(long task_id){
         SQLiteDatabase db = this.getWritableDatabase();
 
-        db.delete(NotificationEntry.TABLE_NAME,
+        Cursor notificationsCursor = db.query(NotificationEntry.TABLE_NAME,
+                null,
                 NotificationEntry.COLUMN_TASK_ID + " = ?",
-                new String[]{ String.valueOf(task_id) });
+                new String[]{ String.valueOf(task_id) },
+                null,
+                null,
+                null);
+
+        if(notificationsCursor != null && notificationsCursor.getCount() > 0){
+            while(notificationsCursor.moveToNext()){
+                Calendar notificationDate = DateTimeUtils.getInstanceInCurrentTimeZone(notificationsCursor.getLong(notificationsCursor.getColumnIndex(NotificationEntry.COLUMN_DATE)),
+                        TimeZone.getTimeZone(notificationsCursor.getString(notificationsCursor.getColumnIndex(NotificationEntry.COLUMN_TIME_ZONE))));
+
+                long taskID = notificationsCursor.getLong(notificationsCursor.getColumnIndex(NotificationEntry.COLUMN_TASK_ID));
+                Task task = getTaskByID(taskID);
+
+                Notification notification = new Notification(notificationsCursor.getLong(notificationsCursor.getColumnIndex(NotificationEntry._ID)),
+                        notificationsCursor.getString(notificationsCursor.getColumnIndex(NotificationEntry.COLUMN_MESSAGE)),
+                        notificationDate,
+                        task,
+                        notificationsCursor.getInt(notificationsCursor.getColumnIndex(NotificationEntry.COLUMN_TYPE)));
+
+                NotificationUtils.deleteNotification(mContext, notification);
+                deleteNotification(notification.getId());
+            }
+        }
     }
 
     // SET DATABASE STATUS TO NOT INITIAL

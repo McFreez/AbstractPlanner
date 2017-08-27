@@ -58,7 +58,7 @@ public final class AbstractPlannerPreferences {
             if(!isNotificationEnabled(context))
                 setNotificationEnabled(context, true);
 
-            createSystemNotification(context, dbHelper);
+            createSystemNotifications(context, dbHelper);
 
             Area sport = new Area("Sport", "My sport tasks");
             Area english = new Area("English", "English learning");
@@ -98,7 +98,7 @@ public final class AbstractPlannerPreferences {
             if(!isNotificationEnabled(context))
                 setNotificationEnabled(context, true);
 
-            createSystemNotification(context, dbHelper);
+            createSystemNotifications(context, dbHelper);
 
             // TODO: fill db with initial data if db is empty
         }
@@ -110,38 +110,67 @@ public final class AbstractPlannerPreferences {
     }
 
     // Create system notification on first run
-    private static void createSystemNotification(Context context, AbstractPlannerDatabaseHelper dbHelper){
-
-        Notification notification = dbHelper.getNotificationByMessageAndType(context.getString(R.string.pref_tomorrow_tasks_notification_message), Notification.TYPE_SYSTEM_ID);
-
-        if(notification == null){
-            notification = dbHelper.createSystemNotification(context.getString(R.string.pref_tomorrow_tasks_notification_message));
-            if(notification == null)
-                return;
-        }
+    private static void createSystemNotifications(Context context, AbstractPlannerDatabaseHelper dbHelper){
 
         AlarmManager manager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
-        Intent alarmIntent = new Intent(context, AlarmReceiver.class);
+        final Calendar today = Calendar.getInstance();
 
-        alarmIntent.putExtra("message", notification.getMessage());
-        alarmIntent.putExtra("title", "Remind");
-        alarmIntent.putExtra("id", notification.getId());
+        // Tomorrow tasks notification
+        Notification tomorrowTasksNotification = dbHelper.getNotificationByMessageAndType(context.getString(R.string.pref_tomorrow_tasks_notification_message), Notification.TYPE_SYSTEM_ID);
 
-        Long idLong = notification.getId();
-        int id = idLong.intValue();
+        if(tomorrowTasksNotification == null){
+            tomorrowTasksNotification = dbHelper.createSystemNotification(context.getString(R.string.pref_tomorrow_tasks_notification_message));
+            if(tomorrowTasksNotification == null)
+                return;
+        }
 
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, id, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent tomorrowTasksAlarmIntent = new Intent(context, AlarmReceiver.class);
 
-        Calendar today = Calendar.getInstance();
+        tomorrowTasksAlarmIntent.putExtra("message", tomorrowTasksNotification.getMessage());
+        tomorrowTasksAlarmIntent.putExtra("title", "Remind");
+        tomorrowTasksAlarmIntent.putExtra("id", tomorrowTasksNotification.getId());
 
-        Calendar notificationDate = notification.getDate();
-        notificationDate.set(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH));
+        Long tomorrowTasks_idLong = tomorrowTasksNotification.getId();
+        int tomorrowTasks_id = tomorrowTasks_idLong.intValue();
 
-        if (today.after(notificationDate))
-            notificationDate.add(Calendar.DATE, 1);
+        PendingIntent tomorrowTasksPendingIntent = PendingIntent.getBroadcast(context, tomorrowTasks_id, tomorrowTasksAlarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        manager.setRepeating(AlarmManager.RTC_WAKEUP, notificationDate.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+        Calendar tomorrowTasksNotificationDate = tomorrowTasksNotification.getDate();
+        tomorrowTasksNotificationDate.set(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH));
+
+        if (today.after(tomorrowTasksNotificationDate))
+            tomorrowTasksNotificationDate.add(Calendar.DATE, 1);
+
+        manager.setRepeating(AlarmManager.RTC_WAKEUP, tomorrowTasksNotificationDate.getTimeInMillis(), AlarmManager.INTERVAL_DAY, tomorrowTasksPendingIntent);
+
+        // Quick tasks notification
+        Notification quickTasksNotification = dbHelper.getNotificationByMessageAndType(context.getString(R.string.pref_unfinished_quick_tasks_message), Notification.TYPE_SYSTEM_ID);
+
+        if(quickTasksNotification == null){
+            quickTasksNotification = dbHelper.createSystemNotification(context.getString(R.string.pref_unfinished_quick_tasks_message));
+            if(quickTasksNotification == null)
+                return;
+        }
+
+        Intent quickTasksAlarmIntent = new Intent(context, AlarmReceiver.class);
+
+        quickTasksAlarmIntent.putExtra("message", quickTasksNotification.getMessage());
+        quickTasksAlarmIntent.putExtra("title", "Remind");
+        quickTasksAlarmIntent.putExtra("id", quickTasksNotification.getId());
+
+        Long quickTasks_idLong = quickTasksNotification.getId();
+        int quickTasks_id = quickTasks_idLong.intValue();
+
+        PendingIntent quickTasksPendingIntent = PendingIntent.getBroadcast(context, quickTasks_id, quickTasksAlarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Calendar quickTasksNotificationDate = quickTasksNotification.getDate();
+        quickTasksNotificationDate.set(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH));
+
+        if (today.after(quickTasksNotificationDate))
+            quickTasksNotificationDate.add(Calendar.DATE, 1);
+
+        manager.setRepeating(AlarmManager.RTC_WAKEUP, quickTasksNotificationDate.getTimeInMillis(), AlarmManager.INTERVAL_DAY, quickTasksPendingIntent);
     }
 
     // Set every day remind notification to set tasks for tomorrow enabled

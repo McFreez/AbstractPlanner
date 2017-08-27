@@ -22,36 +22,35 @@ import com.abstractplanner.utils.DateTimeUtils;
 import java.util.Calendar;
 import java.util.TimeZone;
 
-
-public class DeviceBootReceiver extends BroadcastReceiver {
+public class TimeZoneChangeReceiver extends BroadcastReceiver {
 
     private Context mContext;
 
     @Override
     public void onReceive(Context context, Intent intent) {
+
         mContext = context;
-        //Log.e("ABSTRACT_PLANNER", " received ");
-        if (intent.getAction().equals("android.intent.action.BOOT_COMPLETED")) {
-            //Log.e("ABSTRACT_PLANNER", " started ");
+
+        if (intent.getAction().equals("android.intent.action.TIMEZONE_CHANGED")) {
             AbstractPlannerDatabaseHelper dbHelper = new AbstractPlannerDatabaseHelper(mContext);
 
             //Log.e("ABSTRACT_PLANNER", "db null");
 
             Cursor notificationsCursor = dbHelper.getAllNotifications();
 
-            if(notificationsCursor == null) {
+            if (notificationsCursor == null) {
                 //Log.e("ABSTRACT_PLANNER", " cursor null ");
                 return;
             }
 
-            if(notificationsCursor.getCount() <= 0){
+            if (notificationsCursor.getCount() <= 0) {
                 //Log.e("ABSTRACT_PLANNER", " size 0 ");
                 return;
             }
 
             Calendar today = Calendar.getInstance();
 
-            for(int i = 0; i < notificationsCursor.getCount(); i++){
+            for (int i = 0; i < notificationsCursor.getCount(); i++) {
                 notificationsCursor.moveToPosition(i);
 
                 //Log.e("ABSTRACT_PLANNER", " i " + i);
@@ -62,7 +61,7 @@ public class DeviceBootReceiver extends BroadcastReceiver {
                 long notificationID = notificationsCursor.getLong(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry._ID));
                 int notificationType = notificationsCursor.getInt(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_TYPE));
 
-                if(notificationType == Notification.TYPE_ONE_TIME_ID){
+                if (notificationType == Notification.TYPE_ONE_TIME_ID) {
                     Log.e("ABSTRACT_PLANNER", " notification NOT deleted. Today: "
                             + DateUtils.formatDateTime(mContext, today.getTimeInMillis(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_24HOUR)
                             + " notification datetime: "
@@ -72,7 +71,7 @@ public class DeviceBootReceiver extends BroadcastReceiver {
 
                 String message = notificationsCursor.getString(notificationsCursor.getColumnIndex(AbstractPlannerContract.NotificationEntry.COLUMN_MESSAGE));
 
-                if(notificationType == Notification.TYPE_SYSTEM_ID) {
+                if (notificationType == Notification.TYPE_SYSTEM_ID) {
                     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
                     boolean isNotificationEnabled = false;
 
@@ -98,16 +97,15 @@ public class DeviceBootReceiver extends BroadcastReceiver {
                         task,
                         notificationType);
 
-                if(notificationType == Notification.TYPE_ONE_TIME_ID && today.after(notificationDate)){
-                    clearNotification(notification);
+                clearNotification(notification);
+
+                if (notificationType == Notification.TYPE_ONE_TIME_ID && today.after(notificationDate)) {
                     dbHelper.deleteNotification(notificationID);
                     //Log.e("ABSTRACT_PLANNER", " notification deleted ");
                     continue;
                 }
 
                 createNotification(notification);
-
-                //Log.e("ABSTRACT_PLANNER", " notification created ");
 
             }
         }
@@ -126,10 +124,10 @@ public class DeviceBootReceiver extends BroadcastReceiver {
                 alarmIntent.putExtra("title", notification.getTask().getArea().getName());
         }
         else
-            if(notification.getType() == Notification.TYPE_SYSTEM_ID)
-                alarmIntent.putExtra("title", "Remind");
-            else
-                alarmIntent.putExtra("title", Notification.getNotificationTypeName(notification.getType()) + " notification");
+        if(notification.getType() == Notification.TYPE_SYSTEM_ID)
+            alarmIntent.putExtra("title", "Remind");
+        else
+            alarmIntent.putExtra("title", Notification.getNotificationTypeName(notification.getType()) + " notification");
 
         alarmIntent.putExtra("id", notification.getId());
 
@@ -185,10 +183,10 @@ public class DeviceBootReceiver extends BroadcastReceiver {
                 alarmIntent.putExtra("title", notification.getTask().getArea().getName());
         }
         else
-            if(notification.getType() == Notification.TYPE_SYSTEM_ID)
-                alarmIntent.putExtra("title", "Remind");
-            else
-                alarmIntent.putExtra("title", Notification.getNotificationTypeName(notification.getType()) + " notification");
+        if(notification.getType() == Notification.TYPE_SYSTEM_ID)
+            alarmIntent.putExtra("title", "Remind");
+        else
+            alarmIntent.putExtra("title", Notification.getNotificationTypeName(notification.getType()) + " notification");
         alarmIntent.putExtra("id", notification.getId());
 
         Long idLong = notification.getId();

@@ -28,6 +28,12 @@
             android:summary="Remind me to set tasks for tomorrow"
             android:defaultValue="true" />
 
+        <SwitchPreferenceCompat
+            android:key="@string/pref_unfinished_quick_tasks_key"
+            android:title="Quick tasks"
+            android:summary="Remind me to finish quick tasks"
+            android:defaultValue="true" />
+
     </PreferenceCategory>
 
     <PreferenceCategory

@@ -63,7 +63,10 @@ public class NotificationsDataProvider extends AbstractDataProvider {
 
                     if(message.equals(mContext.getString(R.string.pref_tomorrow_tasks_notification_message))){
                         isNotificationEnabled = sharedPreferences.getBoolean(mContext.getString(R.string.pref_tomorrow_tasks_notification_key), true);
-                    }
+                    } else
+                        if(message.equals(mContext.getString(R.string.pref_unfinished_quick_tasks_message))){
+                            isNotificationEnabled = sharedPreferences.getBoolean(mContext.getString(R.string.pref_unfinished_quick_tasks_key), true);
+                        }
 
                     if(!isNotificationEnabled)
                         continue;
@@ -292,6 +295,9 @@ public class NotificationsDataProvider extends AbstractDataProvider {
     }
 
     public void updateOneTimeNotifications(){
+        if(mLastRemovedData == null || mLastRemovedData.getDataObject().getType() != Notification.TYPE_ONE_TIME_ID)
+            return;
+
         if(mData.size() == 0){
             insertHeader(Notification.TYPE_ONE_TIME_NAME, false);
             mData.add(mLastRemovedData);

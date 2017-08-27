@@ -13,6 +13,9 @@
     <string name="pref_tomorrow_tasks_notification_key">tomorrow_tasks_notification_preference</string>
     <string name="pref_tomorrow_tasks_notification_message">Create tasks for tomorrow</string>
 
+    <string name="pref_unfinished_quick_tasks_key">unfinished_quick_tasks_preference</string>
+    <string name="pref_unfinished_quick_tasks_message">You have unfinished quick tasks</string>
+
     <string name="pref_areas_sort_label"
         translatable="false">Areas sorting</string>
 

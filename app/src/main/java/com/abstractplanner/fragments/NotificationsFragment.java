@@ -240,7 +240,7 @@ public class NotificationsFragment extends Fragment
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if(key.equals(getString(R.string.pref_tomorrow_tasks_notification_key))){
+        if(key.equals(getString(R.string.pref_tomorrow_tasks_notification_key)) || key.equals(getString(R.string.pref_unfinished_quick_tasks_key))){
             ((NotificationsAdapter) mAdapter).refreshData();
         }
     }

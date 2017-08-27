@@ -42,9 +42,15 @@ public class AlarmReceiver extends BroadcastReceiver{
 
         com.abstractplanner.dto.Notification notification = dbHelper.getNotificationByID(id);
 
-        if(notification != null)
-            if(notification.getType() == com.abstractplanner.dto.Notification.TYPE_SYSTEM_ID && dbHelper.isTasksForTomorrowSet())
-                return;
+        if(notification != null) {
+            if (notification.getType() == com.abstractplanner.dto.Notification.TYPE_SYSTEM_ID) {
+                if (notification.getMessage().equals(mContext.getString(R.string.pref_tomorrow_tasks_notification_message)) && dbHelper.isTasksForTomorrowSet())
+                    return;
+                else
+                    if(notification.getMessage().equals(mContext.getString(R.string.pref_unfinished_quick_tasks_message)) && !dbHelper.isQuickTasksLeft())
+                        return;
+            }
+        }
 
         int requestCode = 0;
         Intent intent = new Intent(mContext, MainActivity.class);
@@ -82,6 +88,8 @@ public class AlarmReceiver extends BroadcastReceiver{
         if(notification != null)
             if(notification.getType() == com.abstractplanner.dto.Notification.TYPE_ONE_TIME_ID)
                 dbHelper.deleteNotification(notification.getId());
+
+        dbHelper.close();
     }
 
     private Bitmap largeIcon() {
