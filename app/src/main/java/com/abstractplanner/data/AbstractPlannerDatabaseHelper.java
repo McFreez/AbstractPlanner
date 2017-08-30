@@ -429,6 +429,8 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
                 long dateInMilliseconds = isAllPreviousAreaTasksDone(taskBeforeUpdate);
                 if (dateInMilliseconds > 0)
                     return -2;
+
+                deleteAllTaskNotifications(task.getId());
             }
         }
 

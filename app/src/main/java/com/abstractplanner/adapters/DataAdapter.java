@@ -492,9 +492,11 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
                                                 }
                                                 else
                                                     if(status == -2){
-                                                        long undoneTaskDateMillis = mDbHelper.isAllPreviousAreaTasksDone(task);
-                                                        if(undoneTaskDateMillis > 0){
-                                                            Calendar undoneTaskDate = DateTimeUtils.getCalendarInstance(undoneTaskDateMillis);
+                                                        long taskId = mDbHelper.isAllPreviousAreaTasksDone(task);
+                                                        if(taskId > 0){
+                                                            Task undoneTask = mDbHelper.getTaskByID(taskId);
+
+                                                            Calendar undoneTaskDate = DateTimeUtils.getCalendarInstance(undoneTask.getDate().getTimeInMillis());
 
                                                             Calendar previousYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) - 1, Calendar.DECEMBER, 31);
                                                             Calendar nextYear = new GregorianCalendar(Calendar.getInstance().get(Calendar.YEAR) + 1, Calendar.JANUARY, 1);
