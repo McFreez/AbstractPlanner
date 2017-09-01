@@ -263,7 +263,7 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
         for(int i = 0; i < taskCursor.getCount(); i++){
             taskCursor.moveToPosition(i);
             long taskDateMillis = taskCursor.getLong(taskCursor.getColumnIndex(TaskEntry.COLUMN_DATE));
-            Calendar taskDate = DateTimeUtils.getInstanceDayInCurrentTimeZone(taskDateMillis, TimeZone.getTimeZone("Europe/Warsaw"));
+            Calendar taskDate = DateTimeUtils.getInstanceDayInCurrentTimeZone(taskDateMillis, TimeZone.getTimeZone(taskCursor.getString(taskCursor.getColumnIndex(TaskEntry.COLUMN_TIME_ZONE))));
 
             for (Day d : mDays){
                 if(d.getDate().compareTo(taskDate) == 0){
