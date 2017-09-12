@@ -125,7 +125,7 @@ public class MainActivity extends AppCompatActivity
             // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
             GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                     .requestEmail()
-                    .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
+                    .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER), new Scope(Scopes.DRIVE_FILE))
                     .build();
 
             // Build a GoogleApiClient with access to the Google Sign-In API and the
@@ -173,11 +173,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        /*if(AbstractPlannerPreferences.isUserAuthorized(this)) {*/
+        /*if(AbstractPlannerPreferences.userAuthorized(this)) {*/
             if (mGoogleApiClient == null) {
                 GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                         .requestEmail()
-                        .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
+                        .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER), new Scope(Scopes.DRIVE_FILE))
                         .build();
 
                 mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -196,7 +196,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onPause() {
-        /*if(AbstractPlannerPreferences.isUserAuthorized(this)) {*/
+        /*if(AbstractPlannerPreferences.userAuthorized(this)) {*/
             if (mGoogleApiClient != null) {
                 mGoogleApiClient.disconnect();
             }
@@ -486,7 +486,7 @@ public class MainActivity extends AppCompatActivity
     private void signOut() {
         Log.i(LOG_TAG, "Disconnection from google account");
 
-        /*if(AbstractPlannerPreferences.isUserAuthorized(this)) {*/
+        /*if(AbstractPlannerPreferences.userAuthorized(this)) {*/
         if(mAccount != null){
             // Google sign out
             Auth.GoogleSignInApi.signOut(mGoogleApiClient);/*.setResultCallback(

@@ -41,6 +41,10 @@
 
     <string name="pref_category_google_services">google_services_category</string>
 
+    <string name="pref_export_key">export</string>
+
+    <string name="pref_category_data">data_category</string>
+
     <string name="pref_category_notifications">notifications_category</string>
 
     <string name="pref_category_calendar">calendar_category</string>

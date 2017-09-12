@@ -65,4 +65,15 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory
+        android:title="Data"
+        android:key="@string/pref_category_data">
+
+        <Preference
+            android:title="Export"
+            android:key="@string/pref_export_key"
+            android:summary="Click to export data"/>
+
+    </PreferenceCategory>
+
 </PreferenceScreen>

@@ -5,11 +5,11 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.preference.Preference;
 import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.abstractplanner.data.AbstractPlannerPreferences;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -17,12 +17,16 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.OptionalPendingResult;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.drive.Drive;
 
 public class SettingsActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener,
         GoogleApiClient.ConnectionCallbacks {
+
+    private boolean userAuthorized = false;
 
     private static final String LOG_TAG = "SettingsActivity";
     //private static final int RC_SIGN_IN = 9001;
@@ -39,7 +43,7 @@ public class SettingsActivity extends AppCompatActivity
         if(mGoogleApiClient == null) {
             GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                     .requestEmail()
-                    .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
+                    .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER), new Scope(Scopes.DRIVE_FILE))
                     .build();
 
             // Build a GoogleApiClient with access to the Google Sign-In API and the
@@ -55,6 +59,32 @@ public class SettingsActivity extends AppCompatActivity
                     .build();
         }
         mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        if(AbstractPlannerPreferences.isAuthorizationEnabled(this)) {
+            OptionalPendingResult<GoogleSignInResult> opr = Auth.GoogleSignInApi.silentSignIn(mGoogleApiClient);
+            if (opr.isDone()) {
+                // If the user's cached credentials are valid, the OptionalPendingResult will be "done"
+                // and the GoogleSignInResult will be available instantly.
+                Log.d(LOG_TAG, "Got cached sign-in");
+                GoogleSignInResult result = opr.get();
+                handleSignInResult(result, true);
+            } else {
+                // If the user has not previously signed in on this device or the sign-in has expired,
+                // this asynchronous branch will attempt to sign in the user silently.  Cross-device
+                // single sign-on will occur in this branch.
+                opr.setResultCallback(new ResultCallback<GoogleSignInResult>() {
+                    @Override
+                    public void onResult(GoogleSignInResult googleSignInResult) {
+                        handleSignInResult(googleSignInResult, true);
+                    }
+                });
+            }
+        }
     }
 
     @Override
@@ -82,22 +112,27 @@ public class SettingsActivity extends AppCompatActivity
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            handleSignInResult(result);
+            handleSignInResult(result, false);
         }
     }
 
-    private void handleSignInResult(GoogleSignInResult result){
+    private void handleSignInResult(GoogleSignInResult result, boolean autoSignIn){
         if (result.isSuccess()) {
             // Google Sign In was successful, authenticate with Firebase
             GoogleSignInAccount account = result.getSignInAccount();
-            if(account != null)
-                Toast.makeText(this, "Welcome, " + account.getDisplayName(), Toast.LENGTH_SHORT).show();
-            onBackPressed();
+            userAuthorized = true;
+            if(!autoSignIn) {
+                if (account != null)
+                    Toast.makeText(this, "Welcome, " + account.getDisplayName(), Toast.LENGTH_SHORT).show();
+                onBackPressed();
+            }
             //updateUI(account);
         } else {
             // Google Sign In failed, update UI appropriately
             // [START_EXCLUDE]
-            Toast.makeText(this, "Failed to sign in", Toast.LENGTH_SHORT).show();
+            userAuthorized = false;
+            if(!autoSignIn)
+                Toast.makeText(this, "Failed to sign in", Toast.LENGTH_SHORT).show();
             // [END_EXCLUDE]
         }
     }
@@ -116,5 +151,13 @@ public class SettingsActivity extends AppCompatActivity
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.d(LOG_TAG, "onConnectionFailed:" + connectionResult);
         Toast.makeText(this, "Google Play Services error.", Toast.LENGTH_SHORT).show();
+    }
+
+    public boolean isUserAuthorized(){
+        return userAuthorized;
+    }
+
+    public GoogleApiClient getGoogleApiClient(){
+        return mGoogleApiClient;
     }
 }
