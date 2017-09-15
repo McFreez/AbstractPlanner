@@ -10,6 +10,7 @@ public class AbstractPlannerContract {
 
         public static final String COLUMN_NAME = "name";
         public static final String COLUMN_DESCRIPTION = "description";
+        public static final String COLUMN_ARCHIVED = "archived";
     }
 
     public static final class TaskEntry implements BaseColumns{

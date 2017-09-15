@@ -2,7 +2,6 @@ package com.abstractplanner.fragments;
 
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -22,6 +21,7 @@ import com.abstractplanner.adapters.DataAdapter;
 import com.abstractplanner.adapters.DaysAdapter;
 import com.abstractplanner.data.AbstractPlannerContract;
 import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
+import com.abstractplanner.data.AbstractPlannerPreferences;
 import com.abstractplanner.dto.Area;
 import com.abstractplanner.dto.Day;
 import com.abstractplanner.table.AreasScrollView;
@@ -99,7 +99,7 @@ public class CalendarGridFragment extends Fragment
 
         List<Area> areas = new ArrayList<>();
 
-        Cursor areasCursor = dbHelper.getAllAreas();
+        Cursor areasCursor = dbHelper.getNotArchivedAreas();
         for(int i = 0; i < areasCursor.getCount(); i++){
             areasCursor.moveToPosition(i);
             areas.add(new Area(areasCursor.getLong(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry._ID)),
@@ -107,8 +107,7 @@ public class CalendarGridFragment extends Fragment
                     areasCursor.getString(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_DESCRIPTION))));
         }
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-        String value = sharedPreferences.getString(getString(R.string.pref_areas_sort_key), "");
+        String value = AbstractPlannerPreferences.getAreasSorting(getContext());
         if(value.equals(getString(R.string.pref_areas_sort_by_tasks))) {
             Collections.sort(areas, new Comparator<Area>() {
                 @Override
@@ -232,7 +231,7 @@ public class CalendarGridFragment extends Fragment
         @Override
         protected Void doInBackground(Void... voids) {
 
-            Cursor areasCursor = dbHelper.getAllAreas();
+            Cursor areasCursor = dbHelper.getNotArchivedAreas();
             for(int i = 0; i < areasCursor.getCount(); i++){
                 areasCursor.moveToPosition(i);
                 mAreas.add(new Area(areasCursor.getLong(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry._ID)),

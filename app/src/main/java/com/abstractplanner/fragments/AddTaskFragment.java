@@ -3,7 +3,6 @@ package com.abstractplanner.fragments;
 import android.app.DatePickerDialog;
 import android.content.DialogInterface;
 import android.database.Cursor;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputEditText;
@@ -11,7 +10,6 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.text.format.DateUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +18,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.DatePicker;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -29,7 +26,6 @@ import com.abstractplanner.R;
 import com.abstractplanner.data.AbstractPlannerContract;
 import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.dto.Area;
-import com.abstractplanner.dto.Day;
 import com.abstractplanner.dto.Task;
 
 import java.util.ArrayList;
@@ -81,7 +77,7 @@ public class AddTaskFragment extends Fragment {
 
         List<String> spinnerAreas = new ArrayList<String>();
 
-        Cursor areasCursor = mDbHelper.getAllAreas();
+        Cursor areasCursor = mDbHelper.getNotArchivedAreas();
         for(int i = 0; i < areasCursor.getCount(); i++){
             areasCursor.moveToPosition(i);
             spinnerAreas.add(areasCursor.getString(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_NAME)));

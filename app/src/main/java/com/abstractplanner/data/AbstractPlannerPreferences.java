@@ -173,6 +173,11 @@ public final class AbstractPlannerPreferences {
         manager.setRepeating(AlarmManager.RTC_WAKEUP, quickTasksNotificationDate.getTimeInMillis(), AlarmManager.INTERVAL_DAY, quickTasksPendingIntent);
     }
 
+    public static String getAreasSorting(Context context){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(context.getString(R.string.pref_areas_sort_key), context.getString(R.string.pref_areas_sort_by_tasks));
+    }
+
     // Set every day remind notification to set tasks for tomorrow enabled
     public static void setNotificationEnabled(Context context, boolean enabled){
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);

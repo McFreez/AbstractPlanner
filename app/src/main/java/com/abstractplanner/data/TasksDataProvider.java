@@ -19,13 +19,9 @@ package com.abstractplanner.data;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
-import android.graphics.Color;
-import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.format.DateUtils;
-import android.util.Log;
 
 import com.abstractplanner.R;
 import com.abstractplanner.data.AbstractPlannerContract.*;
@@ -48,7 +44,7 @@ public class TasksDataProvider extends AbstractDataProvider {
 
     public static final String PROVIDER_ID = "today tasks data provider";
 
-    private static final String QUICK_TASKS_HEDAER = "Quick tasks";
+    private static final String QUICK_TASKS_HEADER = "Quick tasks";
 
     private List<TaskData> mData;
     private Context mContext;
@@ -124,6 +120,10 @@ public class TasksDataProvider extends AbstractDataProvider {
             for(int i = 0; i < tasksCursor.getCount(); i++) {
                 tasksCursor.moveToPosition(i);
 
+                Area taskArea = mDbHelper.getAreaByID(tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry.COLUMN_AREA_ID)));
+                if(taskArea.isArchived())
+                    continue;
+
                 int type = tasksCursor.getInt(tasksCursor.getColumnIndex(TaskEntry.COLUMN_TYPE));
 
                 if (!isFirstHeaderCreated) {
@@ -162,7 +162,7 @@ public class TasksDataProvider extends AbstractDataProvider {
                         viewType,
                         swipeReaction,
                         new Task(tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry._ID)),
-                                mDbHelper.getAreaByID(tasksCursor.getLong(tasksCursor.getColumnIndex(TaskEntry.COLUMN_AREA_ID))),
+                                taskArea,
                                 tasksCursor.getString(tasksCursor.getColumnIndex(TaskEntry.COLUMN_NAME)),
                                 tasksCursor.getString(tasksCursor.getColumnIndex(TaskEntry.COLUMN_DESCRIPTION)),
                                 taskDate,
@@ -184,7 +184,7 @@ public class TasksDataProvider extends AbstractDataProvider {
         Calendar taskDate = null;
 
         if(taskType == Task.TYPE_QUICK){
-            day = QUICK_TASKS_HEDAER;
+            day = QUICK_TASKS_HEADER;
         } else {
             Calendar today = DateTimeUtils.getTodayDate();
 
@@ -228,7 +228,7 @@ public class TasksDataProvider extends AbstractDataProvider {
         int headersCount = 0;
 
         for(int i = 0; i < mData.size(); i++)
-            if(mData.get(i).getViewType() == TaskData.ITEM_HEADER && !mData.get(i).getText().equals(QUICK_TASKS_HEDAER))
+            if(mData.get(i).getViewType() == TaskData.ITEM_HEADER && !mData.get(i).getText().equals(QUICK_TASKS_HEADER))
                 headersCount++;
 
         if(headersCount <= 6){
@@ -254,7 +254,7 @@ public class TasksDataProvider extends AbstractDataProvider {
 
         for(int i = mData.size() - 1; i >= 0; i--){
             if(mData.get(i).getViewType() == TaskData.ITEM_HEADER){
-                if(!mData.get(i).getText().equals(QUICK_TASKS_HEDAER)) {
+                if(!mData.get(i).getText().equals(QUICK_TASKS_HEADER)) {
                     colorIndex++;
 
                     if (colorIndex >= taskColors.length)
@@ -474,7 +474,7 @@ public class TasksDataProvider extends AbstractDataProvider {
 
             return mData.size() - 1;
         } else {
-            if (!mData.get(0).mText.equals(QUICK_TASKS_HEDAER))
+            if (!mData.get(0).mText.equals(QUICK_TASKS_HEADER))
                 insertHeader(0, null, mContext, 0, task.getType());
 
             int insertIndex = 1;

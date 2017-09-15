@@ -16,9 +16,7 @@ import com.abstractplanner.dto.Task;
 import com.abstractplanner.utils.DateTimeUtils;
 import com.abstractplanner.utils.NotificationUtils;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 import java.util.TimeZone;
 
 public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
@@ -57,6 +55,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
                 + AreaEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + AreaEntry.COLUMN_NAME + " TEXT NOT NULL,"
                 + AreaEntry.COLUMN_DESCRIPTION + " TEXT,"
+                + AreaEntry.COLUMN_ARCHIVED + " INTEGER NOT NULL,"
                 + " UNIQUE (" + AreaEntry.COLUMN_NAME + ") ON CONFLICT FAIL);";
 
         final String CREATE_TABLE_NOTIFICATION = "CREATE TABLE " + NotificationEntry.TABLE_NAME + " ("
@@ -83,16 +82,19 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         db.beginTransaction();
         Log.i(LOG_TAG, "Transaction began");
         try {
+            db.execSQL("ALTER TABLE " + AreaEntry.TABLE_NAME + " ADD COLUMN " + AreaEntry.COLUMN_ARCHIVED + " INTEGER DEFAULT " + Area.NOT_ARCHIVED);
+            Log.i(LOG_TAG, "Column ARCHIVED added to Area table");
+
             db.execSQL("ALTER TABLE " + TaskEntry.TABLE_NAME + " ADD COLUMN " + TaskEntry.COLUMN_TYPE + " INTEGER DEFAULT " + Task.TYPE_NORMAL);
-            Log.i(LOG_TAG, "Column added");
+            Log.i(LOG_TAG, "Column TYPE added to Task table");
 
             db.execSQL("ALTER TABLE " + TaskEntry.TABLE_NAME + " RENAME TO " + TaskEntry.TABLE_NAME + "_old");
             db.execSQL(CREATE_TABLE_TASK);
             db.execSQL("INSERT INTO " + TaskEntry.TABLE_NAME + " SELECT * FROM " + TaskEntry.TABLE_NAME + "_old");
-            Log.i(LOG_TAG, "Old table replaced with new");
+            Log.i(LOG_TAG, "Old Task table replaced with new");
 
             db.execSQL("DROP TABLE IF EXISTS " + TaskEntry.TABLE_NAME + "_old");
-            Log.i(LOG_TAG, "Old table removed");
+            Log.i(LOG_TAG, "Old Task table removed");
 
             db.setTransactionSuccessful();
             Log.i(LOG_TAG, "Transaction succeed");
@@ -105,17 +107,31 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
 
     // Areas
 
-    public Cursor getAllAreas(){
+    public Cursor getNotArchivedAreas(){
         SQLiteDatabase db = this.getReadableDatabase();
 
         return db.query(
                 AreaEntry.TABLE_NAME,
                 null,
-                null,
-                null,
+                AreaEntry.COLUMN_ARCHIVED + " = ?",
+                new String[]{ String.valueOf(Area.NOT_ARCHIVED) },
                 null,
                 null,
                 null
+        );
+    }
+
+    public Cursor getArchivedAreas(){
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        return db.query(
+                AreaEntry.TABLE_NAME,
+                null,
+                AreaEntry.COLUMN_ARCHIVED + " = ?",
+                new String[]{ String.valueOf(Area.ARCHIVED) },
+                null,
+                null,
+                AreaEntry._ID + " DESC"
         );
     }
 
@@ -125,6 +141,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(AreaEntry.COLUMN_NAME, area.getName());
         values.put(AreaEntry.COLUMN_DESCRIPTION, area.getDescription());
+        values.put(AreaEntry.COLUMN_ARCHIVED, Area.NOT_ARCHIVED);
 
         try {
             long id = db.insert(AreaEntry.TABLE_NAME, null, values);
@@ -149,14 +166,21 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
                 null,
                 null);
 
-        if(areaCursor != null)
+        if(areaCursor != null && areaCursor.getCount() > 0)
             areaCursor.moveToFirst();
         else
             return null;
 
+        boolean archived;
+        if(areaCursor.getInt(areaCursor.getColumnIndex(AreaEntry.COLUMN_ARCHIVED)) == Area.ARCHIVED)
+            archived = true;
+        else
+            archived = false;
+
         return new Area(areaCursor.getLong(areaCursor.getColumnIndex(AbstractPlannerContract.AreaEntry._ID)),
                 areaCursor.getString(areaCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_NAME)),
-                areaCursor.getString(areaCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_DESCRIPTION)));
+                areaCursor.getString(areaCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_DESCRIPTION)),
+                archived);
     }
 
     public Area getAreaByName(String areaName){
@@ -175,9 +199,16 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         else
             return null;
 
+        boolean archived;
+        if(areaCursor.getInt(areaCursor.getColumnIndex(AreaEntry.COLUMN_ARCHIVED)) == Area.ARCHIVED)
+            archived = true;
+        else
+            archived = false;
+
         return new Area(areaCursor.getLong(areaCursor.getColumnIndex(AbstractPlannerContract.AreaEntry._ID)),
                 areaCursor.getString(areaCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_NAME)),
-                areaCursor.getString(areaCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_DESCRIPTION)));
+                areaCursor.getString(areaCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_DESCRIPTION)),
+                archived);
     }
 
     public long updateArea(Area area){
@@ -186,6 +217,10 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(AreaEntry.COLUMN_NAME, area.getName());
         values.put(AreaEntry.COLUMN_DESCRIPTION, area.getDescription());
+        if(area.isArchived())
+            values.put(AreaEntry.COLUMN_ARCHIVED, Area.ARCHIVED);
+        else
+            values.put(AreaEntry.COLUMN_ARCHIVED, Area.NOT_ARCHIVED);
 
         try{
             long id = db.update(AreaEntry.TABLE_NAME, values, AreaEntry._ID + " = ?",
@@ -325,7 +360,7 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
     }
 
     public boolean isTasksForTomorrowSet(){
-        Cursor allAreasCursor = getAllAreas();
+        Cursor allAreasCursor = getNotArchivedAreas();
 
         if(allAreasCursor == null || allAreasCursor.getCount() <= 0)
             return true;
@@ -624,14 +659,16 @@ public class AbstractPlannerDatabaseHelper extends SQLiteOpenHelper {
             time.set(Calendar.HOUR_OF_DAY, 20);
         else
             if(message.equals(mContext.getString(R.string.pref_unfinished_quick_tasks_message)))
-                time.set(Calendar.HOUR_OF_DAY, 18);
-        time.set(Calendar.MINUTE, 0);
+                time.set(Calendar.HOUR_OF_DAY, 19);
+        time.set(Calendar.MINUTE, 12);
         time.set(Calendar.SECOND, 0);
         Notification notification = new Notification(message, time, Notification.TYPE_SYSTEM_ID);
         long id = createNotification(notification);
 
         if(id <= 0)
             return null;
+        else
+            notification.setId(id);
 
         return notification;
     }

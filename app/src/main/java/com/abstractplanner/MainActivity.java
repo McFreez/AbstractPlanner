@@ -35,12 +35,15 @@ import android.widget.TextView;
 import com.abstractplanner.data.AbstractDataProvider;
 import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.data.AbstractPlannerPreferences;
+import com.abstractplanner.data.ArchivedAreasDataProvider;
+import com.abstractplanner.data.ArchivedAreasDataProviderFragment;
 import com.abstractplanner.data.NotificationsDataProvider;
 import com.abstractplanner.data.NotificationsDataProviderFragment;
 import com.abstractplanner.data.TasksDataProvider;
 import com.abstractplanner.data.TasksDataProviderFragment;
 import com.abstractplanner.fragments.AddAreaFragment;
 import com.abstractplanner.fragments.AddTaskFragment;
+import com.abstractplanner.fragments.ArchivedAreasFragment;
 import com.abstractplanner.fragments.CalendarGridFragment;
 import com.abstractplanner.fragments.NotificationsFragment;
 import com.abstractplanner.fragments.TodayTasksFragment;
@@ -392,6 +395,12 @@ public class MainActivity extends AppCompatActivity
                         .add(new NotificationsDataProviderFragment(), NotificationsDataProvider.PROVIDER_ID)
                         .commit();
                 break;
+            case R.id.archived_areas:
+                fragment = new ArchivedAreasFragment();
+                getSupportFragmentManager().beginTransaction()
+                        .add(new ArchivedAreasDataProviderFragment(), ArchivedAreasDataProvider.PROVIDER_ID)
+                        .commit();
+                break;
             case R.id.action_settings:
                 dbHelper.close();
                 Intent startSettingsActivity = new Intent(this, SettingsActivity.class);
@@ -473,6 +482,8 @@ public class MainActivity extends AppCompatActivity
                 return ((TasksDataProviderFragment) fragment).getDataProvider();
             case NotificationsDataProvider.PROVIDER_ID:
                 return ((NotificationsDataProviderFragment) fragment).getDataProvider();
+            case ArchivedAreasDataProvider.PROVIDER_ID:
+                return ((ArchivedAreasDataProviderFragment)fragment).getDataProvider();
             default:
                 return null;
 

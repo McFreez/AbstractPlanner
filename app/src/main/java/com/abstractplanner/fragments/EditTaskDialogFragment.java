@@ -88,7 +88,7 @@ public class EditTaskDialogFragment extends DialogFragment {
 
         List<String> spinnerAreas = new ArrayList<String>();
 
-        Cursor areasCursor = mDbHelper.getAllAreas();
+        Cursor areasCursor = mDbHelper.getNotArchivedAreas();
         for(int i = 0; i < areasCursor.getCount(); i++){
             areasCursor.moveToPosition(i);
             spinnerAreas.add(areasCursor.getString(areasCursor.getColumnIndex(AbstractPlannerContract.AreaEntry.COLUMN_NAME)));

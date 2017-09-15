@@ -22,6 +22,7 @@ import android.widget.Button;
 
 import com.abstractplanner.MainActivity;
 import com.abstractplanner.R;
+import com.abstractplanner.adapters.ArchivedAreasAdapter;
 import com.abstractplanner.adapters.AreasAdapter;
 import com.abstractplanner.data.AbstractPlannerDatabaseHelper;
 import com.abstractplanner.dto.Area;
@@ -38,7 +39,7 @@ public class EditAreaDialogFragment extends DialogFragment {
     private Button mAddAreaButton;
 
     private Area mArea;
-    private AreasAdapter mAdapter;
+    private Object mAdapter;
     private AbstractPlannerDatabaseHelper mDbHelper;
 
     @Nullable
@@ -60,7 +61,7 @@ public class EditAreaDialogFragment extends DialogFragment {
         mAreaNameEditText.setText(mArea.getName());
         mAreaDescriptionEditText.setText(mArea.getDescription());
 
-        mToolbar.setTitle("Edit task");
+        mToolbar.setTitle("Edit area");
         mToolbar.setNavigationIcon(android.R.drawable.ic_menu_close_clear_cancel);
         //mToolbar.setPadding(0, getStatusBarHeight(), 0, 0);
         setHasOptionsMenu(true);
@@ -159,7 +160,12 @@ public class EditAreaDialogFragment extends DialogFragment {
 
             builder.show();
         } else {
-            mAdapter.saveEditedArea(mArea, area);
+            if(mAdapter instanceof AreasAdapter)
+                ((AreasAdapter)mAdapter).saveEditedArea(mArea, area);
+            else
+                if(mAdapter instanceof ArchivedAreasAdapter){
+                    ((ArchivedAreasAdapter)mAdapter).saveEditedArea(area);
+                }
             dismiss();
         }
     }
@@ -177,7 +183,7 @@ public class EditAreaDialogFragment extends DialogFragment {
         mArea = previousArea;
     }
 
-    public void setAreasAdapter(AreasAdapter areasAdapter){
+    public void setAreasAdapter(Object areasAdapter){
         mAdapter = areasAdapter;
     }
 

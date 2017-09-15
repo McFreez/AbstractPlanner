@@ -83,6 +83,7 @@ public class AreasAdapter {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
                                     /*dialogInterface.dismiss();*/
+                                    archiveArea(area);
                                 }
                             })
                             .setNeutralButton("Delete", new DialogInterface.OnClickListener() {
@@ -101,9 +102,16 @@ public class AreasAdapter {
         }
     }
 
+    private void archiveArea(Area area){
+        area.setArchived(true);
+        mDbHelper.updateArea(area);
+
+        mActivity.displaySelectedScreen(R.id.calendar_grid, null);
+    }
+
     private void removeArea(Area area){
 
-        int removeIndex = -1;
+/*        int removeIndex = -1;
         long removeID = -1;
 
         for (int i = 0; i < mAreas.size(); i++){
@@ -117,8 +125,8 @@ public class AreasAdapter {
         if(removeIndex == -1)
             return;
 
-        mAreas.remove(removeIndex);
-        mDbHelper.deleteArea(removeID);
+        mAreas.remove(removeIndex);*/
+        mDbHelper.deleteArea(area.getId());
 
         mActivity.displaySelectedScreen(R.id.calendar_grid, null);
     }
